@@ -42,6 +42,7 @@ export function useCanvas(
       }
     };
   }, [saveState]);
+
   return [fc, setRef] as [typeof fc, typeof setRef];
 }
 
@@ -53,5 +54,6 @@ export const Canvas = React.forwardRef<
   }
 >(({ onLoad, saveState }, ref) => {
   const [canvasRef, setCanvasElRef] = useCanvas(ref, onLoad, saveState);
+
   return <canvas ref={setCanvasElRef} />;
 });

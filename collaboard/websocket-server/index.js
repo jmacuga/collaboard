@@ -2,8 +2,8 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 5001;
+const hostname = "app";
+const port = 4000;
 
 const httpServer = createServer();
 

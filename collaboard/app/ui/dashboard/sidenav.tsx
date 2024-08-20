@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { HomeIcon, UserIcon, CogIcon } from "@heroicons/react/24/outline"; // Install Heroicons if you haven't
+import {
+  HomeIcon,
+  UserIcon,
+  CogIcon,
+  ArrowRightStartOnRectangleIcon,
+} from "@heroicons/react/24/outline";
+import { signOut } from "@/auth";
 
 export default function SideNav() {
   return (
@@ -20,6 +26,19 @@ export default function SideNav() {
           <li className="flex items-center p-4 hover:bg-gray-700">
             <CogIcon className="h-6 w-6 mr-2" />
             <span>Settings</span>
+          </li>
+          <li className="p-4 hover:bg-gray-700">
+            <form
+              action={async () => {
+                "use server";
+                await signOut();
+              }}
+            >
+              <button className="flex items-center">
+                <ArrowRightStartOnRectangleIcon className="h-6 w-6 mr-2" />
+                <span>Sign Out</span>
+              </button>
+            </form>
           </li>
         </ul>
       </nav>

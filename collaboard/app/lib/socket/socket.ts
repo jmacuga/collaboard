@@ -1,10 +1,10 @@
 import * as fabric from "fabric";
 import FabricHelper from "../room/FabricHelper";
 
-export const handleSocketObjectCreated = (object, id, canvas, currentId) => {
-  if (id === currentId) {
-    return;
-  }
+export const handleSocketObjectCreated = (
+  object: fabric.FabricObject,
+  canvas: fabric.Canvas
+) => {
   if (object.type === "Path") {
     const fabricObj = fabric.Path.fromObject(object).then((fabricObj) => {
       fabricObj.id = object.id;
@@ -19,13 +19,8 @@ export const handleSocketObjectMoved = (
   objId: string,
   left: number,
   top: number,
-  id: string,
-  canvas: fabric.Canvas,
-  currentId: string
+  canvas: fabric.Canvas
 ) => {
-  if (id === currentId) {
-    return;
-  }
   console.log("Moved Received id", objId);
   const object: FabricObject | null = new FabricHelper(canvas).findObjectById(
     objId

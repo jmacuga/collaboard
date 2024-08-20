@@ -17,15 +17,14 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log("a user connected");
 
-  socket.on("object-created", function (object, canvasId) {
-    console.log(object);
+  socket.on("object-created", function (object, canvasId, roomId) {
     console.log("received new object -> emiting to clients");
-    io.emit("object-created", object, canvasId);
+    io.emit("object-created", object, canvasId, roomId);
   });
 
-  socket.on("object-moved", function (objId, left, top, canvasId) {
+  socket.on("object-moved", function (objId, left, top, canvasId, roomId) {
     console.log("received object moved -> emiting to clients");
-    io.emit("object-moved", objId, left, top, canvasId);
+    io.emit("object-moved", objId, left, top, canvasId, roomId);
   });
 });
 

@@ -1,5 +1,5 @@
 "use client";
-import SideToolbar from "./SideToolbar";
+import SideToolbar from "./side-toolbar";
 import { useCallback, useRef, useEffect, useState } from "react";
 import * as fabric from "fabric";
 import { Canvas } from "@/app/ui/canvas/canvas";
@@ -7,32 +7,34 @@ import { socket } from "@/app/socket";
 import {
   handleSocketObjectCreated,
   handleSocketObjectMoved,
-} from "@/lib/socket/socket";
+} from "@/app/lib/socket/socket";
 import useWindowSize from "@/app/ui/canvas/hooks/useWindowSize";
 import { v4 as uuidv4 } from "uuid";
-
-// fabric.FabricObject.prototype.toObject = (function (toObject) {
-//   return function (this: FabricObject) {
-
-//   };
-// })(fabric.FabricObject.prototype.toObject);
-
-export default function Room() {
+import { setCanvasEventListeners } from "@/app/ui/canvas/helpers/setCanvasEventListeners";
+export default function Room({ id }: { id: string }) {
   const canvasRef: any = useRef(null);
   const fabricRef: any = useRef(null);
   const { width, height } = useWindowSize();
   const [canvas, setCanvas] = useState(fabricRef.current);
   const [modeState, setModeState] = useState("selecting");
   const modeStateRef = useRef(modeState);
-  const [canvasId] = useState(uuidv4());
+  const currentCanvasId = uuidv4();
+  const currentRoomId = id;
+
+  console.log("currentCanvasId", currentCanvasId);
+  console.log("currentRoomId", currentRoomId);
 
   useEffect(() => {
     modeStateRef.current = modeState;
   }, [modeState]);
 
-  const handleCanvasMouseDown = ({ options, canvas }) => {
-    console.log("modeStrate", modeStateRef.current);
-    var evt = options.e;
+  const handleCanvasMouseDown = ({
+    opt,
+    canvas,
+  }: {
+    opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
+  }) => {
+    var evt = opt.e;
     if (modeStateRef.current === "dragging") {
       canvas.isDragging = true;
       canvas.selection = false;
@@ -47,17 +49,28 @@ export default function Room() {
     }
   };
 
-  const handleCanvasPathCreated = ({ options, socket }) => {
-    options.path.id = uuidv4();
-    const object = options.path.toObject(["id"]);
+  const handleCanvasPathCreated = ({
+    opt,
+    socket,
+  }: {
+    opt: { path: fabric.Path };
+    socket: any;
+  }) => {
+    opt.path.id = uuidv4();
+    const object = opt.path.toObject(["id"]);
     console.log("object", object);
     console.log("emitting created object to server");
-    socket.emit("object-created", object, canvasId);
+    socket.emit("object-created", object, currentCanvasId, currentRoomId);
   };
 
-  const handleCanvasMouseMove = ({ options, canvas }) => {
+  const handleCanvasMouseMove = ({
+    opt,
+    canvas,
+  }: {
+    opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
+  }) => {
     if (canvas.isDragging) {
-      var e = options.e;
+      var e = opt.e;
       var vpt = canvas.viewportTransform;
       vpt[4] += e.clientX - canvas.lastPosX;
       vpt[5] += e.clientY - canvas.lastPosY;
@@ -67,17 +80,32 @@ export default function Room() {
     }
   };
 
-  const handleCanvasMouseUp = ({ options, canvas }) => {
+  const handleCanvasMouseUp = ({
+    canvas,
+  }: {
+    opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
+  }) => {
     canvas.setViewportTransform(canvas.viewportTransform);
     canvas.isDragging = false;
     canvas.selection = true;
   };
 
-  const handleCanvasObjectMoved = ({ options, canvas }) => {
+  const handleCanvasObjectMoved = ({
+    opt,
+  }: {
+    opt: fabric.ModifiedEvent<fabric.TPointerEvent>;
+  }) => {
     console.log("object moved - emmiting to server");
-    var object = options.target;
+    var object = opt.target;
     console.log("Emmiting id:", object.id);
-    socket.emit("object-moved", object.id, object.left, object.top, canvasId);
+    socket.emit(
+      "object-moved",
+      object.id,
+      object.left,
+      object.top,
+      currentCanvasId,
+      currentRoomId
+    );
   };
 
   const onCanvasLoad = useCallback(
@@ -92,34 +120,53 @@ export default function Room() {
 
       const canvas = fabricRef.current;
 
-      canvas.on("path:created", (options) => {
-        handleCanvasPathCreated({ options, socket });
+      canvas.on("path:created", (opt: { path: fabric.Path }) => {
+        handleCanvasPathCreated({ opt, socket });
       });
 
-      canvas.on("mouse:down", (options) => {
-        handleCanvasMouseDown({ options, canvas });
+      canvas.on(
+        "mouse:down",
+        (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
+          handleCanvasMouseDown({ opt, canvas });
+        }
+      );
+
+      canvas.on(
+        "mouse:move",
+        (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
+          handleCanvasMouseMove({ opt, canvas });
+        }
+      );
+
+      canvas.on(
+        "mouse:up",
+        function (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) {
+          handleCanvasMouseUp({ canvas });
+        }
+      );
+      canvas.on(
+        "object:modified",
+        function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
+          console.log("object moved");
+          handleCanvasObjectMoved({ opt });
+        }
+      );
+
+      socket.on("object-created", (obj, canvasId, roomId) => {
+        console.log("received id:", canvasId);
+        console.log("current id:", currentCanvasId);
+        if (canvasId === currentCanvasId || roomId !== currentRoomId) {
+          return;
+        }
+        handleSocketObjectCreated(obj, canvas);
       });
 
-      canvas.on("mouse:move", (options) => {
-        handleCanvasMouseMove({ options, canvas });
-      });
-
-      canvas.on("mouse:up", function (options) {
-        handleCanvasMouseUp({ options, canvas });
-      });
-
-      socket.on("object-created", (object, id) => {
-        handleSocketObjectCreated(object, id, canvas, canvasId);
-      });
-
-      canvas.on("object:modified", function (options) {
-        console.log("object moved");
-        handleCanvasObjectMoved({ options, canvas });
-      });
-
-      socket.on("object-moved", (objId, left, top, id) => {
+      socket.on("object-moved", (objId, left, top, canvasId, roomId) => {
         console.log("object moved - received from server");
-        handleSocketObjectMoved(objId, left, top, id, canvas, canvasId);
+        if (canvasId === currentCanvasId || roomId !== currentRoomId) {
+          return;
+        }
+        handleSocketObjectMoved(objId, left, top, canvas);
       });
     },
     [fabricRef, socket]

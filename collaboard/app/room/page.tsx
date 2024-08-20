@@ -1,5 +1,9 @@
-import Room from "../ui/room/room";
+import CreateRoomButton from "../ui/room/create-room-button";
 
 export default function CanvasPage() {
-  return <Room />;
+  return (
+    <div>
+      <CreateRoomButton />
+    </div>
+  );
 }

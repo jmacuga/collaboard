@@ -1,9 +1,6 @@
-import BoardCards from "../ui/dashboard/board-cards";
-
-export default function Dashboard() {
+export default function BoardCards() {
   return (
-    <main>
-      <BoardCards />
+    <div>
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="p-4 bg-white rounded-lg shadow-md">
@@ -19,6 +16,6 @@ export default function Dashboard() {
           <p className="text-gray-600">Some details about this board.</p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

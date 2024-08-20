@@ -9,33 +9,29 @@ export function useCanvas(
   saveState = false,
   deps: any[] = []
 ) {
-  const elementRef = useRef<HTMLCanvasElement>(null);
+  const elementRef = useRef<HTMLCanvasElement | null>(null);
   const fc = useRef<fabric.Canvas | null>(null);
-  const data = useRef<any>(null);
 
   const setRef = useCallback(
     (el: HTMLCanvasElement | null) => {
       elementRef.current = el;
       ref && (ref.current = elementRef.current);
-
-      // dispose canvas
       fc.current?.dispose();
-      // set/clear ref
       if (!el) {
         fc.current = null;
         return;
       }
       const canvas = new fabric.Canvas(el);
+      canvas.on("mouse:down", (e) => {
+        e.e.preventDefault();
+      });
       window.canvas = fc.current = canvas;
-      // invoke callback
       init && init(canvas);
     },
     [saveState, ...deps]
   );
   useEffect(() => {
-    // disposer
     return () => {
-      // we avoid unwanted disposing by doing so only if element ref is unavailable
       if (!elementRef.current) {
         fc.current?.dispose();
         fc.current = null;

@@ -26,6 +26,14 @@ io.on("connection", (socket) => {
     console.log("received object moved -> emiting to clients");
     io.emit("object-moved", objId, left, top, canvasId, roomId);
   });
+
+  socket.on("request-canvas", function (roomId, canvasId) {
+    io.emit("request-canvas", roomId, canvasId);
+  });
+
+  socket.on("response-canvas", function (canvas, roomId, canvasId) {
+    io.emit("response-canvas", canvas, roomId, canvasId);
+  });
 });
 
 httpServer.listen(port, () => {

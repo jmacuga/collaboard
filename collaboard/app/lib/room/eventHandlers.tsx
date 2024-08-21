@@ -1,5 +1,6 @@
 import { socket } from "@/app/socket";
 import * as fabric from "fabric";
+import { MutableRefObject } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 export const handleCanvasMouseDown = ({
@@ -8,8 +9,11 @@ export const handleCanvasMouseDown = ({
   modeStateRef,
 }: {
   opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
+  canvas: any;
+  modeStateRef: MutableRefObject<string>;
 }) => {
   var evt = opt.e;
+  console.log("modeState", modeStateRef);
   if (modeStateRef.current === "dragging") {
     canvas.isDragging = true;
     canvas.selection = false;
@@ -26,12 +30,10 @@ export const handleCanvasMouseDown = ({
 
 export const handleCanvasPathCreated = ({
   opt,
-  socket,
   currentCanvasId,
   currentRoomId,
 }: {
   opt: { path: fabric.Path };
-  socket: any;
   currentCanvasId: string;
   currentRoomId: string;
 }) => {
@@ -47,6 +49,7 @@ export const handleCanvasMouseMove = ({
   canvas,
 }: {
   opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
+  canvas: any;
 }) => {
   if (canvas.isDragging) {
     var e = opt.e;
@@ -59,11 +62,7 @@ export const handleCanvasMouseMove = ({
   }
 };
 
-export const handleCanvasMouseUp = ({
-  canvas,
-}: {
-  opt: fabric.TPointerEventInfo<fabric.TPointerEvent>;
-}) => {
+export const handleCanvasMouseUp = ({ canvas }) => {
   canvas.setViewportTransform(canvas.viewportTransform);
   canvas.isDragging = false;
   canvas.selection = true;

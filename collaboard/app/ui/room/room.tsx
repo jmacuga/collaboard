@@ -1,6 +1,6 @@
 "use client";
 import SideToolbar from "./side-toolbar";
-import { useCallback, useRef, useEffect, useState } from "react";
+import { useCallback, useRef, useEffect, useState, use } from "react";
 import * as fabric from "fabric";
 import { Canvas } from "@/app/ui/canvas/canvas";
 import { socket } from "@/app/socket";
@@ -28,9 +28,13 @@ export default function Room({ id }: { id: string }) {
   const currentRoomId = id;
 
   useEffect(() => {
-    modeStateRef.current = modeState;
     console.log("currentCanvasId", currentCanvasId);
     console.log("currentRoomId", currentRoomId);
+  }, []);
+
+  useEffect(() => {
+    modeStateRef.current = modeState;
+    console.log("modeState", modeState);
   }, [modeState]);
 
   const onCanvasLoad = useCallback(
@@ -39,6 +43,8 @@ export default function Room({ id }: { id: string }) {
         width: window.innerWidth,
         height: window.innerHeight,
       });
+
+      socket.emit("joined-room", currentRoomId);
 
       console.log("Canvas load");
       fabricRef.current = initFabricCanvas;
@@ -67,7 +73,7 @@ export default function Room({ id }: { id: string }) {
             () => {
               canvas.renderAll.bind(canvas);
             },
-            (o, object) => {
+            (o: fabric.FabricObject, object: fabric.FabricObject) => {
               object.id = o.id;
             }
           )
@@ -79,7 +85,6 @@ export default function Room({ id }: { id: string }) {
       canvas.on("path:created", (opt: { path: fabric.Path }) => {
         handleCanvasPathCreated({
           opt,
-          socket,
           currentCanvasId,
           currentRoomId,
         });

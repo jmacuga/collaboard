@@ -16,6 +16,8 @@
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "fabric": "^6.0.2",
+    "jsondiffpatch": "^0.6.0",
+    "migrate": "^2.1.0",
     "mongodb": "6.8",
     "mongoose": "^8.5.2",
     "next": "14.2.5",

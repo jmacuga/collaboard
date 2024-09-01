@@ -20,7 +20,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "typeRoots": ["node_modules/@types", "app/lib/types"],
+    "typeRoots": ["node_modules/@types", "lib/types"],
     "types": ["fabric"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

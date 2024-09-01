@@ -2,20 +2,20 @@
 import SideToolbar from "./side-toolbar";
 import { useCallback, useRef, useEffect, useState, use } from "react";
 import * as fabric from "fabric";
-import { Canvas } from "@/app/ui/canvas/canvas";
+import { Canvas } from "@/components/canvas/canvas";
 import { socket } from "@/app/socket";
 import {
   handleSocketObjectCreated,
   handleSocketObjectMoved,
-} from "@/app/lib/socket/socket";
+} from "@/lib/socket/socket";
 import {
   handleCanvasMouseDown,
   handleCanvasMouseMove,
   handleCanvasMouseUp,
   handleCanvasPathCreated,
   handleCanvasObjectMoved,
-} from "@/app/lib/room/eventHandlers";
-import useWindowSize from "@/app/ui/canvas/hooks/useWindowSize";
+} from "@/lib/room/eventHandlers";
+import useWindowSize from "@/components/canvas/hooks/useWindowSize";
 import { v4 as uuidv4 } from "uuid";
 export default function Room({ id }: { id: string }) {
   const canvasRef: any = useRef(null);

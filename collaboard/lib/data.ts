@@ -19,7 +19,7 @@ export async function createRoom({
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-  users: [];
+  users: [String];
   canvasId: string;
 }): Promise<IRoom | null> {
   try {
@@ -79,6 +79,17 @@ export async function getCanvasById(id: string): Promise<IFabricCanvas | null> {
     await dbConnect();
     const canvas = await FabricCanvas.findById(id);
     return JSON.parse(JSON.stringify(canvas));
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function fetchUserRooms(): Promise<IRoom[] | null> {
+  try {
+    await dbConnect();
+    const rooms = await Room.find();
+    return JSON.parse(JSON.stringify(rooms));
   } catch (e) {
     console.error(e);
     return null;

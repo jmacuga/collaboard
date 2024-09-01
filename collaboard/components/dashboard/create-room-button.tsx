@@ -1,12 +1,13 @@
 "use client";
 import { createRoom } from "@/lib/data";
 import { useRouter } from "next/navigation";
-
+import { getUser } from "@/lib/data";
 import { useSession, SessionProvider } from "next-auth/react";
 
-export default function CreateRoomButton() {
+export default function CreateRoomButton({ children }) {
   const router = useRouter();
   const session = useSession();
+  console.log("Session: ", session);
 
   const onClick = async () => {
     console.log("Creating room...");
@@ -15,9 +16,15 @@ export default function CreateRoomButton() {
       return;
     }
 
+    const user = await getUser(session.data?.user?.email ?? "");
+    if (user === null) {
+      console.log("Error fetching user");
+      return;
+    }
+
     const room = await createRoom({
       name: "room1",
-      createdBy: session.data?.user?.id ?? "",
+      createdBy: String(user.id) ?? "",
       createdAt: new Date(),
       updatedAt: new Date(),
       users: [session.data?.user?.id ?? ""],
@@ -30,5 +37,5 @@ export default function CreateRoomButton() {
     router.push(`/room/${room._id}`);
   };
 
-  return <button onClick={onClick}>Create Room</button>;
+  return <button onClick={onClick}>{children}</button>;
 }

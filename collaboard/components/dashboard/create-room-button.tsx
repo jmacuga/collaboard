@@ -1,41 +1,33 @@
 "use client";
-import { createRoom } from "@/lib/data";
-import { useRouter } from "next/navigation";
-import { getUser } from "@/lib/data";
-import { useSession, SessionProvider } from "next-auth/react";
+import { useState } from "react";
+import { Modal } from "@mui/material";
+import { Box } from "@mui/material";
+import CreateRoomForm from "./create-room-form";
 
-export default function CreateRoomButton({ children }) {
-  const router = useRouter();
-  const session = useSession();
-  console.log("Session: ", session);
+export default function CreateRoomButton({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onClick = async () => {
-    console.log("Creating room...");
-    if (!session.data?.user) {
-      console.log("No user found");
-      return;
-    }
-
-    const user = await getUser(session.data?.user?.email ?? "");
-    if (user === null) {
-      console.log("Error fetching user");
-      return;
-    }
-
-    const room = await createRoom({
-      name: "room1",
-      createdBy: String(user.id) ?? "",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      users: [session.data?.user?.id ?? ""],
-      canvasId: "canvas1",
-    });
-    if (room === null) {
-      console.log("Error creating room");
-      return <div>Error creating room</div>;
-    }
-    router.push(`/room/${room._id}`);
+    setIsModalOpen(true);
   };
 
-  return <button onClick={onClick}>{children}</button>;
+  return (
+    <>
+      <button onClick={onClick}>{children}</button>
+      <Modal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box>
+          <CreateRoomForm setIsModalOpen={setIsModalOpen} />
+        </Box>
+      </Modal>
+    </>
+  );
 }

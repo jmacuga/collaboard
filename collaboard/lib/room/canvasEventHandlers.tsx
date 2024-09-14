@@ -30,18 +30,17 @@ export const handleCanvasMouseDown = ({
 
 export const handleCanvasPathCreated = ({
   opt,
-  currentCanvasId,
-  currentRoomId,
+  roomId,
+  canvasId,
 }: {
   opt: { path: fabric.Path };
-  currentCanvasId: string;
-  currentRoomId: string;
+  roomId: string;
+  canvasId: string;
 }) => {
   opt.path.id = uuidv4();
   const object = opt.path.toObject(["id"]);
-  console.log("object", object);
   console.log("emitting created object to server");
-  socket.emit("object-created", object, currentCanvasId, currentRoomId);
+  socket.emit("object-created", object, roomId, canvasId);
 };
 
 export const handleCanvasMouseMove = ({

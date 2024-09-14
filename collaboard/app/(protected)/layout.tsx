@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { useSession, SessionProvider } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 
 export default async function RoomLayout({
   children,

@@ -16,20 +16,25 @@ import {
   handleCanvasObjectMoved,
 } from "@/lib/room/eventHandlers";
 import useWindowSize from "@/components/canvas/hooks/useWindowSize";
-import { v4 as uuidv4 } from "uuid";
-export default function Room({ id }: { id: string }) {
+import { IFabricCanvas } from "@/models/FabricCanvas";
+export default function Room({
+  id,
+  fabricCanvas,
+}: {
+  id: string;
+  fabricCanvas: IFabricCanvas;
+}) {
   const canvasRef: any = useRef(null);
   const fabricRef: any = useRef(null);
   const { width, height } = useWindowSize();
   const [canvas, setCanvas] = useState(fabricRef.current);
   const [modeState, setModeState] = useState("selecting");
   const modeStateRef = useRef(modeState);
-  const [currentCanvasId, setCurrentCanvasId] = useState(uuidv4());
-  const currentRoomId = id;
+  console.log("fabricCanvas", fabricCanvas);
+  const canvasId = fabricCanvas._id;
 
   useEffect(() => {
-    console.log("currentCanvasId", currentCanvasId);
-    console.log("currentRoomId", currentRoomId);
+    console.log("currentCanvasId", canvasId);
   }, []);
 
   useEffect(() => {
@@ -39,37 +44,22 @@ export default function Room({ id }: { id: string }) {
 
   const onCanvasLoad = useCallback(
     async (initFabricCanvas: fabric.Canvas) => {
+      console.log("Canvas load");
       initFabricCanvas.setDimensions({
         width: window.innerWidth,
         height: window.innerHeight,
       });
-
-      socket.emit("joined-room", currentRoomId);
-
-      console.log("Canvas load");
+      socket.emit("joined-room", id);
       fabricRef.current = initFabricCanvas;
 
       const canvas = fabricRef.current;
+      canvas.id = canvasId;
 
-      socket.emit("request-canvas", currentRoomId, currentCanvasId);
-
-      socket.on("request-canvas", (roomId, dstCanvasId) => {
-        if (roomId !== currentRoomId || dstCanvasId === currentCanvasId) {
-          return;
-        }
-        console.log("canvas", canvas);
-        console.log("Sending canvas to server");
-        const canvasData = canvas.toObject(["id"]);
-        socket.emit("response-canvas", canvasData, roomId, dstCanvasId);
-      });
-
-      socket.on("response-canvas", (canvasData, roomId, dstCanvasId) => {
-        if (currentCanvasId !== dstCanvasId || roomId !== currentRoomId) {
-          return;
-        }
+      socket.emit("request-canvas", id);
+      if (fabricCanvas.objects) {
         canvas
           .loadFromJSON(
-            canvasData,
+            fabricCanvas.objects,
             () => {
               canvas.renderAll.bind(canvas);
             },
@@ -80,14 +70,10 @@ export default function Room({ id }: { id: string }) {
           .then(function () {
             canvas.renderAll();
           });
-      });
+      }
 
       canvas.on("path:created", (opt: { path: fabric.Path }) => {
-        handleCanvasPathCreated({
-          opt,
-          currentCanvasId,
-          currentRoomId,
-        });
+        handleCanvasPathCreated({ opt: opt, roomId: id, canvasId: canvasId });
       });
 
       canvas.on(
@@ -114,28 +100,29 @@ export default function Room({ id }: { id: string }) {
           handleCanvasMouseUp({ canvas });
         }
       );
-      canvas.on(
-        "object:modified",
-        function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
-          console.log("object moved");
-          handleCanvasObjectMoved({ opt, currentCanvasId, currentRoomId });
-        }
-      );
 
-      socket.on("object-created", (obj, canvasId, roomId) => {
-        if (canvasId === currentCanvasId || roomId !== currentRoomId) {
-          return;
-        }
-        handleSocketObjectCreated(obj, canvas);
-      });
+      // canvas.on(
+      //   "object:modified",
+      //   function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
+      //     console.log("object moved");
+      //     handleCanvasObjectMoved({ opt, socket.id, id });
+      //   }
+      // );
 
-      socket.on("object-moved", (objId, left, top, canvasId, roomId) => {
-        console.log("object moved - received from server");
-        if (canvasId === currentCanvasId || roomId !== currentRoomId) {
-          return;
-        }
-        handleSocketObjectMoved(objId, left, top, canvas);
-      });
+      // socket.on("object-created", (obj, srcClientId, roomId) => {
+      //   if (srcClientId === socket.id) {
+      //     return;
+      //   }
+      //   handleSocketObjectCreated(obj, canvas);
+      // });
+
+      // socket.on("object-moved", (objId, left, top, canvasId, roomId) => {
+      //   console.log("object moved - received from server");
+      //   if (canvasId === socket.id ) {
+      //     return;
+      //   }
+      //   handleSocketObjectMoved(objId, left, top, canvas);
+      // });
     },
     [fabricRef, socket]
   );

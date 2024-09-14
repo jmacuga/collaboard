@@ -39,11 +39,40 @@ export async function createRoom({
   }
 }
 
-export async function createFabricCanvas(): Promise<IFabricCanvas | null> {
+export async function getRoomById(id: string): Promise<IRoom | null> {
   try {
     await dbConnect();
-    const canvas = await FabricCanvas.create();
+    const room = await Room.findById(id);
+    return JSON.parse(JSON.stringify(room));
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function createFabricCanvas(
+  objects?: [Object?],
+  layers?: [Object?]
+): Promise<IFabricCanvas | null> {
+  try {
+    await dbConnect();
+    const canvas = await FabricCanvas.create({ objects, layers });
     return JSON.parse(JSON.stringify(canvas));
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getFabricCanvasById(
+  id: string
+): Promise<IFabricCanvas | null> {
+  try {
+    await dbConnect();
+    const canvas = await FabricCanvas.findById(id);
+    console.log("Canvas: ", canvas);
+
+    return canvas;
   } catch (e) {
     console.error(e);
     return null;
@@ -53,24 +82,11 @@ export async function createFabricCanvas(): Promise<IFabricCanvas | null> {
 export async function getUser(email: string): Promise<User | null> {
   try {
     const prisma = new PrismaClient();
-    console.log("Fetching user");
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log(user);
     return user;
   } catch (error) {
     console.error("Failed to fetch user:", error);
     throw new Error("Failed to fetch user.");
-  }
-}
-
-export async function getUserRooms(email: string): Promise<IRoom[] | null> {
-  try {
-    await dbConnect();
-    const rooms = await Room.find({ users: email });
-    return JSON.parse(JSON.stringify(rooms));
-  } catch (e) {
-    console.error(e);
-    return null;
   }
 }
 
@@ -85,13 +101,30 @@ export async function getCanvasById(id: string): Promise<IFabricCanvas | null> {
   }
 }
 
-export async function fetchUserRooms(): Promise<IRoom[] | null> {
+export async function fetchUserRooms(userId: string): Promise<IRoom[] | null> {
   try {
     await dbConnect();
-    const rooms = await Room.find();
+    const rooms = await Room.find({ createdBy: userId });
     return JSON.parse(JSON.stringify(rooms));
   } catch (e) {
     console.error(e);
     return null;
+  }
+}
+
+export async function addObjectToCanvas({
+  object,
+  canvasId,
+}: {
+  object: Object;
+  canvasId: string;
+}) {
+  try {
+    await dbConnect();
+    const canvas = await FabricCanvas.findById(canvasId);
+    canvas.objects.push(object);
+    canvas.save();
+  } catch (e) {
+    console.error(e);
   }
 }

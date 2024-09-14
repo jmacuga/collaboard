@@ -2,9 +2,7 @@
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import User from "./types/User";
-import { createRoom } from "./data";
-import { getUser } from "./data";
+import { createRoom, createFabricCanvas, getUser } from "./data";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -29,28 +27,37 @@ export async function authenticate(
 export async function createRoomAction(
   formData: { name: string },
   user_email: string
-) {
-  const user = await getUser(user_email);
-  if (user === null) {
-    console.error("Error fetching user");
-    throw new Error("Error fetching user");
-  }
-  console.log("User: ", user);
+): Promise<Room | null> {
   try {
+    const user = await getUser(user_email);
+    if (!user) {
+      console.error("Error: User not found");
+      return null;
+    }
+
+    const canvas = await createFabricCanvas([], []);
+    if (!canvas) {
+      console.error("Error: Canvas creation failed");
+      return null;
+    }
+
     const room = await createRoom({
       name: formData.name,
       createdBy: String(user.id),
       createdAt: new Date(),
       updatedAt: new Date(),
       users: [String(user.id)],
-      canvasId: "canvas1",
+      canvasId: canvas._id as string,
     });
-    if (room === null) {
-      console.error("Error creating room");
-      throw new Error("Error creating room");
+
+    if (!room) {
+      console.error("Error: Room creation failed");
+      return null;
     }
+
     return room;
   } catch (error) {
-    throw error;
+    console.error("Error creating room. Error: ", error);
+    return null;
   }
 }

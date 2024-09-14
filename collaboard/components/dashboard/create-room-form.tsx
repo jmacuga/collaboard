@@ -17,17 +17,13 @@ export default function CreateRoomForm({ setIsModalOpen }) {
   const router = useRouter();
   const session = useSession();
   const [formData, setFormData] = useState<FormData>({ name: "" });
-
   const [errors, setErrors] = useState<Errors>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("name", e.target.value);
-    console.log("formdata", formData);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    console.log("formdata", formData);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,6 +38,7 @@ export default function CreateRoomForm({ setIsModalOpen }) {
         console.log(room);
         if (room === null) {
           console.error("Error creating room");
+          setIsModalOpen(false);
           return;
         }
         router.push(`/room/${room._id}`);

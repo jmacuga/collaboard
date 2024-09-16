@@ -31,16 +31,13 @@ export const handleCanvasMouseDown = ({
 export const handleCanvasPathCreated = ({
   opt,
   roomId,
-  canvasId,
 }: {
   opt: { path: fabric.Path };
   roomId: string;
-  canvasId: string;
 }) => {
   opt.path.id = uuidv4();
   const object = opt.path.toObject(["id"]);
-  console.log("emitting created object to server");
-  socket.emit("object-created", object, roomId, canvasId);
+  socket.emit("object-created", object, roomId);
 };
 
 export const handleCanvasMouseMove = ({
@@ -69,22 +66,11 @@ export const handleCanvasMouseUp = ({ canvas }) => {
 
 export const handleCanvasObjectMoved = ({
   opt,
-  currentCanvasId,
-  currentRoomId,
+  roomId,
 }: {
   opt: fabric.ModifiedEvent<fabric.TPointerEvent>;
-  currentCanvasId: string;
-  currentRoomId: string;
+  roomId: string;
 }) => {
-  console.log("object moved - emmiting to server");
   var object = opt.target;
-  console.log("Emmiting id:", object.id);
-  socket.emit(
-    "object-moved",
-    object.id,
-    object.left,
-    object.top,
-    currentCanvasId,
-    currentRoomId
-  );
+  socket.emit("object-moved", object.id, object.left, object.top, roomId);
 };

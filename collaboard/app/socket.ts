@@ -1,5 +1,12 @@
 "use client";
 
-import { io } from "socket.io-client";
+import { ScissorsIcon } from "@heroicons/react/24/outline";
+import { io, Socket } from "socket.io-client";
 
-export const socket = io("http://localhost:3000");
+var socket: Socket;
+
+if (typeof window !== "undefined") {
+  socket = io(); // Replace with your server URL
+}
+
+export { socket };

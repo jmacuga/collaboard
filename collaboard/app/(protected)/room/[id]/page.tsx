@@ -1,4 +1,4 @@
-import { getCanvasById, getFabricCanvasById, getRoomById } from "@/lib/data";
+import { getCanvasById, getRoomById } from "@/lib/data";
 import Room from "@/components/room/room";
 
 export default async function RoomPage({ params }: { params: { id: string } }) {

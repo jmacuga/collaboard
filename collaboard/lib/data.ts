@@ -70,8 +70,6 @@ export async function getFabricCanvasById(
   try {
     await dbConnect();
     const canvas = await FabricCanvas.findById(id);
-    console.log("Canvas: ", canvas);
-
     return canvas;
   } catch (e) {
     console.error(e);

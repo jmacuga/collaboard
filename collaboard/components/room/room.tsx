@@ -14,7 +14,8 @@ import {
   handleCanvasMouseUp,
   handleCanvasPathCreated,
   handleCanvasObjectMoved,
-} from "@/lib/room/eventHandlers";
+} from "@/lib/room/canvasEventHandlers";
+import { loadCanvasObjects } from "@/lib/room/utils";
 import useWindowSize from "@/components/canvas/hooks/useWindowSize";
 import { IFabricCanvas } from "@/models/FabricCanvas";
 export default function Room({
@@ -30,50 +31,27 @@ export default function Room({
   const [canvas, setCanvas] = useState(fabricRef.current);
   const [modeState, setModeState] = useState("selecting");
   const modeStateRef = useRef(modeState);
-  console.log("fabricCanvas", fabricCanvas);
-  const canvasId = fabricCanvas._id;
-
-  useEffect(() => {
-    console.log("currentCanvasId", canvasId);
-  }, []);
+  const canvasId = fabricCanvas._id as string;
+  const roomId = id;
 
   useEffect(() => {
     modeStateRef.current = modeState;
-    console.log("modeState", modeState);
   }, [modeState]);
 
   const onCanvasLoad = useCallback(
     async (initFabricCanvas: fabric.Canvas) => {
       console.log("Canvas load");
-      initFabricCanvas.setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      socket.emit("joined-room", id);
+      socket.emit("joined-room", roomId);
+
+      loadCanvasObjects(fabricCanvas.objects, initFabricCanvas);
+
       fabricRef.current = initFabricCanvas;
 
       const canvas = fabricRef.current;
       canvas.id = canvasId;
 
-      socket.emit("request-canvas", id);
-      if (fabricCanvas.objects) {
-        canvas
-          .loadFromJSON(
-            fabricCanvas.objects,
-            () => {
-              canvas.renderAll.bind(canvas);
-            },
-            (o: fabric.FabricObject, object: fabric.FabricObject) => {
-              object.id = o.id;
-            }
-          )
-          .then(function () {
-            canvas.renderAll();
-          });
-      }
-
       canvas.on("path:created", (opt: { path: fabric.Path }) => {
-        handleCanvasPathCreated({ opt: opt, roomId: id, canvasId: canvasId });
+        handleCanvasPathCreated({ opt, roomId });
       });
 
       canvas.on(
@@ -101,31 +79,24 @@ export default function Room({
         }
       );
 
-      // canvas.on(
-      //   "object:modified",
-      //   function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
-      //     console.log("object moved");
-      //     handleCanvasObjectMoved({ opt, socket.id, id });
-      //   }
-      // );
+      canvas.on(
+        "object:modified",
+        function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
+          handleCanvasObjectMoved({ opt, roomId });
+        }
+      );
 
-      // socket.on("object-created", (obj, srcClientId, roomId) => {
-      //   if (srcClientId === socket.id) {
-      //     return;
-      //   }
-      //   handleSocketObjectCreated(obj, canvas);
-      // });
+      socket.on("object-created", (obj) => {
+        handleSocketObjectCreated(obj, canvas);
+      });
 
-      // socket.on("object-moved", (objId, left, top, canvasId, roomId) => {
-      //   console.log("object moved - received from server");
-      //   if (canvasId === socket.id ) {
-      //     return;
-      //   }
-      //   handleSocketObjectMoved(objId, left, top, canvas);
-      // });
+      socket.on("object-moved", (objId, left, top) => {
+        handleSocketObjectMoved(objId, left, top, canvas);
+      });
     },
     [fabricRef, socket]
   );
+
   useEffect(() => {
     setCanvas(fabricRef.current);
     if (canvas) {
@@ -157,7 +128,6 @@ export default function Room({
     }
     console.log("Mode set to: ", mode);
   }
-  useEffect(() => {}, [canvas]);
 
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">

@@ -22,28 +22,18 @@ app.prepare().then(() => {
     console.log("a user connected");
 
     socket.on("joined-room", function (roomId) {
-      console.log("user joined room: ", roomId);
       socket.join(roomId);
     });
 
-    socket.on("object-created", function (object, roomId, canvasId) {
+    socket.on("object-created", function (object, roomId) {
       console.log("received new object -> emiting to clients");
-      io.to(roomId).emit("object-created", object, socket.id);
-      console.log("Canvas ID: ", canvasId);
-      addObjectToCanvas({ object, canvasId });
+      socket.to(roomId).emit("object-created", object, socket.id);
+      addObjectToCanvas({ object, roomId });
     });
 
-    socket.on("object-moved", function (objId, left, top, canvasId, roomId) {
+    socket.on("object-moved", function (objId, left, top, roomId) {
       console.log("received object moved -> emiting to clients");
-      io.to(roomId).emit("object-moved", objId, left, top, canvasId, roomId);
-    });
-
-    socket.on("request-canvas", function (roomId, canvasId) {
-      io.to(roomId).emit("request-canvas", roomId, canvasId);
-    });
-
-    socket.on("response-canvas", function (canvas, roomId, canvasId) {
-      io.to(roomId).emit("response-canvas", canvas, roomId, canvasId);
+      socket.to(roomId).emit("object-moved", objId, left, top);
     });
   });
 

@@ -1,15 +1,6 @@
-import { FabricObject } from "fabric";
 import mongoose from "mongoose";
 
-export interface IFabricCanvas extends mongoose.Document {
-  objects: [FabricObject];
-  layers: {
-    name: string;
-    objects: [string];
-  };
-}
-
-const FabricCanvasSchema = new mongoose.Schema<IFabricCanvas>({
+const FabricCanvasSchema = new mongoose.Schema({
   objects: {
     type: [Object],
     required: true,

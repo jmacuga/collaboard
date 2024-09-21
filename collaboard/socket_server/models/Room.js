@@ -1,15 +1,6 @@
 import mongoose from "mongoose";
 
-export interface IRoom extends mongoose.Document {
-  name: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  users: [string];
-  canvasId: string;
-}
-
-export const RoomSchema = new mongoose.Schema<IRoom>({
+const RoomSchema = new mongoose.Schema({
   name: {
     type: String,
   },
@@ -38,4 +29,4 @@ export const RoomSchema = new mongoose.Schema<IRoom>({
 });
 
 export default mongoose.models.Room ||
-  mongoose.model<IRoom>("Room", RoomSchema, "rooms");
+  mongoose.model("Room", RoomSchema, "rooms");

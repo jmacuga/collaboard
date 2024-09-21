@@ -1,18 +1,24 @@
 import type { NextAuthConfig } from "next-auth";
+import { NextResponse } from "next/server";
 
 export const authConfig = {
   pages: {
-    signIn: "/login",
+    signIn: "/auth/login",
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
+      const isAuthRoute = nextUrl.pathname.startsWith("/auth");
+      const isPublicRoute = nextUrl.pathname.startsWith("/public");
+      if (isAuthRoute) {
+        if (isLoggedIn) {
+          return Response.redirect(new URL(`/dashboard`, nextUrl));
+        }
         return false;
-      } else if (isLoggedIn) {
-        return Response.redirect(new URL("/dashboard", nextUrl));
+      }
+
+      if (!isLoggedIn && !isPublicRoute) {
+        return Response.redirect(new URL("/auth/login", nextUrl));
       }
       return true;
     },

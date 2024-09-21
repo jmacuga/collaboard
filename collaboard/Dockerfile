@@ -3,13 +3,11 @@ RUN apk add --no-cache g++ make py3-pip libc6-compat
 WORKDIR /app
 COPY package*.json ./
 EXPOSE 3000
-EXPOSE 4000
 
 FROM base AS builder
 WORKDIR /app
 COPY . .
 RUN npm run build
-# RUN npx prisma generate
 
 FROM base AS production
 WORKDIR /app
@@ -26,7 +24,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/websocket-server ./websocket-server
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/models ./models
+COPY --from=builder /app/.env ./.env
 COPY --from=builder /app/prisma ./prisma
 
 CMD npm start
@@ -37,4 +37,4 @@ RUN npm install
 
 COPY . .
 RUN npx prisma generate
-CMD npm run dev & node ./websocket-server/index.js
+CMD npm run dev

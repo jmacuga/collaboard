@@ -1,5 +1,6 @@
 "use client";
 import SideToolbar from "./side-toolbar";
+import Toolbar from "./toolbar";
 import { useCallback, useRef, useEffect, useState, use } from "react";
 import * as fabric from "fabric";
 import { Canvas } from "@/components/canvas/canvas";
@@ -129,9 +130,15 @@ export default function Room({
     console.log("Mode set to: ", mode);
   }
 
+  const handleToolSelect = (tool) => {
+    console.log("Tool selected: ", tool);
+  };
+
+  const handleColorSelect = (color) => {};
+
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
-      <div className="w-full flex-none md:w-32">
+      <div className="z-10 flex-shrink ">
         <SideToolbar setCursorMode={setCursorMode} />
       </div>
       <div className="flex-grow md:overflow-y-auto">

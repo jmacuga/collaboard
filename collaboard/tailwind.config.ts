@@ -8,6 +8,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        "bice-blue": "#0369A1",
+        "oxford-blue": "#0A1128",
+        white: "#FEFCFB",
+        "tiffany-blue": "#8ADBC4",
+        "burnt-sienna": "#E78567",
+        "burnt-sienna-darker": "#D07E66",
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
@@ -17,4 +25,5 @@ const config: Config = {
   },
   plugins: [],
 };
+
 export default config;

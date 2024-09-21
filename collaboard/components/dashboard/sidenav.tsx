@@ -7,13 +7,11 @@ import CreateRoomButton from "./create-room-button";
 
 export default function SideNav() {
   return (
-    <div className="h-screen w-64 bg-gray-800 text-white">
-      <div className="p-4 text-lg font-bold border-b border-gray-700">
-        Collaboard
-      </div>
+    <div className="h-screen w-64 bg-bice-blue text-white">
+      <div className="p-4 text-xl font-bold">Collaboard</div>
       <nav className="mt-4">
         <ul>
-          <li className="hover:bg-gray-700 p-4">
+          <li className="p-4 hover:bg-blue-200 hover:cursor-pointer hover:text-oxford-blue">
             <CreateRoomButton>
               <div className="flex items-center">
                 <DocumentIcon className="h-6 w-6 mr-2" />
@@ -22,7 +20,7 @@ export default function SideNav() {
             </CreateRoomButton>
           </li>
 
-          <li className="p-4 hover:bg-gray-700">
+          <li className="p-4 hover:bg-blue-200 hover:cursor-pointer hover:text-oxford-blue">
             <form
               action={async () => {
                 "use server";

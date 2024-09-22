@@ -3,7 +3,9 @@ import {
   FaHandPaper,
   FaMousePointer,
   FaCog,
+  FaHome,
 } from "react-icons/fa";
+import Link from "next/link";
 import { Tooltip } from "./tooltip";
 import DrawingToolbar from "./drawing-toolbar";
 interface SideToolbarProps {
@@ -18,10 +20,15 @@ function SideToolbar({
   changeBrushColor,
 }: SideToolbarProps) {
   const toolbarItems = [
+    {
+      label: "Dashboard",
+      icon: <FaHome />,
+      mode: "dashboard",
+      href: "/dashboard",
+    },
     { label: "Draw", icon: <FaPaintBrush />, mode: "drawing" },
     { label: "Drag", icon: <FaHandPaper />, mode: "dragging" },
     { label: "Select", icon: <FaMousePointer />, mode: "selecting" },
-    { label: "Settings", icon: <FaCog /> },
   ];
 
   return (
@@ -38,7 +45,13 @@ function SideToolbar({
                 className="flex flex-col items-center p-2 cursor-pointer hover:text-tiffany-blue rounded-xl transition-all transform hover:scale-110"
                 onClick={() => item.mode && setCursorMode(item.mode)}
               >
-                <div className="text-xl">{item.icon}</div>
+                {item.href ? (
+                  <Link className="text-xl" href={item.href}>
+                    {item.icon}
+                  </Link>
+                ) : (
+                  <div className="text-xl">{item.icon}</div>
+                )}
               </li>
             </Tooltip>
           ))}

@@ -20,12 +20,6 @@ export const handleCanvasMouseDown = ({
     canvas.lastPosX = evt.clientX;
     canvas.lastPosY = evt.clientY;
   }
-  if (canvas.isDrawingMode) {
-    var brush = new fabric.PencilBrush(canvas);
-    brush.color = "red";
-    brush.width = 4;
-    canvas.freeDrawingBrush = brush;
-  }
 };
 
 export const handleCanvasPathCreated = ({
@@ -73,4 +67,15 @@ export const handleCanvasObjectMoved = ({
 }) => {
   var object = opt.target;
   socket.emit("object-moved", object.id, object.left, object.top, roomId);
+};
+
+export const setDrawingMode = (canvas: fabric.Canvas) => {
+  if (canvas.isDrawingMode) {
+    return;
+  }
+  canvas.isDrawingMode = true;
+  var brush = new fabric.PencilBrush(canvas);
+  brush.color = "red";
+  brush.width = 4;
+  canvas.freeDrawingBrush = brush;
 };

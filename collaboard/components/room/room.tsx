@@ -1,7 +1,6 @@
 "use client";
-import SideToolbar from "./side-toolbar";
-import Toolbar from "./toolbar";
-import { useCallback, useRef, useEffect, useState, use } from "react";
+import SideToolbar from "../canvas/side-toolbar";
+import { useCallback, useRef, useEffect, useState } from "react";
 import * as fabric from "fabric";
 import { Canvas } from "@/components/canvas/canvas";
 import { socket } from "@/app/socket";
@@ -15,6 +14,7 @@ import {
   handleCanvasMouseUp,
   handleCanvasPathCreated,
   handleCanvasObjectMoved,
+  setDrawingMode,
 } from "@/lib/room/canvasEventHandlers";
 import { loadCanvasObjects } from "@/lib/room/utils";
 import useWindowSize from "@/components/canvas/hooks/useWindowSize";
@@ -118,7 +118,7 @@ export default function Room({
     setModeState(mode);
     if (canvas) {
       if (mode === "drawing") {
-        canvas.isDrawingMode = true;
+        setDrawingMode(canvas);
       } else {
         canvas.isDrawingMode = false;
       }
@@ -134,12 +134,18 @@ export default function Room({
     console.log("Tool selected: ", tool);
   };
 
-  const handleColorSelect = (color) => {};
+  const changeBrushColor = (color: string) => {
+    canvas.freeDrawingBrush.color = color;
+  };
 
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
       <div className="z-10 flex-shrink ">
-        <SideToolbar setCursorMode={setCursorMode} />
+        <SideToolbar
+          setCursorMode={setCursorMode}
+          changeBrushColor={changeBrushColor}
+          cursorMode={modeState}
+        />
       </div>
       <div className="flex-grow md:overflow-y-auto">
         <Canvas onLoad={onCanvasLoad} ref={canvasRef} saveState />

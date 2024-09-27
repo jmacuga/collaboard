@@ -1,4 +1,4 @@
-import { getCanvasById, getRoomById } from "@/lib/data";
+import { getStageById, getRoomById } from "@/lib/data";
 import Room from "@/components/room/room";
 
 export default async function RoomPage({ params }: { params: { id: string } }) {
@@ -6,10 +6,10 @@ export default async function RoomPage({ params }: { params: { id: string } }) {
   if (room === null) {
     return <div>Room not found</div>;
   }
-  const fabricCanvas = await getCanvasById(room?.canvasId);
-  if (fabricCanvas === null) {
-    return <div>Canvas not found</div>;
+  const stage = await getStageById(room?.stageId);
+  if (stage === null) {
+    return <div>Canvas stage not found</div>;
   }
 
-  return <Room id={params.id} fabricCanvas={fabricCanvas} />;
+  return <Room roomId={params.id} />;
 }

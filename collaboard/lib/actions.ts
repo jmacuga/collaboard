@@ -2,7 +2,8 @@
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { createRoom, createFabricCanvas, getUser } from "./data";
+import { createRoom, createStage, getUser } from "./data";
+import { IRoom } from "@/models/Room";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -27,7 +28,7 @@ export async function authenticate(
 export async function createRoomAction(
   formData: { name: string },
   user_email: string
-): Promise<Room | null> {
+): Promise<IRoom | null> {
   try {
     const user = await getUser(user_email);
     if (!user) {
@@ -35,9 +36,9 @@ export async function createRoomAction(
       return null;
     }
 
-    const canvas = await createFabricCanvas([], []);
-    if (!canvas) {
-      console.error("Error: Canvas creation failed");
+    const stage = await createStage([], []);
+    if (!stage) {
+      console.error("Error: Stage canvas creation failed");
       return null;
     }
 
@@ -47,7 +48,7 @@ export async function createRoomAction(
       createdAt: new Date(),
       updatedAt: new Date(),
       users: [String(user.id)],
-      canvasId: canvas._id as string,
+      stageId: stage._id as string,
     });
 
     if (!room) {

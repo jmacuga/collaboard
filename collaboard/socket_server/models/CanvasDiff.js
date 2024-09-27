@@ -9,7 +9,7 @@ const CanvasDiffSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  canvasId: {
+  stageId: {
     type: String,
     required: true,
   },

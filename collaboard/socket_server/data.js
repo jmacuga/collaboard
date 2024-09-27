@@ -1,4 +1,4 @@
-import FabricCanvas from "./models/FabricCanvas.js";
+import Stage from "./models/Stage.js";
 import Room from "./models/Room.js";
 
 export async function addObjectToCanvas({ object, roomId }) {
@@ -8,13 +8,13 @@ export async function addObjectToCanvas({ object, roomId }) {
       throw new Error(`Room with id ${roomId} not found`);
     }
 
-    const canvas = await FabricCanvas.findById(room.canvasId);
-    if (!canvas) {
-      throw new Error(`Canvas with id ${room.canvasId} not found`);
+    const stage = await Stage.findById(room.stageId);
+    if (!stage) {
+      throw new Error(`CanvaStage canvas with id ${room.stageId} not found`);
     }
 
-    canvas.objects.push(object);
-    await canvas.save();
+    stage.objects.push(object);
+    await stage.save();
 
     return { success: true, message: "Object added to canvas successfully" };
   } catch (e) {

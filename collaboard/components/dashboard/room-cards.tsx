@@ -2,8 +2,8 @@ import { fetchUserRooms } from "@/lib/data";
 import CreateRoomButton from "./create-room-button";
 import Link from "next/link";
 
-export default async function RoomCards({ userId }: { userId: string }) {
-  const userRooms = await fetchUserRooms(userId);
+export default async function RoomCards({ userId }: { userId: number | null }) {
+  const userRooms = userId ? await fetchUserRooms(userId) : null;
   return (
     <div>
       <h1 className="text-3xl text-burnt-sienna font-bold mb-4">Dashboard</h1>

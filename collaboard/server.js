@@ -21,7 +21,7 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("a user connected");
 
-    socket.on("joined-room", function (roomId) {
+    socket.on("join-room", function ({ roomId, user }) {
       socket.join(roomId);
     });
 

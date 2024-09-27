@@ -1,142 +1,59 @@
 "use client";
-import SideToolbar from "../canvas/side-toolbar";
-import { useCallback, useRef, useEffect, useState } from "react";
-import * as fabric from "fabric";
-import { Canvas } from "@/components/canvas/canvas";
-import { socket } from "@/app/socket";
-import {
-  handleSocketObjectCreated,
-  handleSocketObjectMoved,
-} from "@/lib/socket/socket";
-import {
-  handleCanvasMouseDown,
-  handleCanvasMouseMove,
-  handleCanvasMouseUp,
-  handleCanvasPathCreated,
-  handleCanvasObjectMoved,
-  setDrawingMode,
-} from "@/lib/room/canvasEventHandlers";
-import { loadCanvasObjects } from "@/lib/room/utils";
-import useWindowSize from "@/components/canvas/hooks/useWindowSize";
-import { IFabricCanvas } from "@/models/FabricCanvas";
-export default function Room({
-  id,
-  fabricCanvas,
-}: {
-  id: string;
-  fabricCanvas: IFabricCanvas;
-}) {
-  const canvasRef: any = useRef(null);
-  const fabricRef: any = useRef(null);
-  const { width, height } = useWindowSize();
-  const [canvas, setCanvas] = useState(fabricRef.current);
-  const [modeState, setModeState] = useState("selecting");
-  const modeStateRef = useRef(modeState);
-  const canvasId = fabricCanvas._id as string;
-  const roomId = id;
+import SideToolbar from "@/components/canvas/side-toolbar";
+import { useRef, useEffect, useState, useContext, useCallback } from "react";
+import { Stage, Layer, Text, Star, Line } from "react-konva";
+import { RoomContext } from "@/lib/context/roomContext";
+import { useSocket } from "@/lib/hooks/useSocket";
+
+export default function Room({ roomId }: { roomId: string }) {
+  const { nodes, setNodes, setSelectedNode } = useContext(RoomContext);
+  const { joinRoom, leaveRoom } = useSocket({ roomId });
+
+  const [mode, setMode] = useState("selecting");
+  const modeStateRef = useRef(mode);
+  const [tool, setTool] = useState("pen");
+  const [lines, setLines] = useState([]);
+  const isDrawing = useRef(false);
 
   useEffect(() => {
-    modeStateRef.current = modeState;
-  }, [modeState]);
+    modeStateRef.current = mode;
+    joinRoom();
+  }, [mode]);
 
-  const onCanvasLoad = useCallback(
-    async (initFabricCanvas: fabric.Canvas) => {
-      console.log("Canvas load");
-      socket.emit("joined-room", roomId);
-
-      loadCanvasObjects(fabricCanvas.objects, initFabricCanvas);
-
-      fabricRef.current = initFabricCanvas;
-
-      const canvas = fabricRef.current;
-      canvas.id = canvasId;
-
-      canvas.on("path:created", (opt: { path: fabric.Path }) => {
-        handleCanvasPathCreated({ opt, roomId });
-      });
-
-      canvas.on(
-        "mouse:down",
-        (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
-          handleCanvasMouseDown({
-            opt,
-            canvas,
-            modeStateRef,
-          });
-        }
-      );
-
-      canvas.on(
-        "mouse:move",
-        (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
-          handleCanvasMouseMove({ opt, canvas });
-        }
-      );
-
-      canvas.on(
-        "mouse:up",
-        function (opt: fabric.TPointerEventInfo<fabric.TPointerEvent>) {
-          handleCanvasMouseUp({ canvas });
-        }
-      );
-
-      canvas.on(
-        "object:modified",
-        function (opt: fabric.ModifiedEvent<fabric.TPointerEvent>) {
-          handleCanvasObjectMoved({ opt, roomId });
-        }
-      );
-
-      socket.on("object-created", (obj) => {
-        handleSocketObjectCreated(obj, canvas);
-      });
-
-      socket.on("object-moved", (objId, left, top) => {
-        handleSocketObjectMoved(objId, left, top, canvas);
-      });
-    },
-    [fabricRef, socket]
-  );
-
-  useEffect(() => {
-    setCanvas(fabricRef.current);
-    if (canvas) {
-      canvas.setDimensions({
-        width: width,
-        height: height,
-      });
-    }
-  }, [width, height]);
-
-  function setCursorMode(mode: string) {
-    // Modes
-    //   drawing
-    //   dragging
-    //   selecting
-    //   addingObject
-    //
-    setModeState(mode);
-    if (canvas) {
-      if (mode === "drawing") {
-        setDrawingMode(canvas);
-      } else {
-        canvas.isDrawingMode = false;
-      }
-      if (mode === "selecting") {
-      }
-      if (mode === "dragging") {
-      }
-    }
+  function setCursorMode(new_mode: string) {
+    setMode(new_mode);
     console.log("Mode set to: ", mode);
   }
 
-  const handleToolSelect = (tool) => {
-    console.log("Tool selected: ", tool);
+  const changeBrushColor = (color: string) => {};
+
+  const handleMouseDown = (e) => {
+    if (mode == "drawing") {
+      isDrawing.current = true;
+      const pos = e.target.getStage().getPointerPosition();
+      setLines([...lines, { tool, points: [pos.x, pos.y] }]);
+    }
   };
 
-  const changeBrushColor = (color: string) => {
-    canvas.freeDrawingBrush.color = color;
+  const handleMouseMove = (e) => {
+    if (mode == "drawing") {
+      if (!isDrawing.current) {
+        return;
+      }
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      let lastLine = lines[lines.length - 1];
+      lastLine.points = lastLine.points.concat([point.x, point.y]);
+      lines.splice(lines.length - 1, 1, lastLine);
+      setLines(lines.concat());
+    }
   };
+
+  const handleMouseUp = useCallback(() => {
+    if (mode == "drawing") {
+      isDrawing.current = false;
+    }
+  }, [mode]);
 
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
@@ -144,11 +61,37 @@ export default function Room({
         <SideToolbar
           setCursorMode={setCursorMode}
           changeBrushColor={changeBrushColor}
-          cursorMode={modeState}
+          cursorMode={mode}
         />
       </div>
       <div className="flex-grow md:overflow-y-auto">
-        <Canvas onLoad={onCanvasLoad} ref={canvasRef} saveState />
+        <Stage
+          width={window.innerWidth}
+          height={window.innerHeight}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchEnd={handleMouseUp}
+        >
+          <Layer>
+            {lines.map((line, i) => (
+              <Line
+                key={i}
+                points={line.points}
+                stroke="#df4b26"
+                strokeWidth={5}
+                bezier={true}
+                lineCap="round"
+                lineJoin="round"
+                globalCompositeOperation={
+                  line.tool === "eraser" ? "destination-out" : "source-over"
+                }
+              />
+            ))}
+          </Layer>
+        </Stage>
       </div>
     </div>
   );

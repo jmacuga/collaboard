@@ -28,18 +28,12 @@ export type Child = {
   color: string;
 };
 
-export type Node = {
+export type Line = {
   id: string;
-  children: Child[];
-  parents: string[];
-  text: string;
-  shapeType: ShapeType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fillStyle: string;
-  strokeStyle: string;
+  points: number[];
+  stroke: string;
+  strokeWidth: number;
+  globalCompositeOperation: string;
 };
 
 export type UserCursor = {
@@ -55,10 +49,12 @@ export type RoomUser = {
 };
 
 type IRoomContext = {
-  nodes: Map<string, Node>;
-  setNodes: React.Dispatch<React.SetStateAction<Map<string, Node>>>;
-  selectedNode: Node | null;
-  setSelectedNode: React.Dispatch<React.SetStateAction<Node | null>>;
+  shapes: Map<string, Konva.Shape>;
+  setShapes: React.Dispatch<React.SetStateAction<Map<string, Konva.Shape>>>;
+  brushColor: string;
+  setBrushColor: React.Dispatch<React.SetStateAction<string>>;
+  lines: Map<string, Line>;
+  setLines: React.Dispatch<React.SetStateAction<Map<string, Line>>>;
 };
 export const RoomContext: React.Context<IRoomContext> = createContext(
   {} as IRoomContext
@@ -68,23 +64,22 @@ export const RoomContextProvider: React.FC<Props> = ({ children }) => {
   const [stageRef, setStageRef] = useState<React.RefObject<Konva.Stage> | null>(
     null
   );
-  const [nodes, setNodes] = useState<Map<string, Node>>(new Map());
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-
+  const [lines, setLines] = useState<Map<string, Line>>(new Map());
+  const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [roomName, setRoomName] = useState<string>("");
 
   const value = useMemo(
     () => ({
       stageRef,
       setStageRef,
-      nodes,
-      setNodes,
-      selectedNode,
-      setSelectedNode,
       roomName,
       setRoomName,
+      brushColor,
+      setBrushColor,
+      lines,
+      setLines,
     }),
-    [nodes, selectedNode, stageRef, roomName]
+    [stageRef, roomName, lines, brushColor]
   );
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;

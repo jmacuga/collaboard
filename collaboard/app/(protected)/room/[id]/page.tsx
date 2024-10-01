@@ -1,5 +1,7 @@
 import { getStageById, getRoomById } from "@/lib/data";
 import Room from "@/components/room/room";
+import { SocketContextProvider } from "@/lib/context/socketContext";
+import { RoomContextProvider } from "@/lib/context/roomContext";
 
 export default async function RoomPage({ params }: { params: { id: string } }) {
   const room = await getRoomById(params.id);
@@ -11,5 +13,11 @@ export default async function RoomPage({ params }: { params: { id: string } }) {
     return <div>Canvas stage not found</div>;
   }
 
-  return <Room roomId={params.id} />;
+  return (
+    <RoomContextProvider>
+      <SocketContextProvider>
+        <Room roomId={params.id} />
+      </SocketContextProvider>
+    </RoomContextProvider>
+  );
 }

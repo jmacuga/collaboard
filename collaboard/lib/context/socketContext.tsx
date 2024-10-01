@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { io, Socket } from "socket.io-client";
-import { Node, RoomContext, RoomUser, UserCursor } from "./roomContext";
+import { Line, Node, RoomContext, RoomUser, UserCursor } from "./roomContext";
 
 type Props = {
   children: React.ReactNode;
@@ -95,12 +95,18 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
     []
   );
 
+  const addShape = useCallback(({ shape }: { lines: [Line]; shape: Line }) => {
+    console.log("Adding shape to room: ", shape);
+    lines.push(shape);
+  }, []);
+
   useEffect(() => {
     socket.on("connection-success", connectionSuccess);
     socket.on("get-room-users", getRoomUsers);
     socket.on("user-joined", userJoined);
     socket.on("user-left", userLeft);
     socket.on("get-user-mouse-update", getUserMouseUpdate);
+    socket.on("add-shape", addShape);
 
     return () => {
       socket.off("connection-success", connectionSuccess);
@@ -111,16 +117,13 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
     };
   }, [getRoomUpdate, userJoined, userLeft, getUserMouseUpdate, getRoomUsers]);
 
-  const socketMemo = useMemo(
+  const value = useMemo(
     () => ({
       socket,
     }),
     []
   );
-
   return (
-    <SocketContext.Provider value={socketMemo}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
   );
 };

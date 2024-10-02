@@ -3,7 +3,6 @@ import Room from "./models/Room.js";
 
 export async function addObjectToStage({ object, roomId }) {
   try {
-    console.log("object", object);
     const room = await Room.findById(roomId);
     if (!room) {
       throw new Error(`Room with id ${roomId} not found`);

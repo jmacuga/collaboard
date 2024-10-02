@@ -22,7 +22,7 @@ app.prepare().then(() => {
     console.log("a user connected");
 
     socket.on("add-shape", function ({ shape, roomId }) {
-      socket.to(roomId).emit("add-shape", { shape });
+      socket.to(roomId).emit("add-shape", shape);
       addObjectToStage({ object: shape, roomId: roomId });
     });
 

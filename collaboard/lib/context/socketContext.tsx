@@ -8,7 +8,9 @@ import React, {
   useMemo,
 } from "react";
 import { io, Socket } from "socket.io-client";
-import { Line, Node, RoomContext, RoomUser, UserCursor } from "./roomContext";
+import { Line, RoomContext, RoomUser, UserCursor } from "./roomContext";
+import { Coming_Soon } from "next/font/google";
+import { set } from "mongoose";
 
 type Props = {
   children: React.ReactNode;
@@ -54,51 +56,25 @@ if (typeof window !== "undefined") {
   socket = io();
 }
 export const SocketContextProvider: React.FC<Props> = ({ children }) => {
-  const { setNodes } = useContext(RoomContext);
-
   const connectionSuccess = () => {
     console.log("connection successful!");
   };
-
+  const { lines, setLines } = useContext(RoomContext);
   const getRoomUsers = useCallback((payload: UserJoinedPayload[]) => {}, []);
   const userJoined = useCallback((payload: UserJoinedPayload) => {}, []);
   const userLeft = useCallback(({ socketId }: { socketId: string }) => {}, []);
-
-  const getRoomUpdate = useCallback(
-    (payload: UpdateRoomPayload) => {
-      const { data } = payload;
-      if (payload.type === "update") {
-        if (data) {
-          data.forEach((node) => {
-            setNodes((prevState) => {
-              prevState.set(node.id, node);
-              return new Map(prevState);
-            });
-          });
-        }
-      }
-      if (payload.type === "history") {
-        if (data) {
-          const updatedNodes: Map<string, Node> = new Map();
-          data.forEach((node) => {
-            updatedNodes.set(node.id, node);
-          });
-          setNodes(updatedNodes);
-        }
-      }
-    },
-    [setNodes]
-  );
-
   const getUserMouseUpdate = useCallback(
     (payload: GetUserMouseUpdatePayload) => {},
     []
   );
 
-  const addShape = useCallback(({ shape }: { lines: [Line]; shape: Line }) => {
-    console.log("Adding shape to room: ", shape);
-    lines.push(shape);
-  }, []);
+  const addShape = useCallback(
+    (shape: Line) => {
+      lines.set(shape.id, shape);
+      setLines(new Map(lines));
+    },
+    [lines]
+  );
 
   useEffect(() => {
     socket.on("connection-success", connectionSuccess);
@@ -115,7 +91,7 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
       socket.off("user-left", userLeft);
       socket.off("get-user-mouse-update", getUserMouseUpdate);
     };
-  }, [getRoomUpdate, userJoined, userLeft, getUserMouseUpdate, getRoomUsers]);
+  }, [userJoined, userLeft, getUserMouseUpdate, getRoomUsers]);
 
   const value = useMemo(
     () => ({

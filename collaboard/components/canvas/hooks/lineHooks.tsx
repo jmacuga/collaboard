@@ -1,52 +1,52 @@
 "use client";
-import { Line } from "@/lib/context/roomContext";
-function useCreateLine({
-  e,
-  lines,
-  setLines,
-  currentLineId,
-}: {
-  e: any;
-  lines: Map<string, Line>;
-  setLines: any;
-  currentLineId: string;
-}) {
-  const stage = e.target.getStage();
-  const point = stage.getPointerPosition();
-  const lastLine = lines.get(currentLineId);
-  if (!lastLine) {
-    return;
-  }
-  lastLine.points = lastLine.points.concat([point.x, point.y]);
-  lines.set(currentLineId, lastLine);
-  setLines(new Map(lines)); // workaround for rerender
-  return lastLine;
+
+import { useContext } from "react";
+import { RoomContext } from "@/lib/context/roomContext";
+
+function useDrawLine() {
+  const { lines, setLines, currentLineId } = useContext(RoomContext);
+
+  const drawLine = (e) => {
+    const lastLine = lines.get(currentLineId);
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    if (!lastLine) {
+      return;
+    }
+
+    lastLine.points = lastLine.points.concat([point.x, point.y]);
+    lines.set(currentLineId, lastLine);
+    setLines(new Map(lines)); // workaround for rerender
+    return lastLine;
+  };
+
+  return [drawLine];
 }
 
 function useStartLine({
-  e,
-  lines,
-  setLines,
   tool,
   brushColor,
-  currentLineId,
 }: {
-  e: any;
-  lines: Map<string, Line>;
-  setLines: any;
   tool: string;
   brushColor: string;
-  currentLineId: string;
 }) {
-  const pos = e.target.getStage().getPointerPosition();
-  const newLine = {
-    id: currentLineId,
-    points: [pos.x, pos.y],
-    stroke: brushColor,
-    strokeWidth: 5,
-    globalCompositeOperation: tool,
+  const { lines, setLines, currentLineId } = useContext(RoomContext);
+
+  const startLine = (e) => {
+    const pos = e.target.getStage().getPointerPosition();
+    const newLine = {
+      id: currentLineId,
+      points: [pos.x, pos.y],
+      stroke: brushColor,
+      strokeWidth: 5,
+      globalCompositeOperation: tool,
+    };
+    const newLines = new Map(lines);
+    newLines.set(currentLineId, newLine);
+    setLines(newLines);
   };
-  setLines(lines.set(currentLineId, newLine));
+
+  return [startLine];
 }
 
-export { useCreateLine, useStartLine };
+export { useDrawLine, useStartLine };

@@ -12,7 +12,9 @@ export async function addObjectToStage({ object, roomId }) {
     if (!stage) {
       throw new Error(`CanvaStage canvas with id ${room.stageId} not found`);
     }
-
+    if (!object) {
+      return { success: false, message: "Object is required" };
+    }
     stage.objects.push(object);
     await stage.save();
 

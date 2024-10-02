@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useMemo } from "react";
 import Konva from "konva";
+import { v4 as uuidv4 } from "uuid";
 
 export const fills = [
   "#6B7280",
@@ -55,6 +56,8 @@ type IRoomContext = {
   setBrushColor: React.Dispatch<React.SetStateAction<string>>;
   lines: Map<string, Line>;
   setLines: React.Dispatch<React.SetStateAction<Map<string, Line>>>;
+  currentLineId: string;
+  setCurrentLineId: React.Dispatch<React.SetStateAction<string>>;
 };
 export const RoomContext: React.Context<IRoomContext> = createContext(
   {} as IRoomContext
@@ -67,6 +70,7 @@ export const RoomContextProvider: React.FC<Props> = ({ children }) => {
   const [lines, setLines] = useState<Map<string, Line>>(new Map());
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [roomName, setRoomName] = useState<string>("");
+  const [currentLineId, setCurrentLineId] = useState<string>(uuidv4());
 
   const value = useMemo(
     () => ({
@@ -78,8 +82,10 @@ export const RoomContextProvider: React.FC<Props> = ({ children }) => {
       setBrushColor,
       lines,
       setLines,
+      currentLineId,
+      setCurrentLineId,
     }),
-    [stageRef, roomName, lines, brushColor]
+    [stageRef, roomName, lines, brushColor, currentLineId]
   );
 
   return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;

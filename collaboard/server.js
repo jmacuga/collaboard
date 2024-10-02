@@ -22,6 +22,9 @@ app.prepare().then(() => {
     console.log("a user connected");
 
     socket.on("add-shape", function ({ shape, roomId }) {
+      if (!shape) {
+        return;
+      }
       socket.to(roomId).emit("add-shape", shape);
       addObjectToStage({ object: shape, roomId: roomId });
     });
@@ -29,12 +32,6 @@ app.prepare().then(() => {
     socket.on("join-room", function ({ roomId, user }) {
       socket.join(roomId);
     });
-
-    // socket.on("object-created", function (object, roomId) {
-    //   console.log("received new object -> emiting to clients");
-    //   socket.to(roomId).emit("object-created", object, socket.id);
-    //   addObjectToCanvas({ object, roomId });
-    // });
 
     socket.on("object-moved", function (objId, left, top, roomId) {
       console.log("received object moved -> emiting to clients");

@@ -1,16 +1,8 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { createContext, useCallback, useEffect, useMemo } from "react";
 import { io, Socket } from "socket.io-client";
-import { Line, RoomContext, RoomUser, UserCursor } from "./roomContext";
-import { Coming_Soon } from "next/font/google";
-import { set } from "mongoose";
+import { RoomUser, UserCursor } from "./roomContext";
 
 type Props = {
   children: React.ReactNode;
@@ -59,7 +51,6 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
   const connectionSuccess = () => {
     console.log("connection successful!");
   };
-  const { lines, setLines } = useContext(RoomContext);
   const getRoomUsers = useCallback((payload: UserJoinedPayload[]) => {}, []);
   const userJoined = useCallback((payload: UserJoinedPayload) => {}, []);
   const userLeft = useCallback(({ socketId }: { socketId: string }) => {}, []);
@@ -68,21 +59,12 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
     []
   );
 
-  const addShape = useCallback(
-    (shape: Line) => {
-      lines.set(shape.id, shape);
-      setLines(new Map(lines));
-    },
-    [lines]
-  );
-
   useEffect(() => {
     socket.on("connection-success", connectionSuccess);
     socket.on("get-room-users", getRoomUsers);
     socket.on("user-joined", userJoined);
     socket.on("user-left", userLeft);
     socket.on("get-user-mouse-update", getUserMouseUpdate);
-    socket.on("add-shape", addShape);
 
     return () => {
       socket.off("connection-success", connectionSuccess);
@@ -97,7 +79,7 @@ export const SocketContextProvider: React.FC<Props> = ({ children }) => {
     () => ({
       socket,
     }),
-    []
+    [socket]
   );
   return (
     <SocketContext.Provider value={value}>{children}</SocketContext.Provider>

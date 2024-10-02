@@ -16,7 +16,7 @@ export default async function RoomPage({ params }: { params: { id: string } }) {
   return (
     <RoomContextProvider>
       <SocketContextProvider>
-        <Room roomId={params.id} />
+        <Room roomId={params.id} stage={stage} />
       </SocketContextProvider>
     </RoomContextProvider>
   );

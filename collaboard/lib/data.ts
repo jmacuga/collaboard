@@ -2,8 +2,7 @@
 import { IRoom } from "@/models/Room";
 import Room from "@/models/Room";
 import dbConnect from "./dbConnect";
-import FabricCanvas from "@/models/FabricCanvas";
-import { IFabricCanvas } from "@/models/FabricCanvas";
+import Stage, { IStage } from "@/models/Stage";
 import type { User } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 
@@ -13,14 +12,14 @@ export async function createRoom({
   createdAt,
   updatedAt,
   users,
-  canvasId,
+  stageId,
 }: {
   name: string;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
   users: [String];
-  canvasId: string;
+  stageId: string;
 }): Promise<IRoom | null> {
   try {
     await dbConnect();
@@ -30,7 +29,7 @@ export async function createRoom({
       createdAt,
       updatedAt,
       users,
-      canvasId,
+      stageId,
     });
     return JSON.parse(JSON.stringify(room));
   } catch (e) {
@@ -50,27 +49,14 @@ export async function getRoomById(id: string): Promise<IRoom | null> {
   }
 }
 
-export async function createFabricCanvas(
+export async function createStage(
   objects?: [Object?],
   layers?: [Object?]
-): Promise<IFabricCanvas | null> {
+): Promise<IStage | null> {
   try {
     await dbConnect();
-    const canvas = await FabricCanvas.create({ objects, layers });
-    return JSON.parse(JSON.stringify(canvas));
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
-export async function getFabricCanvasById(
-  id: string
-): Promise<IFabricCanvas | null> {
-  try {
-    await dbConnect();
-    const canvas = await FabricCanvas.findById(id);
-    return canvas;
+    const stage = await Stage.create({ objects, layers });
+    return JSON.parse(JSON.stringify(stage));
   } catch (e) {
     console.error(e);
     return null;
@@ -88,18 +74,18 @@ export async function getUser(email: string): Promise<User | null> {
   }
 }
 
-export async function getCanvasById(id: string): Promise<IFabricCanvas | null> {
+export async function getStageById(id: string): Promise<IStage | null> {
   try {
     await dbConnect();
-    const canvas = await FabricCanvas.findById(id);
-    return JSON.parse(JSON.stringify(canvas));
+    const stage = await Stage.findById(id);
+    return JSON.parse(JSON.stringify(stage));
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function fetchUserRooms(userId: string): Promise<IRoom[] | null> {
+export async function fetchUserRooms(userId: number): Promise<IRoom[] | null> {
   try {
     await dbConnect();
     const rooms = await Room.find({ createdBy: userId });
@@ -110,18 +96,18 @@ export async function fetchUserRooms(userId: string): Promise<IRoom[] | null> {
   }
 }
 
-export async function addObjectToCanvas({
+export async function addObjectToCanvasStage({
   object,
-  canvasId,
+  stageId,
 }: {
   object: Object;
-  canvasId: string;
+  stageId: string;
 }) {
   try {
     await dbConnect();
-    const canvas = await FabricCanvas.findById(canvasId);
-    canvas.objects.push(object);
-    canvas.save();
+    const stage = await Stage.findById(stageId);
+    stage.objects.push(object);
+    stage.save();
   } catch (e) {
     console.error(e);
   }

@@ -6,7 +6,7 @@ export interface IRoom extends mongoose.Document {
   createdAt: Date;
   updatedAt: Date;
   users: [string];
-  canvasId: string;
+  stageId: string;
 }
 
 export const RoomSchema = new mongoose.Schema<IRoom>({
@@ -31,7 +31,7 @@ export const RoomSchema = new mongoose.Schema<IRoom>({
     type: [String],
     default: [],
   },
-  canvasId: {
+  stageId: {
     type: String,
     required: true,
   },

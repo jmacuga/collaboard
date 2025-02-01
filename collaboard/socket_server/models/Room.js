@@ -22,7 +22,7 @@ const RoomSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  canvasId: {
+  stageId: {
     type: String,
     required: true,
   },

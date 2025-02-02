@@ -1,10 +1,10 @@
 "use client";
 
 import { useContext } from "react";
-import { RoomContext } from "@/lib/context/roomContext";
+import { BoardContext } from "@/context/boardContext";
 
 function useDrawLine() {
-  const { lines, setLines, currentLineId } = useContext(RoomContext);
+  const { lines, setLines, currentLineId } = useContext(BoardContext);
 
   const drawLine = (e) => {
     const lastLine = lines.get(currentLineId);
@@ -30,7 +30,7 @@ function useStartLine({
   tool: string;
   brushColor: string;
 }) {
-  const { lines, setLines, currentLineId } = useContext(RoomContext);
+  const { lines, setLines, currentLineId } = useContext(BoardContext);
 
   const startLine = (e) => {
     const pos = e.target.getStage().getPointerPosition();

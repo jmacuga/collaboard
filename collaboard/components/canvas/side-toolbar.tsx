@@ -14,11 +14,12 @@ interface SideToolbarProps {
   changeBrushColor: (color: string) => void;
 }
 
-function SideToolbar({
-  setCursorMode,
-  cursorMode,
-  changeBrushColor,
-}: SideToolbarProps) {
+function SideToolbar() {
+  // {
+  //   setCursorMode,
+  //   cursorMode,
+  //   changeBrushColor,
+  // }: SideToolbarProps
   const toolbarItems = [
     {
       label: "Dashboard",
@@ -35,7 +36,7 @@ function SideToolbar({
     <div className="fixed top-4 left-4 h-auto bg-bice-blue text-white shadow-lg rounded-3xl p-3">
       <nav>
         <ul className="space-y-4">
-          {cursorMode === "drawing" && (
+          {/* {cursorMode === "drawing" && (
             <DrawingToolbar changeBrushColor={changeBrushColor} />
           )}
           {toolbarItems.map((item, index) => (
@@ -54,7 +55,7 @@ function SideToolbar({
                 )}
               </li>
             </Tooltip>
-          ))}
+          ))} */}
         </ul>
       </nav>
     </div>

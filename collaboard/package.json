@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
     "start": "NODE_ENV=production node --env-file=.env server.js",
     "lint": "next lint"
   },
   "dependencies": {
+    "@automerge/automerge": "^2.2.8",
+    "@automerge/automerge-repo": "^1.2.1",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@heroicons/react": "^2.1.5",
@@ -24,12 +26,12 @@
     "migrate": "^2.1.0",
     "mongodb": "6.8",
     "mongoose": "^8.5.2",
-    "next": "^14.2.13",
+    "next": "15.1.6",
     "next-auth": "^5.0.0-beta.20",
     "nodemon": "^3.1.4",
     "prisma": "^5.18.0",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-icons": "^5.3.0",
     "react-konva": "^18.2.10",
     "socket.io": "^4.7.5",
@@ -41,13 +43,17 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3",
     "@types/uuid": "^10.0.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.5",
+    "eslint-config-next": "15.1.6",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@types/react": "19.0.8",
+    "@types/react-dom": "19.0.3"
   }
 }

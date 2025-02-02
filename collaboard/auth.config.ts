@@ -12,7 +12,7 @@ export const authConfig = {
       const isPublicRoute = nextUrl.pathname.startsWith("/public");
       if (isAuthRoute) {
         if (isLoggedIn) {
-          return Response.redirect(new URL(`/dashboard`, nextUrl));
+          return Response.redirect(new URL(`/teams`, nextUrl));
         }
         return false;
       }

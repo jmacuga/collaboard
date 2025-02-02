@@ -27,7 +27,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/models ./models
 COPY --from=builder /app/.env ./.env
-COPY --from=builder /app/prisma ./prisma
 
 CMD npm start
 
@@ -36,5 +35,4 @@ ENV NODE_ENV=development
 RUN npm install
 
 COPY . .
-RUN npx prisma generate
 CMD npm run dev

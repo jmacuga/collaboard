@@ -1,114 +1,76 @@
 "use server";
-import { IRoom } from "@/models/Room";
-import Room from "@/models/Room";
-import dbConnect from "./dbConnect";
-import Stage, { IStage } from "@/models/Stage";
-import type { User } from "@prisma/client";
-import { PrismaClient } from "@prisma/client";
 
-export async function createRoom({
+import { Board, IBoard } from "@/models/Board";
+import dbConnect from "@/lib/dbConnect";
+import { ObjectId } from "mongoose";
+import { IUser, User } from "@/models/User";
+import { ITeam, Team } from "@/models/Team";
+import { TeamMember } from "@/models/TeamMember";
+
+export async function createTeam({
   name,
-  createdBy,
-  createdAt,
-  updatedAt,
-  users,
-  stageId,
+  teamId,
+  isMergeRequestRequired,
+  docId,
 }: {
   name: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  users: [String];
-  stageId: string;
-}): Promise<IRoom | null> {
+  teamId: ObjectId;
+  isMergeRequestRequired?: boolean;
+  docId?: string;
+}): Promise<IBoard | null> {
   try {
     await dbConnect();
-    const room = await Room.create({
+    const board = await Board.create({
       name,
-      createdBy,
-      createdAt,
-      updatedAt,
-      users,
-      stageId,
+      teamId,
+      isMergeRequestRequired,
+      docId,
     });
-    return JSON.parse(JSON.stringify(room));
+    return board;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function getRoomById(id: string): Promise<IRoom | null> {
+export async function getBoardById(id: string): Promise<IBoard | null> {
   try {
     await dbConnect();
-    const room = await Room.findById(id);
-    return JSON.parse(JSON.stringify(room));
+    return await Board.findById(id);
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function createStage(
-  objects?: [Object?],
-  layers?: [Object?]
-): Promise<IStage | null> {
+export async function getUser(email: string): Promise<IUser | null> {
   try {
     await dbConnect();
-    const stage = await Stage.create({ objects, layers });
-    return JSON.parse(JSON.stringify(stage));
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
-export async function getUser(email: string): Promise<User | null> {
-  try {
-    const prisma = new PrismaClient();
-    const user = await prisma.user.findUnique({ where: { email } });
-    return user;
+    return await User.findOne({ email: email });
   } catch (error) {
     console.error("Failed to fetch user:", error);
-    throw new Error("Failed to fetch user.");
+    return null;
   }
 }
 
-export async function getStageById(id: string): Promise<IStage | null> {
+export async function getUserTeams(userId: string): Promise<ITeam[] | null> {
   try {
     await dbConnect();
-    const stage = await Stage.findById(id);
-    return JSON.parse(JSON.stringify(stage));
+    const userTeamMemberships = await TeamMember.find({ userId });
+    const teamIds = userTeamMemberships.map((membership) => membership.teamId);
+    return await Team.find({ _id: { $in: teamIds } });
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function fetchUserRooms(userId: number): Promise<IRoom[] | null> {
+export async function getTeamBoards(teamId: string): Promise<IBoard[] | null> {
   try {
     await dbConnect();
-    const rooms = await Room.find({ createdBy: userId });
-    return JSON.parse(JSON.stringify(rooms));
+    return await Board.find({ teamId });
   } catch (e) {
     console.error(e);
     return null;
-  }
-}
-
-export async function addObjectToCanvasStage({
-  object,
-  stageId,
-}: {
-  object: Object;
-  stageId: string;
-}) {
-  try {
-    await dbConnect();
-    const stage = await Stage.findById(stageId);
-    stage.objects.push(object);
-    stage.save();
-  } catch (e) {
-    console.error(e);
   }
 }

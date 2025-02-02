@@ -12,21 +12,6 @@ services:
     networks:
       - mongo-network
 
-  postgres:
-    image: postgres:latest
-    container_name: postgres_container
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: user1234
-      POSTGRES_DB: collaboard
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-    networks:
-      - mongo-network
-
   app:
     build:
       context: ./
@@ -45,7 +30,6 @@ services:
 
 volumes:
   mongo-data:
-  postgres-data:
 
 networks:
   mongo-network:

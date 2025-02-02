@@ -1,23 +1,13 @@
 import mongoose from "mongoose";
+import Konva from "konva";
 
 export interface IStage extends mongoose.Document {
-  objects: [];
-  layers: {
-    name: string;
-    objects: [string];
-  };
+  data: Konva.Stage;
 }
 
 const StageSchema = new mongoose.Schema<IStage>({
-  objects: {
-    type: [Object],
-    required: true,
-  },
-  layers: {
-    name: String,
-    objects: [String],
-  },
+  data: { type: Object, required: true },
 });
 
 export default mongoose.models.Stage ||
-  mongoose.model("Stage", StageSchema, "canvas_stages");
+  mongoose.model("Stage", StageSchema, "stages");

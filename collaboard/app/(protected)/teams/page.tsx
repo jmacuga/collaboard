@@ -1,6 +1,7 @@
 import { getUserTeams, getUser } from "@/lib/data";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
+import Sidenav from "@/components/teams/sidenav";
 
 export default async function Teams() {
   const session = await auth();
@@ -18,6 +19,7 @@ export default async function Teams() {
   return (
     <main className="flex">
       <div>
+        <Sidenav />
         <h1>Teams</h1>
         <ul>
           {teams ? (

@@ -15,9 +15,6 @@ export const fills = [
   "#EC4899",
 ];
 
-export const CANVAS_WIDTH = window.innerWidth;
-export const CANVAS_HEIGHT = window.innerHeight;
-
 export type ShapeType = "rect" | "ellipse" | "polygon";
 
 type Props = {
@@ -64,9 +61,8 @@ export const BoardContext: React.Context<BoardContext> = createContext(
 );
 
 export const BoardContextProvider: React.FC<Props> = ({ children }) => {
-  const [stageRef, setStageRef] = useState<React.RefObject<Konva.Stage | null> | null>(
-    null
-  );
+  const [stageRef, setStageRef] =
+    useState<React.RefObject<Konva.Stage | null> | null>(null);
   const [lines, setLines] = useState<Map<string, Line>>(new Map());
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [roomName, setRoomName] = useState<string>("");

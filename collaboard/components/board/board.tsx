@@ -1,22 +1,30 @@
 "use client";
 import SideToolbar from "@/components/canvas/side-toolbar";
-// import { useRef, useEffect, useState, useContext, useCallback } from "react";
-// import { Stage, Layer, Line } from "react-konva";
-// import { RoomContext } from "@/lib/context/roomContext";
+import { useRef, useEffect, useState, useContext, useCallback } from "react";
+import { Stage, Layer, Line, Shape, Rect } from "react-konva";
+import * as A from "@automerge/automerge-repo";
+import { BoardContext } from "@/context/boardContext";
 // import { useSocket } from "@/lib/hooks/useSocket";
 // import { useDrawLine, useStartLine } from "@/components/canvas/hooks/lineHooks";
 // import { v4 as uuidv4 } from "uuid";
-// import { IStage } from "@/models/Stage";
+import { IStage } from "@/models/Stage";
+import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import { uuid } from "@automerge/automerge";
+import Konva from "konva";
+import KonvaNodeObject from "@/types/KonvaNodeObject";
 
-export default function Board({ boardId }: { boardId: string }) {
-  //   const {
-  //     lines,
-  //     setLines,
-  //     brushColor,
-  //     setBrushColor,
-  //     currentLineId,
-  //     setCurrentLineId,
-  //   } = useContext(RoomContext);
+export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
+  const [message, setMessage] = useState<string | undefined>(undefined);
+  const [doc, changeDoc] = useDocument<KonvaNodeObject>(docUrl);
+  const {
+    lines,
+    setLines,
+    brushColor,
+    setBrushColor,
+    currentLineId,
+    setCurrentLineId,
+  } = useContext(BoardContext);
+
   //   const { joinRoom, addShapeEmit } = useSocket({ roomId });
   //   const [mode, setMode] = useState("selecting");
   //   const modeStateRef = useRef(mode);
@@ -58,6 +66,7 @@ export default function Board({ boardId }: { boardId: string }) {
   //       setCurrentLineId(uuidv4());
   //     }
   //   }, [mode, lines, currentLineId]);
+
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
       <div className="z-10 flex-shrink ">
@@ -68,37 +77,25 @@ export default function Board({ boardId }: { boardId: string }) {
         />
       </div>
       <div className="flex-grow md:overflow-y-auto">
-        {/* <Stage
-            width={window.innerWidth}
-            height={window.innerHeight}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onTouchMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onTouchEnd={handleMouseUp}
-          >
-            <Layer>
-              {Array.from(lines.entries()).map(([key, line]) => {
-                return (
-                  <Line
-                    key={key}
-                    points={line.points}
-                    stroke={line.stroke}
-                    strokeWidth={5}
-                    bezier={true}
-                    lineCap="round"
-                    lineJoin="round"
-                    globalCompositeOperation={
-                      line.globalCompositeOperation === "eraser"
-                        ? "destination-out"
-                        : "source-over"
-                    }
-                  />
-                );
-              })}
-            </Layer>
-          </Stage> */}
+        <Stage
+          key={uuid()}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          // onMouseDown={handleMouseDown}
+          // onTouchStart={handleMouseDown}
+          // onMouseMove={handleMouseMove}
+          // onTouchMove={handleMouseMove}
+          // onMouseUp={handleMouseUp}
+          // onTouchEnd={handleMouseUp}
+        >
+          <Layer key={uuid()}>
+            {doc?.children?.map((shape) => {
+              if (shape.className == "Line") {
+                return <Line key={uuid()} {...shape.attrs}></Line>;
+              }
+            })}
+          </Layer>
+        </Stage>
       </div>
     </div>
   );

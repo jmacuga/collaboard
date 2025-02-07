@@ -6,8 +6,7 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import KonvaNodeSchema from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { throttle } from "lodash";
-
+import { LineConfig } from "konva/lib/shapes/Line";
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
 
 interface Point {
@@ -15,22 +14,18 @@ interface Point {
   y: number;
 }
 
-interface LineAttributes {
-  id: string;
-  points: number[];
-  stroke: string;
-  strokeWidth: number;
-}
-
 const createLine = (
   id: string,
-  point: Point,
+  points: number[],
   color: string
-): LineAttributes => ({
+): LineConfig => ({
   id,
-  points: [point.x, point.y],
+  points: points,
   stroke: color,
   strokeWidth: 5,
+  tension: 0.5,
+  lineCap: "round",
+  lineJoin: "round",
 });
 
 const getPointerPosition = (e: KonvaEvent): Point | null => {
@@ -47,17 +42,16 @@ function useDrawing({ docUrl }: { docUrl: string }) {
   const [localPoints, setLocalPoints] = useState<number[]>([]);
 
   const updateAutomerge = useCallback(
-    throttle((points: number[]) => {
+    (points: number[]) => {
       changeDoc((doc) => {
         if (!doc.children) doc.children = [];
         const currentLineIndex = doc.children.findIndex(
           (child) => child.attrs.id === currentLineId
         );
         if (currentLineIndex === -1) return;
-
-        doc.children[currentLineIndex].attrs.points.push(...points);
+        doc.children[currentLineIndex].attrs.points = points;
       });
-    }, 50),
+    },
     [changeDoc, currentLineId]
   );
 
@@ -66,26 +60,34 @@ function useDrawing({ docUrl }: { docUrl: string }) {
 
     const point = getPointerPosition(e);
     if (!point) return;
-
     setLocalPoints((prev) => [...prev, point.x, point.y]);
-
-    updateAutomerge([point.x, point.y]);
   };
 
   const startLine = (e: KonvaEvent) => {
     const point = getPointerPosition(e);
     if (!point) return;
 
-    const lineAttributes = createLine(currentLineId, point, brushColor);
+    const lineAttributes = createLine(
+      currentLineId,
+      [point.x, point.y],
+      brushColor
+    );
     const newLine = new Konva.Line(lineAttributes);
 
     changeDoc((doc) => {
       if (!doc.children) doc.children = [];
       doc.children.push(newLine.toObject() as KonvaNodeSchema);
     });
+
+    setLocalPoints([point.x, point.y]);
   };
 
-  return [startLine, drawLine, localPoints] as const;
+  const endLine = () => {
+    updateAutomerge(localPoints);
+    setLocalPoints([]);
+  };
+
+  return [startLine, drawLine, endLine, localPoints, createLine] as const;
 }
 
 export { useDrawing };

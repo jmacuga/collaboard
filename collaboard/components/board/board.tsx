@@ -28,7 +28,9 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
   const [tool, setTool] = useState("pen");
   const isDrawing = useRef(false);
 
-  const [startLine, drawLine, localPoints] = useDrawing({ docUrl: docUrl });
+  const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing({
+    docUrl: docUrl,
+  });
 
   useEffect(() => {
     console.log(mode);
@@ -52,30 +54,24 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
   const handleMouseMove = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
   ) => {
-    if (mode === "drawing") {
-      if (!isDrawing.current) {
-        return;
-      }
-      drawLine(e);
+    if (!isDrawing.current || mode !== "drawing") return;
 
-      setLocalLine({
-        points: localPoints,
-        stroke: brushColor,
-        strokeWidth: 2,
-        tension: 0.5,
-        lineCap: "round",
-        lineJoin: "round",
-      });
-    }
+    drawLine(e);
+
+    const pos = e.target.getStage()?.getPointerPosition();
+    if (!pos) return;
+
+    setLocalLine(createLine(currentLineId, localPoints, brushColor));
   };
 
   const handleMouseUp = useCallback(() => {
     if (mode === "drawing") {
       isDrawing.current = false;
+      endLine();
       setCurrentLineId(uuidv4());
       setLocalLine(null);
     }
-  }, [mode, lines, currentLineId]);
+  }, [mode, endLine, setCurrentLineId]);
 
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
@@ -88,7 +84,6 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
       </div>
       <div className="flex-grow md:overflow-y-auto">
         <Stage
-          key={uuid()}
           width={window.innerWidth}
           height={window.innerHeight}
           onMouseDown={handleMouseDown}
@@ -98,13 +93,15 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
           onMouseUp={handleMouseUp}
           onTouchEnd={handleMouseUp}
         >
-          <Layer key={uuid()}>
+          <Layer>
             {doc?.children?.map((shape) => {
               if (shape.className == "Line") {
-                return <Line key={uuid()} {...shape.attrs}></Line>;
+                return (
+                  <Line key={shape.attrs.id ?? "0"} {...shape.attrs}></Line>
+                );
               }
             })}
-            {localLine && <Line {...localLine} />}
+            {localLine && <Line key={currentLineId} {...localLine} />}
           </Layer>
         </Stage>
       </div>

@@ -1,5 +1,5 @@
 import { getBoardById } from "@/lib/data";
-import { BoardPage } from "@/components/board/board-wrapper";
+import { BoardWrapper } from "@/components/board/board-wrapper";
 
 export default async function boardPage({
   params,
@@ -16,5 +16,5 @@ export default async function boardPage({
 
   const docUrl = board.docUrl.toString();
 
-  return <BoardPage docUrl={docUrl} />;
+  return <BoardWrapper docUrl={docUrl} />;
 }

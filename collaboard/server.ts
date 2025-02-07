@@ -2,6 +2,7 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { parse } from "url";
 import next from "next";
+import { createAutomergeServer } from "@/lib/automerge-server";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -24,18 +25,17 @@ app.prepare().then(() => {
     }
   });
 
-  // Create WebSocket server with a path
   const wss = new WebSocketServer({
     noServer: true,
   });
 
-  // Handle upgrade requests
+  createAutomergeServer(wss, hostname);
+
   server.on("upgrade", (request, socket, head) => {
     const pathname = new URL(request.url!, `http://${request.headers.host}`)
       .pathname;
 
     if (pathname === "/_next/webpack-hmr") {
-      // Skip handling HMR WebSocket - let Next.js handle it internally
       return;
     }
 
@@ -46,22 +46,7 @@ app.prepare().then(() => {
       return;
     }
 
-    // If neither path matches, destroy the connection
     socket.destroy();
-  });
-
-  wss.on("connection", (ws) => {
-    console.log("Client connected");
-
-    ws.on("message", (message) => {
-      console.log("Received:", message.toString());
-    });
-
-    ws.on("close", () => {
-      console.log("Client disconnected");
-    });
-
-    ws.send("Connected to WebSocket server");
   });
 
   server.listen(port, () => {

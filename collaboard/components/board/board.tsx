@@ -1,21 +1,18 @@
 "use client";
 import SideToolbar from "@/components/canvas/side-toolbar";
-import { useRef, useEffect, useState, useContext, useCallback } from "react";
+import { useEffect, useContext } from "react";
 import { Stage, Layer, Line, Shape, Rect } from "react-konva";
 import * as A from "@automerge/automerge-repo";
 import { BoardContext } from "@/context/boardContext";
-// import { useSocket } from "@/lib/hooks/useSocket";
 // import { useDrawLine, useStartLine } from "@/components/canvas/hooks/lineHooks";
 // import { v4 as uuidv4 } from "uuid";
-import { IStage } from "@/models/Stage";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { uuid } from "@automerge/automerge";
-import Konva from "konva";
-import KonvaNodeObject from "@/types/KonvaNodeObject";
+import KonvaNodeSchema from "@/types/KonvaNodeSchema";
 
 export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
-  const [message, setMessage] = useState<string | undefined>(undefined);
-  const [doc, changeDoc] = useDocument<KonvaNodeObject>(docUrl);
+  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(docUrl);
+
   const {
     lines,
     setLines,

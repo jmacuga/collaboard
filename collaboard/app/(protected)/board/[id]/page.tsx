@@ -1,5 +1,5 @@
 import { getBoardById } from "@/lib/data";
-import { BoardPage } from "@/components/board/board-page";
+import { BoardPage } from "@/components/board/board-wrapper";
 
 export default async function boardPage({
   params,

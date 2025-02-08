@@ -6,10 +6,19 @@ const nextConfig = {
       bufferutil: "commonjs bufferutil",
       canvas: "commonjs canvas",
     });
+    config.experiments = {
+      asyncWebAssembly: true,
+      syncWebAssembly: true,
+      layers: true,
+      topLevelAwait: true,
+      // importAsync: true,
+    };
     // config.infrastructureLogging = { debug: /PackFileCache/ };
     return config;
   },
-  experimental: { esmExternals: "loose" }, //required o make Konva and konva-react work
+  experimental: {
+    esmExternals: "loose",
+  }, //required o make Konva and konva-react work
 };
 
 export default nextConfig;

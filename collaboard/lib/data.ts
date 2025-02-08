@@ -6,6 +6,7 @@ import { ObjectId } from "mongoose";
 import { IUser, User } from "@/models/User";
 import { ITeam, Team } from "@/models/Team";
 import { TeamMember } from "@/models/TeamMember";
+import { IDoc, Doc } from "@/models/Doc";
 
 export async function createTeam({
   name,

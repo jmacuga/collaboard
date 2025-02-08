@@ -1,24 +1,20 @@
 import { getBoardById } from "@/lib/data";
-import Board from "@/components/board/board";
-import { SocketContextProvider } from "@/context/socketContext";
-import { BoardContextProvider } from "@/context/boardContext";
+import { BoardWrapper } from "@/components/board/board-wrapper";
 
-export default async function boardPage(
-  props: {
-    params: Promise<{ id: string }>;
-  }
-) {
-  const params = await props.params;
-  const board = await getBoardById(params.id);
-  if (board === null) {
-    return <div>board not found</div>;
+export default async function boardPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: boardId } = await params;
+  const board = await getBoardById(boardId);
+
+  if (!board || !board.docUrl) {
+    console.error("Board or docUrl not found");
+    return <div>Board not found</div>;
   }
 
-  return (
-    <BoardContextProvider>
-      <SocketContextProvider>
-        <Board boardId={params.id} />
-      </SocketContextProvider>
-    </BoardContextProvider>
-  );
+  const docUrl = board.docUrl.toString();
+
+  return <BoardWrapper docUrl={docUrl} />;
 }

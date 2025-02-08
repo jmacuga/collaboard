@@ -8,7 +8,6 @@ import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
-
 interface Point {
   x: number;
   y: number;

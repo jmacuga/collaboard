@@ -2,26 +2,20 @@
 import SideToolbar from "@/components/canvas/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Line, Shape, Rect } from "react-konva";
-import * as A from "@automerge/automerge-repo";
+import { AutomergeUrl } from "@automerge/automerge-repo";
 import { BoardContext } from "@/context/boardContext";
 import { useDrawing } from "@/components/canvas/hooks/useDrawing";
 import { v4 as uuidv4 } from "uuid";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { uuid } from "@automerge/automerge";
 import KonvaNodeSchema from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
+import * as A from "@automerge/automerge/slim/next";
 
-export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
+export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
   const [doc, changeDoc] = useDocument<KonvaNodeSchema>(docUrl);
-  const {
-    lines,
-    setLines,
-    brushColor,
-    setBrushColor,
-    currentLineId,
-    setCurrentLineId,
-  } = useContext(BoardContext);
+  const { brushColor, setBrushColor, currentLineId, setCurrentLineId } =
+    useContext(BoardContext);
 
   const [mode, setMode] = useState("selecting");
   const modeStateRef = useRef(mode);
@@ -36,6 +30,16 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
     console.log(mode);
     modeStateRef.current = mode;
   }, [mode]);
+
+  useEffect(() => {
+    if (!doc) return;
+    const allChanges = A.getAllChanges(doc);
+    console.log("Changes length: ", allChanges.length);
+    for (const changeBinary of allChanges) {
+      const decodedChange = A.decodeChange(changeBinary);
+      console.log(decodedChange);
+    }
+  }, [doc]);
 
   function setCursorMode(new_mode: string) {
     setMode(new_mode);
@@ -55,9 +59,7 @@ export default function Board({ docUrl }: { docUrl: A.AutomergeUrl }) {
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
   ) => {
     if (!isDrawing.current || mode !== "drawing") return;
-
     drawLine(e);
-
     const pos = e.target.getStage()?.getPointerPosition();
     if (!pos) return;
 

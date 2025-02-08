@@ -15,8 +15,6 @@ export const fills = [
   "#EC4899",
 ];
 
-export type ShapeType = "rect" | "ellipse" | "polygon";
-
 type Props = {
   children: React.ReactNode;
 };
@@ -24,14 +22,6 @@ type Props = {
 export type Child = {
   id: string;
   color: string;
-};
-
-export type Line = {
-  id: string;
-  points: number[];
-  stroke: string;
-  strokeWidth: number;
-  globalCompositeOperation: string;
 };
 
 export type UserCursor = {
@@ -47,12 +37,8 @@ export type RoomUser = {
 };
 
 type BoardContext = {
-  shapes: Map<string, Konva.Shape>;
-  setShapes: React.Dispatch<React.SetStateAction<Map<string, Konva.Shape>>>;
   brushColor: string;
   setBrushColor: React.Dispatch<React.SetStateAction<string>>;
-  lines: Map<string, Line>;
-  setLines: React.Dispatch<React.SetStateAction<Map<string, Line>>>;
   currentLineId: string;
   setCurrentLineId: React.Dispatch<React.SetStateAction<string>>;
 };
@@ -63,7 +49,6 @@ export const BoardContext: React.Context<BoardContext> = createContext(
 export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [stageRef, setStageRef] =
     useState<React.RefObject<Konva.Stage | null> | null>(null);
-  const [lines, setLines] = useState<Map<string, Line>>(new Map());
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [roomName, setRoomName] = useState<string>("");
   const [currentLineId, setCurrentLineId] = useState<string>(uuidv4());
@@ -76,12 +61,10 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setRoomName,
       brushColor,
       setBrushColor,
-      lines,
-      setLines,
       currentLineId,
       setCurrentLineId,
     }),
-    [stageRef, roomName, lines, brushColor, currentLineId]
+    [stageRef, roomName, brushColor, currentLineId]
   );
 
   return (

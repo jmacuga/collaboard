@@ -3,7 +3,7 @@
 import { signIn } from "@/lib/auth";
 import { IBoard } from "@/models/Board";
 import { AuthError } from "next-auth";
-import { createBoard } from "@/lib/data";
+import { createBoard, deleteBoard } from "@/lib/data";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -43,5 +43,15 @@ export async function createBoardAction(
   } catch (error) {
     console.error("Error creating board. Error: ", error);
     return null;
+  }
+}
+
+export async function deleteBoardAction(boardId: string): Promise<boolean> {
+  try {
+    const result = await deleteBoard(boardId);
+    return result !== null;
+  } catch (error) {
+    console.error("Error deleting board:", error);
+    return false;
   }
 }

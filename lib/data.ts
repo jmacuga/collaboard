@@ -117,3 +117,13 @@ export async function updateBoard(
     return null;
   }
 }
+
+export async function deleteBoard(boardId: string) {
+  try {
+    await dbConnect();
+    return await Board.findByIdAndDelete(boardId);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}

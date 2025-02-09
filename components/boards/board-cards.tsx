@@ -1,9 +1,17 @@
 import { IBoard } from "@/models/Board";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LayoutDashboard } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { LayoutDashboard, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getColorForIndex } from "@/lib/colors";
 import { format } from "date-fns";
+import { DeleteBoardDialog } from "./delete-board-dialog";
 
 export default async function BoardCards({
   teamBoards,
@@ -14,32 +22,44 @@ export default async function BoardCards({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamBoards ? (
         teamBoards.map((board, index) => (
-          <Card
-            key={board._id as string}
-            className="hover:bg-accent/50 transition-colors overflow-hidden relative"
-          >
-            <Link href={`/board/${board._id}`}>
-              <div
-                className="absolute inset-0 opacity-5"
-                style={{
-                  backgroundColor: getColorForIndex(index).primary,
-                }}
+          <Card key={board.id as string} className="relative group">
+            <div
+              className="absolute inset-0 opacity-5"
+              style={{
+                backgroundColor: getColorForIndex(index).primary,
+              }}
+            />
+
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-2">
+                <LayoutDashboard
+                  className="h-5 w-5"
+                  style={{ color: getColorForIndex(index).primary }}
+                />
+                {board.name}
+              </CardTitle>
+              <DeleteBoardDialog
+                boardId={board.id as string}
+                boardName={board.name}
               />
-              <CardHeader className="relative">
-                <CardTitle className="flex items-center gap-2">
-                  <LayoutDashboard
-                    className="h-5 w-5"
-                    style={{ color: getColorForIndex(index).primary }}
-                  />
-                  {board.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground relative">
-                <p className="text-sm text-muted-foreground">
-                  Created at: {format(new Date(board.createdAt), "MMM d, yyyy")}
-                </p>
-              </CardContent>
-            </Link>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <p>
+                Created{" "}
+                {format(new Date(board.createdAt), "MMM d, yyyy 'at' h:mm a")}
+              </p>
+            </CardContent>
+            <CardFooter className="relative justify-end">
+              <Link href={`/board/${board.id}`} className="ml-auto">
+                <Button
+                  variant="ghost"
+                  className="hover:bg-accent/50 transition-colors flex items-center gap-2"
+                >
+                  Open Board
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardFooter>
           </Card>
         ))
       ) : (

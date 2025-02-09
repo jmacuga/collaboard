@@ -3,8 +3,9 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { AutomergeUrl, Repo } from "@automerge/automerge-repo";
-import { connectAutomergeRepo } from "@/lib/automergeRepo";
-import initialStageData from "@/features/automerge-konva-binding/initialStageData";
+import { connectAutomergeRepo } from "@/lib/automerge-repo-utils";
+import { updateBoard } from "@/lib/data";
+
 const Board = dynamic(() => import("@/components/board/board"), {
   ssr: false,
 });
@@ -13,15 +14,23 @@ interface RepoState {
   docUrl: string;
 }
 
-export default function BoardProvider({ docUrl }: { docUrl: string }) {
-  const initLayer = initialStageData().toObject();
+export default function BoardProvider({
+  boardId,
+  docUrl,
+}: {
+  boardId: string;
+  docUrl: string;
+}) {
   const [state, setState] = useState<RepoState>({
     repo: null,
-    docUrl: docUrl,
+    docUrl: docUrl || "",
   });
 
   useEffect(() => {
-    const { repo, handleUrl } = connectAutomergeRepo(docUrl, initLayer);
+    const { repo, handleUrl } = connectAutomergeRepo(docUrl);
+    if (docUrl == "" || handleUrl != docUrl) {
+      updateBoard(boardId, { docUrl: handleUrl });
+    }
     setState({ repo, docUrl: handleUrl });
   }, [docUrl]);
 

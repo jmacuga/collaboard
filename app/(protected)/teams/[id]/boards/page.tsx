@@ -1,9 +1,8 @@
 "use server";
 import { getTeamBoards } from "@/lib/data";
 import { getTeam } from "@/lib/data";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import TeamBoardsCards from "@/components/boards/board-cards";
+import BoardCards from "@/components/boards/board-cards";
+import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 
 export default async function TeamBoardsPage({
   params,
@@ -13,7 +12,6 @@ export default async function TeamBoardsPage({
   const teamId = (await params).id;
   const teamBoards = await getTeamBoards(teamId);
   const team = await getTeam(teamId);
-
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
@@ -22,12 +20,9 @@ export default async function TeamBoardsPage({
             {team.name} Boards
           </h1>
         )}
-        <Button className="bg-burnt-sienna hover:bg-burnt-sienna-darker">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Board
-        </Button>
+        <CreateBoardDialog teamId={teamId} />
       </div>
-      <TeamBoardsCards teamBoards={teamBoards} />
+      <BoardCards teamBoards={teamBoards} />
     </div>
   );
 }

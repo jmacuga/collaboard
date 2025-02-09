@@ -24,7 +24,7 @@ function SideToolbar({
       label: "Dashboard",
       icon: <FaHome />,
       mode: "dashboard",
-      href: "/dashboard",
+      href: "/teams",
     },
     { label: "Draw", icon: <FaPaintBrush />, mode: "drawing" },
     { label: "Drag", icon: <FaHandPaper />, mode: "dragging" },

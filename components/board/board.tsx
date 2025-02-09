@@ -31,16 +31,6 @@ export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
     modeStateRef.current = mode;
   }, [mode]);
 
-  useEffect(() => {
-    if (!doc) return;
-    const allChanges = A.getAllChanges(doc);
-    console.log("Changes length: ", allChanges.length);
-    for (const changeBinary of allChanges) {
-      const decodedChange = A.decodeChange(changeBinary);
-      console.log(decodedChange);
-    }
-  }, [doc]);
-
   function setCursorMode(new_mode: string) {
     setMode(new_mode);
   }

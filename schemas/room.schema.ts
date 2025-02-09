@@ -4,7 +4,7 @@ import { z } from "zod";
  * Schema for validating create room form data using Zod.
  *
  */
-export const schemaRoom = z.object({
+export const schemaBoard = z.object({
   /**
    * Validates the name field.
    */

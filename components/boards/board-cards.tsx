@@ -3,8 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { getColorForIndex } from "@/lib/colors";
+import { format } from "date-fns";
 
-export default async function TeamBoardsCards({
+export default async function BoardCards({
   teamBoards,
 }: {
   teamBoards: IBoard[] | null;
@@ -35,7 +36,7 @@ export default async function TeamBoardsCards({
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground relative">
                 <p className="text-sm text-muted-foreground">
-                  Created at: {board.createdAt.toLocaleDateString()}
+                  Created at: {format(new Date(board.createdAt), "MMM d, yyyy")}
                 </p>
               </CardContent>
             </Link>

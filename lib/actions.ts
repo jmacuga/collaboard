@@ -1,7 +1,9 @@
 "use server";
 
 import { signIn } from "@/lib/auth";
+import { IBoard } from "@/models/Board";
 import { AuthError } from "next-auth";
+import { createBoard } from "@/lib/data";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -23,40 +25,23 @@ export async function authenticate(
   }
 }
 
-// export async function createRoomAction(
-//   formData: { name: string },
-//   user_email: string
-// ): Promise<IRoom | null> {
-//   try {
-//     const user = await getUser(user_email);
-//     if (!user) {
-//       console.error("Error: User not found");
-//       return null;
-//     }
-
-//     const stage = await createStage([], []);
-//     if (!stage) {
-//       console.error("Error: Stage canvas creation failed");
-//       return null;
-//     }
-
-//     const room = await createRoom({
-//       name: formData.name,
-//       createdBy: String(user.id),
-//       createdAt: new Date(),
-//       updatedAt: new Date(),
-//       users: [String(user.id)],
-//       stageId: stage._id as string,
-//     });
-
-//     if (!room) {
-//       console.error("Error: Room creation failed");
-//       return null;
-//     }
-
-//     return room;
-//   } catch (error) {
-//     console.error("Error creating room. Error: ", error);
-//     return null;
-//   }
-// }
+export async function createBoardAction(
+  formData: { name: string },
+  teamId: string
+): Promise<IBoard | null> {
+  try {
+    const name = formData.name;
+    const board = await createBoard({
+      teamId,
+      name,
+    });
+    if (!board) {
+      console.error("Error: Board creation failed");
+      return null;
+    }
+    return JSON.parse(JSON.stringify(board));
+  } catch (error) {
+    console.error("Error creating board. Error: ", error);
+    return null;
+  }
+}

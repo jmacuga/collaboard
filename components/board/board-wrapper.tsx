@@ -8,10 +8,16 @@ const BoardProvider = dynamic(
   }
 ); // workaround client component dynamic import to use wasm
 
-export function BoardWrapper({ docUrl }: { docUrl: string }) {
+export function BoardWrapper({
+  boardId,
+  docUrl,
+}: {
+  boardId: string;
+  docUrl: string;
+}) {
   return (
     <BoardContextProvider>
-      <BoardProvider docUrl={docUrl} />
+      <BoardProvider boardId={boardId} docUrl={docUrl} />
     </BoardContextProvider>
   );
 }

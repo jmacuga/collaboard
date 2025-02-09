@@ -85,3 +85,35 @@ export async function getTeam(id: string): Promise<ITeam | null> {
     return null;
   }
 }
+
+export async function createBoard({
+  teamId,
+  name,
+}: {
+  teamId: string;
+  name: string;
+}): Promise<IBoard | null> {
+  try {
+    await dbConnect();
+    return await Board.create({
+      name,
+      teamId,
+    });
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function updateBoard(
+  boardId: string,
+  updateData: Partial<IBoard>
+) {
+  try {
+    await dbConnect();
+    return await Board.findByIdAndUpdate(boardId, updateData);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}

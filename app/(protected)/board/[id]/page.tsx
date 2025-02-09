@@ -9,12 +9,12 @@ export default async function boardPage({
   const { id: boardId } = await params;
   const board = await getBoardById(boardId);
 
-  if (!board || !board.docUrl) {
-    console.error("Board or docUrl not found");
+  if (!board) {
+    console.error("Board not found");
     return <div>Board not found</div>;
   }
 
-  const docUrl = board.docUrl.toString();
+  const docUrl = board.docUrl?.toString() || "";
 
-  return <BoardWrapper docUrl={docUrl} />;
+  return <BoardWrapper boardId={boardId} docUrl={docUrl} />;
 }

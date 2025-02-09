@@ -9,8 +9,7 @@ import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 
 const connectAutomergeRepo = (
-  docUrl: string,
-  initLayer: KonvaNodeSchema
+  docUrl: string | null
 ): { repo: Repo; handleUrl: string } => {
   let handle: DocHandle<KonvaNodeSchema> | null = null;
   const clientRepo = new Repo({
@@ -21,12 +20,12 @@ const connectAutomergeRepo = (
   });
 
   try {
-    if (isValidAutomergeUrl(docUrl)) {
+    if (docUrl && isValidAutomergeUrl(docUrl)) {
       handle = clientRepo.find(docUrl as AnyDocumentId);
       console.log("Connected to existing doc");
     } else {
-      handle = clientRepo.create<KonvaNodeSchema>(initLayer);
-      console.log("Created new doc. Handle url:", handle.url);
+      handle = clientRepo.create<KonvaNodeSchema>();
+      console.log("Created new doc");
     }
   } catch (error) {
     console.error("Error setting up Automerge:", error);

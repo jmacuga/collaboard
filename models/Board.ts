@@ -4,7 +4,6 @@ export interface IBoard extends mongoose.Document {
   name: string;
   teamId: ObjectId;
   isMergeRequestRequired: boolean;
-  docId?: string;
   docUrl?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +18,6 @@ const BoardSchema = new mongoose.Schema(
       ref: "Team",
     },
     isMergeRequestRequired: { type: Boolean, required: true, default: true },
-    docId: { type: mongoose.Schema.Types.ObjectId, ref: "Doc" },
     docUrl: { type: String },
   },
   { timestamps: true }

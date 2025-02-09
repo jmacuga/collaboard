@@ -34,7 +34,7 @@ const data = {
       items: [
         {
           title: "Your Teams",
-          url: "#",
+          url: "/teams",
           icon: Users,
         },
         {
@@ -62,7 +62,7 @@ const data = {
         },
         {
           title: "Logout",
-          url: "#",
+          url: "/api/auth/signout",
           icon: LogOut,
         },
       ],

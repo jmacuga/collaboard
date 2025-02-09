@@ -6,6 +6,8 @@ export interface IBoard extends mongoose.Document {
   isMergeRequestRequired: boolean;
   docId?: string;
   docUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const BoardSchema = new mongoose.Schema(

@@ -6,6 +6,8 @@ export interface ITeamInvitation extends mongoose.Document {
   teamId: string;
   host: ObjectId;
   invitee: ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const TeamInvitationSchema = new mongoose.Schema(

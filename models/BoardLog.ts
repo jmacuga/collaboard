@@ -7,6 +7,8 @@ export interface IBoardLog extends mongoose.Document {
   action: BoardAction;
   objectId: String;
   headId: String;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const BoardLogSchema = new mongoose.Schema(

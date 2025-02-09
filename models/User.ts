@@ -6,6 +6,8 @@ export interface IUser extends mongoose.Document {
   surname: string;
   passwordHash: string;
   username: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const UserSchema = new mongoose.Schema(

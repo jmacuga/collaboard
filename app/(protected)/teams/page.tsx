@@ -1,7 +1,7 @@
 import { getUserTeams, getUser } from "@/lib/data";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
-
+import { TeamNav } from "@/components/team/team-nav";
 export default async function Teams() {
   const session = await auth();
   console.log("Session", session);

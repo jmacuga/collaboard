@@ -75,3 +75,13 @@ export async function getTeamBoards(teamId: string): Promise<IBoard[] | null> {
     return null;
   }
 }
+
+export async function getTeam(id: string): Promise<ITeam | null> {
+  try {
+    await dbConnect();
+    return await Team.findById(id);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}

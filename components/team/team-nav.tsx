@@ -1,5 +1,7 @@
+"use client";
 import { LayoutDashboard, Users, Settings } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 interface TeamNavProps {
   teamId: string;
@@ -7,6 +9,7 @@ interface TeamNavProps {
 }
 
 export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
+  const router = useRouter();
   const navItems = [
     {
       value: "boards",
@@ -29,9 +32,8 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
     <Tabs
       defaultValue={defaultTab}
       className="w-full"
-      onValueChange={(value) => {
-        // You can handle route changes here if needed
-        // router.push(`/teams/${teamId}/${value}`)
+      onValueChange={(value: string) => {
+        router.push(`/teams/${teamId}/${value}`);
       }}
     >
       <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
@@ -47,11 +49,11 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
         ))}
       </TabsList>
 
-      <TabsContent value="boards">{/* Your Boards content */}</TabsContent>
+      <TabsContent value="boards">{}</TabsContent>
 
-      <TabsContent value="members">{/* Your Members content */}</TabsContent>
+      <TabsContent value="members">{}</TabsContent>
 
-      <TabsContent value="settings">{/* Your Settings content */}</TabsContent>
+      <TabsContent value="settings">{}</TabsContent>
     </Tabs>
   );
 }

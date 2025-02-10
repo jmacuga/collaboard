@@ -66,4 +66,12 @@ export class AutomergeService<T extends object>
   getServerRepo(): Repo {
     return this.serverRepo;
   }
+
+  deleteServerDoc(docUrl: string): void {
+    this.serverRepo.delete(docUrl as AnyDocumentId);
+  }
+
+  deleteLocalDoc(docUrl: string): void {
+    this.localRepo.delete(docUrl as AnyDocumentId);
+  }
 }

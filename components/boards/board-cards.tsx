@@ -50,7 +50,7 @@ export default function BoardCards({
                 {board.name}
               </CardTitle>
               <DeleteBoardDialog
-                boardId={board.id as string}
+                boardId={board._id as string}
                 boardName={board.name}
               />
             </CardHeader>

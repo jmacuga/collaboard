@@ -11,6 +11,8 @@ export interface IAutomergeService<T extends object> {
   connectOrCreateLocalDoc(docUrl?: string | null): string;
   getLocalRepo(): Repo;
   getServerRepo(): Repo;
+  deleteServerDoc(docUrl: string): void;
+  deleteLocalDoc(docUrl: string): void;
   //   getDocUrl(): string | null;
   //   getLocalHandle(): DocHandle<T> | null;
   //   getLocalDocUrl(): string | null;

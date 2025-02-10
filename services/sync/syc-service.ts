@@ -77,4 +77,9 @@ export class SyncService implements ISyncService {
   connectToServer(docUrl: string): void {
     throw new Error("Method not implemented.");
   }
+
+  deleteDoc(): void {
+    this.automergeService.deleteServerDoc(this.serverDocUrl);
+    this.automergeService.deleteLocalDoc(this.localDocUrl);
+  }
 }

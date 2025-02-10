@@ -19,5 +19,6 @@ export interface ISyncService {
   //   applyLocalChanges(changes: Uint8Array[]): void;
   //   discardLocalChanges(): void;
   connectToServer(docUrl: string): void;
+  deleteDoc(serverDocUrl: string): void;
   //   disconnectFromServer(): void;
 }

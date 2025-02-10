@@ -109,6 +109,10 @@ export async function updateBoard(
   boardId: string,
   updateData: Partial<IBoard>
 ) {
+  if (!boardId) {
+    console.error("Board ID is required");
+    return null;
+  }
   try {
     await dbConnect();
     return await Board.findByIdAndUpdate(boardId, updateData);

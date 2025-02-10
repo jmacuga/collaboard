@@ -4,7 +4,7 @@ import { signIn } from "@/lib/auth";
 import { IBoard } from "@/models/Board";
 import { AuthError } from "next-auth";
 import { createBoard, deleteBoard } from "@/lib/data";
-
+import { ISyncService } from "@/services/sync/types";
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData

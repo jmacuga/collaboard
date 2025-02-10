@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { AutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { connectAutomergeRepo } from "@/lib/automerge-repo-utils";
-import { updateBoard } from "@/lib/data";
 
 const Board = dynamic(() => import("@/components/board/board"), {
   ssr: false,
@@ -27,11 +26,11 @@ export default function BoardProvider({
   });
 
   useEffect(() => {
-    const { repo, handleUrl } = connectAutomergeRepo(docUrl);
-    if (docUrl == "" || handleUrl != docUrl) {
-      updateBoard(boardId, { docUrl: handleUrl });
-    }
-    setState({ repo, docUrl: handleUrl });
+    const initializeBoard = async () => {
+      const { repo, handleUrl } = await connectAutomergeRepo(docUrl);
+      setState({ repo, docUrl: handleUrl });
+    };
+    initializeBoard();
   }, [docUrl]);
 
   if (!state.repo) {

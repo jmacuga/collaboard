@@ -2,7 +2,7 @@
 import { getTeamBoards } from "@/lib/data";
 import { getTeam } from "@/lib/data";
 import BoardCards from "@/components/boards/board-cards";
-import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
+import CreateBoardDialogWrapper from "@/components/boards/create-board-dialog-wrapper";
 
 export default async function TeamBoardsPage({
   params,
@@ -20,9 +20,9 @@ export default async function TeamBoardsPage({
             {team.name} Boards
           </h1>
         )}
-        <CreateBoardDialog teamId={teamId} />
+        <CreateBoardDialogWrapper teamId={teamId} />
       </div>
-      <BoardCards teamBoards={teamBoards} />
+      <BoardCards teamBoards={JSON.parse(JSON.stringify(teamBoards))} />
     </div>
   );
 }

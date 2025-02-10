@@ -1,3 +1,5 @@
+"use client";
+
 export const boardColors = [
   {
     primary: "#FF6B6B", // Coral Red

@@ -36,6 +36,10 @@ export async function createTeam({
 
 export async function getBoardById(id: string): Promise<IBoard | null> {
   try {
+    if (!id) {
+      console.error("Board ID is required");
+      return null;
+    }
     await dbConnect();
     return await Board.findById(id);
   } catch (e) {
@@ -109,6 +113,10 @@ export async function updateBoard(
   boardId: string,
   updateData: Partial<IBoard>
 ) {
+  if (!boardId) {
+    console.error("Board ID is required");
+    return null;
+  }
   try {
     await dbConnect();
     return await Board.findByIdAndUpdate(boardId, updateData);
@@ -122,6 +130,17 @@ export async function deleteBoard(boardId: string) {
   try {
     await dbConnect();
     return await Board.findByIdAndDelete(boardId);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getBoardDocUrl(boardId: string): Promise<string | null> {
+  try {
+    await dbConnect();
+    const board = await Board.findById(boardId);
+    return board?.docUrl || null;
   } catch (e) {
     console.error(e);
     return null;

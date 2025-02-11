@@ -13,10 +13,6 @@ export default async function boardPage({
     console.error("Board not found");
     return <div>Board not found</div>;
   }
-  if (!board.docUrl) {
-    console.error("Board docUrl not found");
-    return <div>Board docUrl not found</div>;
-  }
 
   const docUrl = board.docUrl?.toString() || "";
 

@@ -1,7 +1,7 @@
 interface KonvaNodeSchema {
   attrs: any;
   className: string;
-  children?: KonvaNodeSchema[] | undefined;
+  children?: KonvaNodeSchema[];
 }
 
 export default KonvaNodeSchema;

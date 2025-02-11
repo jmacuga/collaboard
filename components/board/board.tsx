@@ -10,13 +10,11 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import KonvaNodeSchema from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
-import * as A from "@automerge/automerge/next";
 
 export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
   const [doc, changeDoc] = useDocument<KonvaNodeSchema>(docUrl);
   const { brushColor, setBrushColor, currentLineId, setCurrentLineId } =
     useContext(BoardContext);
-
   const [mode, setMode] = useState("selecting");
   const modeStateRef = useRef(mode);
   const [tool, setTool] = useState("pen");

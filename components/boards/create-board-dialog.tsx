@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { schemaBoard } from "@/schemas/room.schema";
 import { createBoardAction } from "@/lib/actions";
+import { updateBoard } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { AutomergeService } from "@/services/automerge/automerge-service";
 
 type FormData = {
   name: string;
@@ -35,7 +37,6 @@ type FormData = {
 export function CreateBoardDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-
   const form = useForm<FormData>({
     resolver: zodResolver(schemaBoard),
     defaultValues: {
@@ -47,8 +48,14 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
     try {
       const board = await createBoardAction(data, teamId);
       if (board) {
+        const websocketUrl = "ws://localhost:3000/api/socket";
+        const automergeService = new AutomergeService(websocketUrl);
+        const docUrl = automergeService.createServerDoc();
+        console.log("Board:", board);
+        updateBoard(board._id as string, { docUrl });
+        router.refresh();
+        console.log("Board created successfully");
         toast.success("Board created successfully");
-        router.push(`/board/${board._id}`);
         setOpen(false);
         form.reset();
       } else {

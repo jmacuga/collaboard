@@ -1,4 +1,4 @@
-"use client";
+"use server";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { DocHandle } from "@automerge/automerge-repo";
 import { isValidAutomergeUrl } from "@automerge/automerge-repo";

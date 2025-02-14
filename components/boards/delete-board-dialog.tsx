@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,7 +52,7 @@ export function DeleteBoardDialog({
 
       if (success) {
         toast.success("Board deleted successfully");
-        router.refresh();
+        router.replace(router.asPath);
         setOpen(false);
       } else {
         toast.error("Failed to delete board");

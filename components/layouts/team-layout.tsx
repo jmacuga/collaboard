@@ -1,13 +1,14 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { TeamNav } from "@/components/team/team-nav";
 
-export default function TeamLayout({
-  children,
-}: Readonly<{
+interface TeamLayoutProps {
   children: React.ReactNode;
-}>) {
-  const { id } = useParams();
+}
+
+const TeamLayout = ({ children }: TeamLayoutProps) => {
+  const router = useRouter();
+  const { id } = router.query;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -15,4 +16,6 @@ export default function TeamLayout({
       {children}
     </div>
   );
-}
+};
+
+export default TeamLayout;

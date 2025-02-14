@@ -1,6 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
-
+import { Schema, model, models } from "mongoose";
 export interface IBoard extends mongoose.Document {
+  id: string;
   name: string;
   teamId: ObjectId;
   isMergeRequestRequired: boolean;
@@ -9,9 +10,12 @@ export interface IBoard extends mongoose.Document {
   updatedAt: Date;
 }
 
-const BoardSchema = new mongoose.Schema(
+const boardSchema = new Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+    },
     teamId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
@@ -20,9 +24,9 @@ const BoardSchema = new mongoose.Schema(
     isMergeRequestRequired: { type: Boolean, required: true, default: true },
     docUrl: { type: String },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export const Board =
-  mongoose.models.Board ||
-  mongoose.model<IBoard>("Board", BoardSchema, "boards");
+export const Board = models?.Board || model("Board", boardSchema);

@@ -41,7 +41,8 @@ export async function getBoardById(id: string): Promise<IBoard | null> {
       return null;
     }
     await dbConnect();
-    return await Board.findById(id);
+    const board = await Board.findById(id);
+    return JSON.parse(JSON.stringify(board));
   } catch (e) {
     console.error(e);
     return null;
@@ -63,7 +64,8 @@ export async function getUserTeams(userId: string): Promise<ITeam[] | null> {
     await dbConnect();
     const userTeamMemberships = await TeamMember.find({ userId });
     const teamIds = userTeamMemberships.map((membership) => membership.teamId);
-    return await Team.find({ _id: { $in: teamIds } });
+    const teams = await Team.find({ _id: { $in: teamIds } });
+    return JSON.parse(JSON.stringify(teams));
   } catch (e) {
     console.error(e);
     return null;
@@ -73,7 +75,8 @@ export async function getUserTeams(userId: string): Promise<ITeam[] | null> {
 export async function getTeamBoards(teamId: string): Promise<IBoard[] | null> {
   try {
     await dbConnect();
-    return await Board.find({ teamId });
+    const boards = await Board.find({ teamId });
+    return JSON.parse(JSON.stringify(boards));
   } catch (e) {
     console.error(e);
     return null;
@@ -83,7 +86,8 @@ export async function getTeamBoards(teamId: string): Promise<IBoard[] | null> {
 export async function getTeam(id: string): Promise<ITeam | null> {
   try {
     await dbConnect();
-    return await Team.findById(id);
+    const team = await Team.findById(id);
+    return JSON.parse(JSON.stringify(team));
   } catch (e) {
     console.error(e);
     return null;

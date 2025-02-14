@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 
 export interface IDoc extends mongoose.Document {
+  _id: string;
   key: [];
-  data: BinaryData;
+  data: BinaryType;
 }
 
 const DocSchema = new mongoose.Schema({
@@ -11,4 +12,4 @@ const DocSchema = new mongoose.Schema({
 });
 
 export const Doc =
-  mongoose.models.Doc || mongoose.model<IDoc>("Doc", DocSchema, "docs");
+  mongoose.models?.Doc || mongoose.model<IDoc>("Doc", DocSchema, "docs");

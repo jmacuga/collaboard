@@ -1,28 +1,31 @@
 "use server";
 
-import { signIn } from "@/lib/auth";
 import { IBoard } from "@/models/Board";
-import { AuthError } from "next-auth";
 import { createBoard, deleteBoard } from "@/lib/data";
-import { ISyncService } from "@/services/sync/types";
+import { signIn } from "next-auth/react";
+import { schemaLogin } from "@/schemas/login.schema";
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData
-) {
+): Promise<{ error: string; isLoading: boolean }> {
   try {
-    console.log("Sign in:");
-    await signIn("credentials", formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
-        default:
-          return "Something went wrong.";
-      }
+    const parsedFormData = schemaLogin.parse({
+      email: formData.get("email"),
+      password: formData.get("password"),
+    });
+    const result = await signIn("credentials", {
+      email: parsedFormData.email,
+      password: parsedFormData.password,
+      redirect: false,
+    });
+    if (result?.error) {
+      return { error: "Invalid email or password", isLoading: false };
     }
-    throw error;
+  } catch (error) {
+    return { error: "An error occurred. Please try again.", isLoading: false };
   }
+  return { error: "", isLoading: false };
 }
 
 export async function createBoardAction(

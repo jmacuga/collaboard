@@ -2,6 +2,7 @@ import mongoose, { ObjectId, Schema } from "mongoose";
 import TeamInvitationStatus from "@/types/TeamInvitationStatus";
 
 export interface ITeamInvitation extends mongoose.Document {
+  _id: string;
   status: TeamInvitationStatus;
   teamId: string;
   host: ObjectId;
@@ -25,7 +26,7 @@ const TeamInvitationSchema = new mongoose.Schema(
 );
 
 export const TeamInvitation =
-  mongoose.models.TeamInvitation ||
+  mongoose.models?.TeamInvitation ||
   mongoose.model<ITeamInvitation>(
     "TeamInvitation",
     TeamInvitationSchema,

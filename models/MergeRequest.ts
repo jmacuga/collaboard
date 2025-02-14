@@ -2,6 +2,7 @@ import mongoose, { ObjectId } from "mongoose";
 import MergeRequestStatus from "@/types/MergeRequestStatus";
 
 export interface IMergeRequest extends mongoose.Document {
+  _id: string;
   boardId: ObjectId;
   requester: ObjectId;
   updateData: Object;
@@ -31,7 +32,7 @@ const MergeRequestSchema = new mongoose.Schema(
 );
 
 export const MergeRequest =
-  mongoose.models.MergeRequest ||
+  mongoose.models?.MergeRequest ||
   mongoose.model<IMergeRequest>(
     "MergeRequest",
     MergeRequestSchema,

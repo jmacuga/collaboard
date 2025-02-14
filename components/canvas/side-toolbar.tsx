@@ -1,10 +1,4 @@
-import {
-  FaPaintBrush,
-  FaHandPaper,
-  FaMousePointer,
-  FaCog,
-  FaHome,
-} from "react-icons/fa";
+import { Brush, Hand, MousePointer, Home } from "lucide-react";
 import Link from "next/link";
 import { Tooltip } from "./tooltip";
 import DrawingToolbar from "./drawing-toolbar";
@@ -21,32 +15,56 @@ function SideToolbar({
 }: SideToolbarProps) {
   const toolbarItems = [
     {
-      label: "Dashboard",
-      icon: <FaHome />,
-      mode: "dashboard",
+      label: "Back to teams",
+      icon: <Home />,
+      mode: "teams",
       href: "/teams",
     },
-    { label: "Draw", icon: <FaPaintBrush />, mode: "drawing" },
-    { label: "Drag", icon: <FaHandPaper />, mode: "dragging" },
-    { label: "Select", icon: <FaMousePointer />, mode: "selecting" },
+    { label: "Draw", icon: <Brush />, mode: "drawing" },
+    { label: "Drag", icon: <Hand />, mode: "dragging" },
+    { label: "Select", icon: <MousePointer />, mode: "selecting" },
   ];
 
+  const handleItemClick = (mode: string) => {
+    if (mode) {
+      setCursorMode(mode);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, mode: string) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleItemClick(mode);
+    }
+  };
+
   return (
-    <div className="fixed top-4 left-4 h-auto bg-bice-blue text-white shadow-lg rounded-3xl p-3">
+    <div
+      className="fixed top-4 left-4 h-auto bg-gray-800 text-white shadow-lg rounded-3xl p-3"
+      role="toolbar"
+      aria-label="Canvas tools"
+    >
       <nav>
-        <ul className="space-y-4">
+        <ul className="space-y-4" role="list">
           {cursorMode === "drawing" && (
             <DrawingToolbar changeBrushColor={changeBrushColor} />
           )}
           {toolbarItems.map((item, index) => (
-            <Tooltip key={index} content={item.label}>
+            <Tooltip key={item.mode || index} content={item.label}>
               <li
-                key={index}
                 className="flex flex-col items-center p-2 cursor-pointer hover:text-tiffany-blue rounded-xl transition-all transform hover:scale-110"
-                onClick={() => item.mode && setCursorMode(item.mode)}
+                role="button"
+                tabIndex={0}
+                aria-label={item.label}
+                onClick={() => handleItemClick(item.mode)}
+                onKeyDown={(e) => handleKeyDown(e, item.mode)}
               >
                 {item.href ? (
-                  <Link className="text-xl" href={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-xl"
+                    aria-label={`Go to ${item.label}`}
+                  >
                     {item.icon}
                   </Link>
                 ) : (

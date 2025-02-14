@@ -32,6 +32,7 @@ export class AutomergeService<T extends object>
   createServerDoc(): string {
     let handle: DocHandle<T> | null = null;
     try {
+      console.log("Creating new doc");
       handle = this.serverRepo.create<T>();
       console.log("Created new doc");
     } catch (error) {

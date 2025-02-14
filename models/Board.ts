@@ -1,3 +1,4 @@
+"use server";
 import mongoose, { ObjectId } from "mongoose";
 import { Schema, model, models } from "mongoose";
 export interface IBoard extends mongoose.Document {

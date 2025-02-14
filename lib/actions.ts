@@ -1,9 +1,11 @@
 "use server";
 
 import { IBoard } from "@/models/Board";
-import { createBoard, deleteBoard } from "@/lib/data";
+import { createBoard, deleteBoard, getBoard } from "@/lib/data";
 import { signIn } from "next-auth/react";
 import { schemaLogin } from "@/schemas/login.schema";
+import { AutomergeService } from "@/services/automerge/automerge-service";
+import { SyncService } from "@/services/sync/sync-service";
 
 export async function authenticate(
   prevState: string | undefined,
@@ -26,35 +28,4 @@ export async function authenticate(
     return { error: "An error occurred. Please try again.", isLoading: false };
   }
   return { error: "", isLoading: false };
-}
-
-export async function createBoardAction(
-  formData: { name: string },
-  teamId: string
-): Promise<IBoard | null> {
-  try {
-    const name = formData.name;
-    const board = await createBoard({
-      teamId,
-      name,
-    });
-    if (!board) {
-      console.error("Error: Board creation failed");
-      return null;
-    }
-    return JSON.parse(JSON.stringify(board));
-  } catch (error) {
-    console.error("Error creating board. Error: ", error);
-    return null;
-  }
-}
-
-export async function deleteBoardAction(boardId: string): Promise<boolean> {
-  try {
-    const result = await deleteBoard(boardId);
-    return result !== null;
-  } catch (error) {
-    console.error("Error deleting board:", error);
-    return false;
-  }
 }

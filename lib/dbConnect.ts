@@ -1,32 +1,32 @@
+"use server";
 import mongoose from "mongoose";
 
-declare global {
-  var mongoose:
-    | {
-        conn: null | typeof mongoose;
-        promise: null | Promise<typeof mongoose>;
-      }
-    | undefined;
+const MONGODB_URI = process.env.MONGODB_URI!;
+
+if (!MONGODB_URI) {
+  throw new Error(
+    "Please define the MONGODB_URI environment variable inside .env.local"
+  );
 }
 
-const MONGODB_URI = process.env.MONGODB_URI ?? "";
+declare global {
+  var mongoose: {
+    conn: any | null;
+    promise: Promise<any> | null;
+  };
+}
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 async function dbConnect() {
-  let cached = global.mongoose;
-
-  if (!cached) {
-    cached = global.mongoose = { conn: null, promise: null };
-  }
-
-  if (!MONGODB_URI) {
-    throw new Error("Define the MONGODB_URI environmental variable");
-  }
-
   if (cached.conn) {
     return cached.conn;
   }
 
-  if (!cached?.promise) {
+  if (!cached.promise) {
     const opts = {
       bufferCommands: false,
     };

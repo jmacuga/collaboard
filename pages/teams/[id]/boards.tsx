@@ -6,6 +6,7 @@ import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
 import { IBoard } from "@/models/Board";
 import { ITeam } from "@/models/Team";
+import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 
 interface BoardsPageProps {
   boards: IBoard[];
@@ -17,10 +18,7 @@ export default function BoardsPage({ boards, team }: BoardsPageProps) {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">{team.name} Boards</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Board
-        </Button>
+        <CreateBoardDialog teamId={team._id as string} />
       </div>
 
       {boards && <BoardCards teamBoards={boards} />}

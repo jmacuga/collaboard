@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
@@ -15,9 +13,6 @@ import {
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteBoardAction } from "@/lib/actions";
-import { SyncService } from "@/services/sync/syc-service";
-import { AutomergeService } from "@/services/automerge/automerge-service";
-import { getBoardDocUrl } from "@/lib/data";
 
 interface DeleteBoardDialogProps {
   boardId: string;
@@ -31,25 +26,11 @@ export function DeleteBoardDialog({
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
-  const automergeService = new AutomergeService(
-    "ws://localhost:3000/api/socket"
-  );
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const boardDocUrl = await getBoardDocUrl(boardId);
-      if (!boardDocUrl) {
-        console.error("Board doc url not found");
-      } else {
-        const syncService = await SyncService.create(
-          automergeService,
-          boardDocUrl
-        );
-        syncService.deleteDoc();
-      }
       const success = await deleteBoardAction(boardId);
-
       if (success) {
         toast.success("Board deleted successfully");
         router.replace(router.asPath);

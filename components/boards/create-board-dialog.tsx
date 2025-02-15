@@ -5,7 +5,6 @@ import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { schemaBoard } from "@/schemas/board.schema";
-import { createBoardAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

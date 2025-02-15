@@ -37,6 +37,7 @@ export function BoardCards({ teamBoards }: { teamBoards: IBoard[] | null }) {
               <DeleteBoardDialog
                 boardId={board._id as string}
                 boardName={board.name}
+                teamId={board.teamId}
               />
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">

@@ -111,16 +111,6 @@ export async function updateBoard(
   }
 }
 
-export async function deleteBoard(boardId: string) {
-  try {
-    await dbConnect();
-    return await Board.findByIdAndDelete(boardId);
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
 export async function getBoardDocUrl(boardId: string): Promise<string | null> {
   try {
     await dbConnect();

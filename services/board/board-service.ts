@@ -3,8 +3,19 @@ import { IBoard, Board } from "@/models/Board";
 import { IBoardService } from "./types";
 import dbConnect from "@/lib/dbConnect";
 import { AutomergeService } from "@/services/automerge";
+import { Model } from "mongoose";
+import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { SyncService } from "../sync/syc-service";
 
 export class BoardService implements IBoardService {
+  private readonly boardModel: Model<IBoard>;
+  private readonly automergeService: AutomergeService<KonvaNodeSchema>;
+  constructor() {
+    const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "";
+    this.boardModel = Board;
+    this.automergeService = new AutomergeService(websocketUrl);
+  }
+
   async create(data: { name: string; teamId: string }): Promise<IBoard> {
     try {
       await dbConnect();
@@ -26,7 +37,14 @@ export class BoardService implements IBoardService {
     }
   }
 
-  delete(boardId: string): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  async delete(boardId: string): Promise<boolean> {
+    try {
+      await dbConnect();
+      const board = await Board.findByIdAndDelete(boardId);
+      return !!board;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }

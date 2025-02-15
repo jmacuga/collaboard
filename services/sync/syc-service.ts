@@ -4,6 +4,9 @@ import KonvaNodeSchema from "@/types/KonvaNodeSchema";
 import { AutomergeService } from "../automerge/automerge-service";
 import { Repo } from "@automerge/automerge-repo";
 import { db } from "@/lib/indexed-db";
+import { AnyDocumentId } from "@automerge/automerge-repo";
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
+import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 
 export class SyncService implements ISyncService {
   private localDocUrl: string;
@@ -78,8 +81,15 @@ export class SyncService implements ISyncService {
     throw new Error("Method not implemented.");
   }
 
-  deleteDoc(): void {
-    this.automergeService.deleteServerDoc(this.serverDocUrl);
-    this.automergeService.deleteLocalDoc(this.localDocUrl);
+  deleteLocalDoc(): void {
+    const localRepo = new Repo({
+      network: [],
+      storage: new IndexedDBStorageAdapter(),
+    });
+    const serverRepo = new Repo({
+      network: [new BrowserWebSocketClientAdapter(this.websocketURL)],
+    });
+    serverRepo.delete(this.serverDocUrl as AnyDocumentId);
+    localRepo.delete(this.localDocUrl as AnyDocumentId);
   }
 }

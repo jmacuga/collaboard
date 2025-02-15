@@ -12,16 +12,17 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteBoardAction } from "@/lib/actions";
-
+import { AutomergeService } from "@/services/automerge";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
+  teamId: string;
 }
-
+import { SyncService } from "@/services/sync/syc-service";
 export function DeleteBoardDialog({
   boardId,
   boardName,
+  teamId,
 }: DeleteBoardDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -30,10 +31,27 @@ export function DeleteBoardDialog({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const success = await deleteBoardAction(boardId);
-      if (success) {
+      const response = await fetch(`/api/boards/${boardId}/delete`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok) {
+        try {
+          const automergeService = new AutomergeService(
+            process.env.NEXT_PUBLIC_WEBSOCKET_URL || ""
+          );
+          const syncService = await SyncService.create(
+            automergeService,
+            boardId
+          );
+          syncService.deleteLocalDoc();
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to delete board doc");
+        }
+        console.log("Board deleted successfully");
         toast.success("Board deleted successfully");
-        router.replace(router.asPath);
+        router.push(`/teams/${teamId}/boards/`);
         setOpen(false);
       } else {
         toast.error("Failed to delete board");

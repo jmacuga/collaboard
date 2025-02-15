@@ -4,4 +4,4 @@ interface KonvaNodeSchema {
   children?: KonvaNodeSchema[];
 }
 
-export default KonvaNodeSchema;
+export { KonvaNodeSchema };

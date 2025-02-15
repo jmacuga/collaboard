@@ -3,7 +3,7 @@
 import { useContext, useState, useCallback } from "react";
 import { BoardContext } from "@/context/boardContext";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import KonvaNodeSchema from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";

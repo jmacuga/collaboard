@@ -1,6 +1,6 @@
 "use server";
 import { ISyncService } from "./types";
-import KonvaNodeSchema from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import { AutomergeService } from "../automerge/automerge-service";
 import { Repo } from "@automerge/automerge-repo";
 import { db } from "@/lib/indexed-db";

@@ -1,5 +1,6 @@
 FROM node:18-alpine AS base
-RUN apk add --no-cache g++ make py3-pip libc6-compat
+RUN apk add --no-cache g++ make py3-pip libc6-compat \
+    && apk add --no-cache pkgconfig cairo-dev pango-dev libjpeg-turbo-dev giflib-dev
 WORKDIR /app
 COPY package*.json ./
 EXPOSE 3000

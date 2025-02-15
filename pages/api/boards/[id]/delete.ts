@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { BoardService } from "@/services/board";
+import { BoardService } from "@/lib/services/board";
 import { getServerSession } from "next-auth/next";
-import authOptions from "../../auth/[...nextauth]";
+import { authOptions } from "@/lib/auth/auth";
 
 export default async function handler(
   req: NextApiRequest,

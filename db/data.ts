@@ -1,12 +1,12 @@
 "use server";
 
-import { Board, IBoard } from "@/models/Board";
-import dbConnect from "@/lib/dbConnect";
+import { Board, IBoard } from "@/db/models/Board";
+import dbConnect from "@/db/dbConnect";
 import { ObjectId } from "mongoose";
-import { IUser, User } from "@/models/User";
-import { ITeam, Team } from "@/models/Team";
-import { TeamMember } from "@/models/TeamMember";
-import { IDoc, Doc } from "@/models/Doc";
+import { IUser, User } from "@/db/models/User";
+import { ITeam, Team } from "@/db/models/Team";
+import { TeamMember } from "@/db/models/TeamMember";
+import { IDoc, Doc } from "@/db/models/Doc";
 
 export async function createTeam({
   name,

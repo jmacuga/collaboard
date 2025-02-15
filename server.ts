@@ -2,8 +2,8 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { parse } from "url";
 import next from "next";
+import "./polyfill";
 import { createAutomergeServer } from "@/lib/automerge-server";
-
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);

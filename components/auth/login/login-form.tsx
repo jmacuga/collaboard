@@ -6,8 +6,8 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
-import { Button } from "../ui/button";
-import { authenticate } from "@/lib/actions";
+import { Button } from "../../ui/button";
+import { authenticate } from "@/lib/auth/actions";
 import { useState } from "react";
 import { useRouter } from "next/router";
 export function LoginForm() {

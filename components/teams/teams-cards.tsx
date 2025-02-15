@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ITeam } from "@/models/Team";
+import { ITeam } from "@/db/models/Team";
 import { Users } from "lucide-react";
 
 export default function TeamsCards({ teams }: { teams: ITeam[] }) {

@@ -1,6 +1,6 @@
 import { Repo } from "@automerge/automerge-repo";
-import { SyncService } from "@/services/sync/syc-service";
-import { AutomergeService } from "@/services/automerge/automerge-service";
+import { SyncService } from "@/lib/services/sync/syc-service";
+import { AutomergeService } from "@/lib/services/automerge/automerge-service";
 const connectAutomergeRepo = async (
   docUrl: string | null
 ): Promise<{ repo: Repo; handleUrl: string }> => {

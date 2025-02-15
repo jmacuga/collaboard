@@ -1,18 +1,15 @@
 "use server";
-import { IBoard, Board } from "@/models/Board";
+import { IBoard, Board } from "@/db/models/Board";
 import { IBoardService } from "./types";
-import dbConnect from "@/lib/dbConnect";
-import { AutomergeService } from "@/services/automerge";
+import dbConnect from "@/db/dbConnect";
+import { AutomergeService } from "@/lib/services/automerge";
 import { Model } from "mongoose";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
-import { SyncService } from "../sync/syc-service";
 
 export class BoardService implements IBoardService {
-  private readonly boardModel: Model<IBoard>;
-  private readonly automergeService: AutomergeService<KonvaNodeSchema>;
+  private automergeService: AutomergeService<KonvaNodeSchema>;
   constructor() {
     const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "";
-    this.boardModel = Board;
     this.automergeService = new AutomergeService(websocketUrl);
   }
 

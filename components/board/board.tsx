@@ -1,13 +1,13 @@
 "use client";
-import SideToolbar from "@/components/canvas/side-toolbar";
+import SideToolbar from "@/components/board/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Line, Shape, Rect } from "react-konva";
 import { AutomergeUrl } from "@automerge/automerge-repo";
 import { BoardContext } from "@/context/boardContext";
-import { useDrawing } from "@/components/canvas/hooks/useDrawing";
+import { useDrawing } from "@/components/board/hooks/useDrawing";
 import { v4 as uuidv4 } from "uuid";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import KonvaNodeSchema from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
 

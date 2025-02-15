@@ -1,11 +1,7 @@
 "use server";
 
-import { IBoard } from "@/models/Board";
-import { createBoard, deleteBoard, getBoard } from "@/lib/data";
 import { signIn } from "next-auth/react";
-import { schemaLogin } from "@/schemas/login.schema";
-import { AutomergeService } from "@/services/automerge/automerge-service";
-import { SyncService } from "@/services/sync/sync-service";
+import { schemaLogin } from "@/styles/schemas/login.schema";
 
 export async function authenticate(
   prevState: string | undefined,

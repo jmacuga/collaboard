@@ -12,22 +12,6 @@ services:
     networks:
       - mongo-network
 
-  app:
-    build:
-      context: ./
-      target: dev
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    ports:
-      - "3000:3000"
-    depends_on:
-      - mongodb
-    networks:
-      - mongo-network
-
 volumes:
   mongo-data:
 

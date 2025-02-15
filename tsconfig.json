@@ -30,7 +30,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "lib/dbConnect.ts",
+    "components/auth/providers/db/dbConnect.ts",
     "server.ts",
     "types/**/*.d.ts"
   ],

@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/router";
-import { TeamNav } from "@/components/team/team-nav";
+import { TeamNav } from "@/components/teams/team-nav";
 
 interface TeamLayoutProps {
   children: React.ReactNode;

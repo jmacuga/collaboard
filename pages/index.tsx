@@ -1,4 +1,4 @@
-import { SyncService } from "@/services/sync/syc-service";
+import { SyncService } from "@/lib/services/sync/syc-service";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";

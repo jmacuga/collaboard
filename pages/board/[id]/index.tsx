@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
 
-import { getBoardById } from "@/lib/data";
+import { getBoardById } from "@/db/data";
 import { BoardContextProvider } from "@/context/boardContext";
 import { BoardProvider } from "@/components/board/board-provider";
 

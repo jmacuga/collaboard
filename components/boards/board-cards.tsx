@@ -1,4 +1,4 @@
-import { IBoard } from "@/models/Board";
+import { IBoard } from "@/db/models/Board";
 import {
   Card,
   CardHeader,
@@ -9,7 +9,7 @@ import {
 import { LayoutDashboard, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { getColorForIndex } from "@/lib/colors";
+import { getColorForIndex } from "@/lib/utils/colors";
 import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 

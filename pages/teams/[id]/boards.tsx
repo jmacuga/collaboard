@@ -1,11 +1,9 @@
 import { GetServerSideProps } from "next";
-import { getTeamBoards, getTeam } from "@/lib/data";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { getTeamBoards, getTeam } from "@/db/data";
 import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
-import { IBoard } from "@/models/Board";
-import { ITeam } from "@/models/Team";
+import { IBoard } from "@/db/models/Board";
+import { ITeam } from "@/db/models/Team";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 
 interface BoardsPageProps {

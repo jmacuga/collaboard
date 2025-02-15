@@ -1,9 +1,9 @@
-import { User } from "@/models/User";
-import dbConnect from "@/lib/dbConnect";
-import { Board } from "@/models/Board";
-import { Team } from "@/models/Team";
-import { TeamMember } from "@/models/TeamMember";
-import { TeamRole } from "@/models/TeamRole";
+import { User } from "@/db/models/User";
+import dbConnect from "@/db/dbConnect";
+import { Board } from "@/db/models/Board";
+import { Team } from "@/db/models/Team";
+import { TeamMember } from "@/db/models/TeamMember";
+import { TeamRole } from "@/db/models/TeamRole";
 
 export async function populateMongodb() {
   await dbConnect();

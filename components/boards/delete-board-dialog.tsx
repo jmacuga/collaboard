@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AutomergeService } from "@/services/automerge";
+import { AutomergeService } from "@/lib/services/automerge";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
   teamId: string;
 }
-import { SyncService } from "@/services/sync/syc-service";
+import { SyncService } from "@/lib/services/sync/syc-service";
 export function DeleteBoardDialog({
   boardId,
   boardName,

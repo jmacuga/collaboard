@@ -1,4 +1,4 @@
-import { IBoard } from "@/models/Board";
+import { IBoard } from "@/providers/db/models/Board";
 
 export interface IBoardService {
   create(data: { name: string; teamId: string }): Promise<IBoard>;

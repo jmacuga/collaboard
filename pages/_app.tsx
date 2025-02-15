@@ -1,7 +1,7 @@
 import type { AppProps } from "next/app";
 import { Session } from "next-auth";
-import AuthProvider from "../providers/session-provider";
-import "../styles/global.css";
+import AuthProvider from "@/components/auth/providers/session-provider";
+import "@/styles/global.css";
 import TeamLayout from "@/components/layouts/team-layout";
 import { AppLayout } from "@/components/layouts/app-layout";
 

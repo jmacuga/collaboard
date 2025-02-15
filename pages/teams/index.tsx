@@ -1,11 +1,11 @@
 import { GetServerSideProps } from "next";
-import { getUser, getUserTeams } from "@/lib/data";
+import { getUser, getUserTeams } from "@/db/data";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TeamsCards from "@/components/teams/teams-cards";
 import { useState } from "react";
 import { getSession } from "next-auth/react";
-import { ITeam } from "@/models/Team";
+import { ITeam } from "@/db/models/Team";
 
 interface TeamsPageProps {
   teams: ITeam[];

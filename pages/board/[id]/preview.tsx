@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { getBoardById } from "@/lib/data";
+import { getBoardById } from "@/db/data";
 
 interface BoardPageProps {
   boardId: string;

@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { schemaBoard } from "@/schemas/board.schema";
-import { BoardService } from "@/services/board";
+import { schemaBoard } from "@/styles/schemas/board.schema";
+import { BoardService } from "@/lib/services/board";
 import { getServerSession } from "next-auth/next";
-import authOptions from "../auth/[...nextauth]";
+import { authOptions } from "@/lib/auth/auth";
 import { ZodError } from "zod";
 
 export default async function handler(

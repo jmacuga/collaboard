@@ -1,7 +1,7 @@
 "use client";
 import { LayoutDashboard, Users, Settings } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 interface TeamNavProps {
   teamId: string;

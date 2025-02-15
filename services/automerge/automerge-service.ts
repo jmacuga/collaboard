@@ -1,4 +1,4 @@
-"use client";
+"use server";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { DocHandle } from "@automerge/automerge-repo";
 import { isValidAutomergeUrl } from "@automerge/automerge-repo";
@@ -13,25 +13,22 @@ export class AutomergeService<T extends object>
   private websocketURL: string;
   private serverRepo: Repo;
   private localRepo: Repo;
-  private localDocUrl: string;
-  private serverDocUrl: string;
 
   constructor(websocketURL: string) {
     this.websocketURL = websocketURL;
     this.serverRepo = new Repo({
-      network: [new BrowserWebSocketClientAdapter(this.websocketURL)],
+      network: [],
     });
+
     this.localRepo = new Repo({
       network: [],
-      storage: new IndexedDBStorageAdapter(),
     });
-    this.localDocUrl = "";
-    this.serverDocUrl = "";
   }
 
   createServerDoc(): string {
     let handle: DocHandle<T> | null = null;
     try {
+      console.log("Creating new doc");
       handle = this.serverRepo.create<T>();
       console.log("Created new doc");
     } catch (error) {
@@ -55,7 +52,6 @@ export class AutomergeService<T extends object>
     if (!handle) {
       throw new Error("Error finding doc");
     }
-    this.localDocUrl = handle.url;
     return handle.url;
   }
 

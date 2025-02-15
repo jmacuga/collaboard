@@ -6,23 +6,18 @@ import { createAutomergeServer } from "@/lib/automerge-server";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = 3000;
-
-// Initialize Next.js
-const app = next({ dev, hostname, port });
+const port = parseInt(process.env.PORT || "3000", 10);
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  // Create HTTP server
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url!, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
+  const server = createServer((req, res) => {
+    const parsedUrl = parse(req.url!, true);
+    handle(req, res, parsedUrl).catch((err) => {
       console.error("Error occurred handling", req.url, err);
       res.statusCode = 500;
       res.end("Internal Server Error");
-    }
+    });
   });
 
   const wss = new WebSocketServer({
@@ -32,8 +27,9 @@ app.prepare().then(() => {
   createAutomergeServer(wss, hostname);
 
   server.on("upgrade", (request, socket, head) => {
-    const pathname = new URL(request.url!, `http://${request.headers.host}`)
-      .pathname;
+    if (!request.url) return socket.destroy();
+
+    const { pathname } = parse(request.url);
 
     if (pathname === "/_next/webpack-hmr") {
       return;

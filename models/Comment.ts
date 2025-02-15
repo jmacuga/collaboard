@@ -1,6 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
 
 export interface IComment extends mongoose.Document {
+  _id: string;
   boardId: ObjectId;
   userId: ObjectId;
   text: string;
@@ -28,5 +29,5 @@ const CommentSchema = new mongoose.Schema(
 );
 
 export const Comment =
-  mongoose.models.Comment ||
+  mongoose.models?.Comment ||
   mongoose.model<IComment>("Comment", CommentSchema, "comments");

@@ -9,19 +9,33 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "../ui/button";
 import { authenticate } from "@/lib/actions";
 import { useState } from "react";
-
-export default function LoginForm() {
+import { useRouter } from "next/router";
+export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const formAction = (formData: FormData) => {
-    const prevState = undefined;
-    authenticate(prevState, formData).then((res) => {
-      setErrorMessage(res ? res : "Invalid credentials");
-    });
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    try {
+      const { error, isLoading } = await authenticate(undefined, formData);
+      if (error) {
+        setErrorMessage(error);
+      }
+      if (isLoading) {
+        setIsLoading(true);
+      }
+      if (!error && !isLoading) {
+        router.push("/teams");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred");
+    }
   };
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
         <h1 className={`mb-3 text-2xl`}>Please log in to continue.</h1>
         <div className="w-full">
@@ -65,7 +79,7 @@ export default function LoginForm() {
             </div>
           </div>
         </div>
-        <Button className="mt-4 w-full">
+        <Button className="mt-4 w-full" type="submit">
           Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
         <div

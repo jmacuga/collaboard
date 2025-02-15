@@ -2,6 +2,7 @@ import mongoose, { ObjectId } from "mongoose";
 import BoardAction from "@/types/BoardAction";
 
 export interface IBoardLog extends mongoose.Document {
+  _id: string;
   boardId: ObjectId;
   userId: ObjectId;
   action: BoardAction;
@@ -31,5 +32,5 @@ const BoardLogSchema = new mongoose.Schema(
 );
 
 export const BoardLog =
-  mongoose.models.BoardLog ||
+  mongoose.models?.BoardLog ||
   mongoose.model<IBoardLog>("BoardLog", BoardLogSchema, "board_logs");

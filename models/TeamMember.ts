@@ -1,6 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
 
 export interface ITeamMember extends mongoose.Document {
+  _id: string;
   teamId: ObjectId;
   userId: ObjectId;
   role: ObjectId;
@@ -17,5 +18,5 @@ const TeamMemberSchema = new mongoose.Schema({
 });
 
 export const TeamMember =
-  mongoose.models.TeamMember ||
+  mongoose.models?.TeamMember ||
   mongoose.model<ITeamMember>("TeamMember", TeamMemberSchema, "team_members");

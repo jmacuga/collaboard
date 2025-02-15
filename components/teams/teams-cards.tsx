@@ -8,17 +8,19 @@ export default function TeamsCards({ teams }: { teams: ITeam[] }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teams ? (
         teams.map((team) => (
-          <Card key={team.id} className="hover:bg-accent/50 transition-colors">
-            <Link href={`/teams/${team.id}/boards`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {team.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Team ID: {team.id}
-              </CardContent>
+          <Card key={team._id} className="hover:bg-accent/50 transition-colors">
+            <Link href={`/teams/${team._id}/boards`}>
+              <a className="block">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    {team.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  Team ID: {team._id}
+                </CardContent>
+              </a>
             </Link>
           </Card>
         ))

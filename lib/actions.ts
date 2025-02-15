@@ -1,57 +1,31 @@
 "use server";
 
-import { signIn } from "@/lib/auth";
 import { IBoard } from "@/models/Board";
-import { AuthError } from "next-auth";
-import { createBoard, deleteBoard } from "@/lib/data";
-import { ISyncService } from "@/services/sync/types";
+import { createBoard, deleteBoard, getBoard } from "@/lib/data";
+import { signIn } from "next-auth/react";
+import { schemaLogin } from "@/schemas/login.schema";
+import { AutomergeService } from "@/services/automerge/automerge-service";
+import { SyncService } from "@/services/sync/sync-service";
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData
-) {
+): Promise<{ error: string; isLoading: boolean }> {
   try {
-    console.log("Sign in:");
-    await signIn("credentials", formData);
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
-        default:
-          return "Something went wrong.";
-      }
-    }
-    throw error;
-  }
-}
-
-export async function createBoardAction(
-  formData: { name: string },
-  teamId: string
-): Promise<IBoard | null> {
-  try {
-    const name = formData.name;
-    const board = await createBoard({
-      teamId,
-      name,
+    const parsedFormData = schemaLogin.parse({
+      email: formData.get("email"),
+      password: formData.get("password"),
     });
-    if (!board) {
-      console.error("Error: Board creation failed");
-      return null;
+    const result = await signIn("credentials", {
+      email: parsedFormData.email,
+      password: parsedFormData.password,
+      redirect: false,
+    });
+    if (result?.error) {
+      return { error: "Invalid email or password", isLoading: false };
     }
-    return JSON.parse(JSON.stringify(board));
   } catch (error) {
-    console.error("Error creating board. Error: ", error);
-    return null;
+    return { error: "An error occurred. Please try again.", isLoading: false };
   }
-}
-
-export async function deleteBoardAction(boardId: string): Promise<boolean> {
-  try {
-    const result = await deleteBoard(boardId);
-    return result !== null;
-  } catch (error) {
-    console.error("Error deleting board:", error);
-    return false;
-  }
+  return { error: "", isLoading: false };
 }

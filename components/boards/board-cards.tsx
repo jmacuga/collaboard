@@ -1,5 +1,3 @@
-"use client";
-
 import { IBoard } from "@/models/Board";
 import {
   Card,
@@ -13,22 +11,9 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getColorForIndex } from "@/lib/colors";
 import { format } from "date-fns";
-import dynamic from "next/dynamic";
-const DeleteBoardDialog = dynamic(
-  () =>
-    import("@/components/boards/delete-board-dialog").then(
-      (mod) => mod.DeleteBoardDialog
-    ),
-  {
-    ssr: false,
-  }
-);
+import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 
-export default function BoardCards({
-  teamBoards,
-}: {
-  teamBoards: IBoard[] | null;
-}) {
+export function BoardCards({ teamBoards }: { teamBoards: IBoard[] | null }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamBoards ? (
@@ -52,6 +37,7 @@ export default function BoardCards({
               <DeleteBoardDialog
                 boardId={board._id as string}
                 boardName={board.name}
+                teamId={board.teamId}
               />
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
@@ -61,7 +47,7 @@ export default function BoardCards({
               </p>
             </CardContent>
             <CardFooter className="relative justify-end">
-              <Link href={`/board/${board.id}`} className="ml-auto">
+              <Link href={`/board/${board._id}`} className="ml-auto">
                 <Button
                   variant="ghost"
                   className="hover:bg-accent/50 transition-colors flex items-center gap-2"

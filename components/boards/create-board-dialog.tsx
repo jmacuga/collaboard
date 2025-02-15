@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { schemaBoard } from "@/schemas/room.schema";
-import { createBoardAction } from "@/lib/actions";
-import { updateBoard } from "@/lib/data";
+import { schemaBoard } from "@/schemas/board.schema";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,7 +26,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { AutomergeService } from "@/services/automerge/automerge-service";
 
 type FormData = {
   name: string;
@@ -46,23 +43,30 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const board = await createBoardAction(data, teamId);
-      if (board) {
-        const websocketUrl = "ws://localhost:3000/api/socket";
-        const automergeService = new AutomergeService(websocketUrl);
-        const docUrl = automergeService.createServerDoc();
-        console.log("Board:", board);
-        updateBoard(board._id as string, { docUrl });
-        router.refresh();
-        console.log("Board created successfully");
-        toast.success("Board created successfully");
-        setOpen(false);
-        form.reset();
+      const response = await fetch("/api/boards/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data, teamId }),
+        credentials: "include",
+      });
+
+      const board = await response.json();
+      console.log("Board:", board);
+      if (response.ok) {
+        router.push(`/teams/${teamId}/boards/`);
       } else {
-        toast.error("Failed to create board");
+        throw new Error(board.message || "Failed to create board");
       }
+
+      toast.success("Board created successfully");
+      setOpen(false);
+      form.reset();
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
       console.error(error);
     }
   };
@@ -70,7 +74,10 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-burnt-sienna hover:bg-burnt-sienna-darker">
+        <Button
+          className="bg-burnt-sienna hover:bg-burnt-sienna-darker"
+          aria-label="Create new board"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Create Board
         </Button>

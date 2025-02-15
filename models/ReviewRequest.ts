@@ -1,6 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
 
 export interface IReviewRequest extends mongoose.Document {
+  _id: string;
   boardId: ObjectId;
   reviewer: ObjectId;
   accepted: Boolean;
@@ -27,7 +28,7 @@ const ReviewRequestSchema = new mongoose.Schema({
 });
 
 export const ReviewRequest =
-  mongoose.models.ReviewRequest ||
+  mongoose.models?.ReviewRequest ||
   mongoose.model<IReviewRequest>(
     "ReviewRequest",
     ReviewRequestSchema,

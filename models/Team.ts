@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 export interface ITeam extends mongoose.Document {
+  _id: string;
+  id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
@@ -14,4 +16,4 @@ const TeamSchema = new mongoose.Schema(
 );
 
 export const Team =
-  mongoose.models.Team || mongoose.model<ITeam>("Team", TeamSchema, "teams");
+  mongoose.models?.Team || mongoose.model<ITeam>("Team", TeamSchema, "teams");

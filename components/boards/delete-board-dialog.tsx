@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,45 +12,46 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteBoardAction } from "@/lib/actions";
-import { SyncService } from "@/services/sync/syc-service";
-import { AutomergeService } from "@/services/automerge/automerge-service";
-import { getBoardDocUrl } from "@/lib/data";
-
+import { AutomergeService } from "@/services/automerge";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
+  teamId: string;
 }
-
+import { SyncService } from "@/services/sync/syc-service";
 export function DeleteBoardDialog({
   boardId,
   boardName,
+  teamId,
 }: DeleteBoardDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
-  const automergeService = new AutomergeService(
-    "ws://localhost:3000/api/socket"
-  );
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const boardDocUrl = await getBoardDocUrl(boardId);
-      if (!boardDocUrl) {
-        console.error("Board doc url not found");
-      } else {
-        const syncService = await SyncService.create(
-          automergeService,
-          boardDocUrl
-        );
-        syncService.deleteDoc();
-      }
-      const success = await deleteBoardAction(boardId);
-
-      if (success) {
+      const response = await fetch(`/api/boards/${boardId}/delete`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (response.ok) {
+        try {
+          const automergeService = new AutomergeService(
+            process.env.NEXT_PUBLIC_WEBSOCKET_URL || ""
+          );
+          const syncService = await SyncService.create(
+            automergeService,
+            boardId
+          );
+          syncService.deleteLocalDoc();
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to delete board doc");
+        }
+        console.log("Board deleted successfully");
         toast.success("Board deleted successfully");
-        router.refresh();
+        router.push(`/teams/${teamId}/boards/`);
         setOpen(false);
       } else {
         toast.error("Failed to delete board");

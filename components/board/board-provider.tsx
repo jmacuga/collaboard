@@ -1,19 +1,16 @@
 "use client";
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { AutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { connectAutomergeRepo } from "@/lib/automerge-repo-utils";
+import Board from "@/components/board/board";
 
-const Board = dynamic(() => import("@/components/board/board"), {
-  ssr: false,
-});
 interface RepoState {
   repo: Repo | null;
   docUrl: string;
 }
 
-export default function BoardProvider({
+export function BoardProvider({
   boardId,
   docUrl,
 }: {

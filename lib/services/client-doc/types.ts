@@ -1,5 +1,3 @@
-import { Repo } from "@automerge/automerge-repo";
-
 export interface ClientSyncStatus {
   isOnline: boolean;
   lastSynced: Date | null;
@@ -7,9 +5,8 @@ export interface ClientSyncStatus {
   isSynced: boolean;
 }
 
-export interface ISyncService {
-  createBoardData(): string;
-  initialize(): { localRepo: Repo; localDocUrl: string };
+export interface IClientDocService {
+  create(serverDocUrl: string): Promise<IClientDocService>;
   getLocalDocUrl(): string;
   getServerDocUrl(): string;
   //   getSyncStatus(): ClientSyncStatus;
@@ -18,8 +15,8 @@ export interface ISyncService {
   //   getMergeResult(): KonvaNodeSchema & Record<string, any>;
   //   applyLocalChanges(changes: Uint8Array[]): void;
   //   discardLocalChanges(): void;
+  updateServerData(docUrl: string): void;
   connectToServer(docUrl: string): void;
-  deleteLocalDoc(): void;
-  deleteServerDoc(): void;
+  deleteDoc(): void;
   //   disconnectFromServer(): void;
 }

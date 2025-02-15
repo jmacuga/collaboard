@@ -2,26 +2,18 @@
 import { IBoard, Board } from "@/db/models/Board";
 import { IBoardService } from "./types";
 import dbConnect from "@/db/dbConnect";
-import { AutomergeService } from "@/lib/services/automerge";
-import { Model } from "mongoose";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { createAutomergeServer } from "@/lib/automerge-server";
 
 export class BoardService implements IBoardService {
-  private automergeService: AutomergeService<KonvaNodeSchema>;
-  constructor() {
-    const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "";
-    this.automergeService = new AutomergeService(websocketUrl);
-  }
+  constructor() {}
 
   async create(data: { name: string; teamId: string }): Promise<IBoard> {
     try {
       await dbConnect();
-      const websocketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-      if (!websocketUrl) {
-        throw new Error("WebSocket URL is not defined");
-      }
-      const automergeService = new AutomergeService(websocketUrl);
-      const docUrl = automergeService.createServerDoc();
+      const serverRepo = createAutomergeServer(null, "server");
+      const handle = serverRepo.create<KonvaNodeSchema>();
+      const docUrl = handle.url;
       const board = await Board.create({
         name: data.name,
         teamId: data.teamId,
@@ -43,5 +35,11 @@ export class BoardService implements IBoardService {
       console.error(error);
       throw error;
     }
+  }
+
+  async getDocUrl(boardId: string): Promise<string> {
+    await dbConnect();
+    const board = await Board.findById(boardId);
+    return board?.docUrl || "";
   }
 }

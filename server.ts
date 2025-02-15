@@ -2,7 +2,6 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { parse } from "url";
 import next from "next";
-import "./polyfill";
 import { createAutomergeServer } from "@/lib/automerge-server";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -29,7 +28,7 @@ app.prepare().then(() => {
   server.on("upgrade", (request, socket, head) => {
     if (!request.url) return socket.destroy();
 
-    const { pathname } = parse(request.url);
+    const { pathname } = new URL(request.url, `http://${hostname}`);
 
     if (pathname === "/_next/webpack-hmr") {
       return;

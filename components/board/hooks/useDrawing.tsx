@@ -55,7 +55,7 @@ function useDrawing({ docUrl }: { docUrl: string }) {
   );
 
   const drawLine = (e: KonvaEvent) => {
-    if (!doc?.children) return;
+    // if (!doc?.children) return;
 
     const point = getPointerPosition(e);
     if (!point) return;
@@ -73,7 +73,9 @@ function useDrawing({ docUrl }: { docUrl: string }) {
     );
     const newLine = new Konva.Line(lineAttributes);
 
-    changeDoc((doc) => {
+    changeDoc((doc: KonvaNodeSchema) => {
+      console.log("changeDoc");
+      console.log("doc", doc);
       if (!doc.children) doc.children = [];
       doc.children.push(newLine.toObject() as KonvaNodeSchema);
     });

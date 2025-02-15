@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
-import { AutomergeUrl, Repo } from "@automerge/automerge-repo";
+import { AnyDocumentId, AutomergeUrl, Repo } from "@automerge/automerge-repo";
 import { connectAutomergeRepo } from "@/lib/automerge-repo-utils";
 import Board from "@/components/board/board";
 

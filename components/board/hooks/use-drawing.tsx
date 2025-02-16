@@ -27,7 +27,6 @@ const createLine = (
   tension: 0.5,
   lineCap: "round",
   lineJoin: "round",
-  draggable: true,
 });
 
 const getPointerPosition = (e: KonvaEvent): Point | null => {

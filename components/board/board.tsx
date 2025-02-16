@@ -36,7 +36,7 @@ export default function Board({}: {}) {
   const modeStateRef = useRef(mode);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
   const { draggingState, handleDragStart, handleDragEnd } = useDragging();
-  const { transformerRef } = useTransformer(localDoc);
+  const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
 
   useEffect(() => {
     modeStateRef.current = mode;
@@ -78,6 +78,8 @@ export default function Board({}: {}) {
   }, [mode, endLine, setCurrentLineId]);
 
   const handleShapeClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (mode !== "selecting") return;
+
     const shapeId = e.target.attrs.id;
     setSelectedShapeIds((prev: string[]): string[] => {
       return prev.includes(shapeId)
@@ -113,10 +115,11 @@ export default function Board({}: {}) {
                   <Line
                     key={shape.attrs.id ?? "0"}
                     {...shape.attrs}
-                    draggable
+                    draggable={mode === "selecting"}
                     onClick={handleShapeClick}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
                     ref={(node) => {
                       shape.attrs.ref = node;
                     }}

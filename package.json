@@ -9,11 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.2.8",
-    "@automerge/automerge-repo": "^1.2.1",
+    "@automerge/automerge": "^2.1.10",
+    "@automerge/automerge-repo": "^1.1.2",
     "@automerge/automerge-repo-network-websocket": "^1.2.1",
-    "@automerge/automerge-repo-react-hooks": "^1.2.1",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.2.1",
+    "@automerge/automerge-repo-react-hooks": "^1.1.12",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.12",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^3.10.0",
     "@kessl/next-flash": "^1.0.3",

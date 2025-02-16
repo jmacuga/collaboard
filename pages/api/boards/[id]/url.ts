@@ -18,7 +18,6 @@ export default async function handler(
     }
 
     const boardId = req.query.id as string;
-    console.log("Board ID:", boardId);
     if (!boardId) {
       return res.status(400).json({ message: "Board ID is required" });
     }

@@ -1,40 +1,36 @@
 "use client";
 import { IClientDocService } from "./types";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
-import {
-  isValidAutomergeUrl,
-  Repo,
-  AnyDocumentId,
-} from "@automerge/automerge-repo";
-import { db } from "@/lib/indexed-db";
+import { Repo, AnyDocumentId, DocHandle } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { db } from "@/lib/indexed-db";
 
 export class ClientDocService implements IClientDocService {
-  localDocUrl: string;
-  serverDocUrl: string;
+  docUrl: string;
   serverRepo: Repo;
   localRepo: Repo;
+  websocketURL: string;
 
   private constructor({
-    serverDocUrl,
-    localDocUrl,
+    docUrl,
     serverRepo,
     localRepo,
+    websocketURL,
   }: {
-    serverDocUrl: string;
-    localDocUrl: string;
+    docUrl: string;
     serverRepo: Repo;
     localRepo: Repo;
+    websocketURL: string;
   }) {
-    this.serverDocUrl = serverDocUrl;
-    this.localDocUrl = localDocUrl;
+    this.docUrl = docUrl;
     this.serverRepo = serverRepo;
     this.localRepo = localRepo;
+    this.websocketURL = websocketURL;
   }
 
-  static async create(serverDocUrl: string): Promise<ClientDocService> {
+  static async create(docUrl: string): Promise<ClientDocService> {
     const websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
     const serverRepo = new Repo({
       network: [new BrowserWebSocketClientAdapter(websocketURL)],
@@ -43,32 +39,32 @@ export class ClientDocService implements IClientDocService {
       network: [],
       storage: new IndexedDBStorageAdapter(),
     });
-
-    const mapping = await db.urlMappings.get(serverDocUrl);
-    let localDocUrl = mapping?.localUrl;
-
-    if (!localDocUrl) {
-      console.log("Local doc URL not found in indexedDB - creating local doc");
-      localDocUrl = await ClientDocService.createLocalDocFromServerDoc(
-        localRepo,
-        serverRepo,
-        serverDocUrl
-      );
-    } else {
-      console.log("Local doc URL received from indexedDB");
+    let localDocHandle;
+    try {
+      const docExists = await db.docUrls.get(docUrl);
+      if (docExists) {
+        console.log("Found doc in indexedDB", docExists);
+        localDocHandle = localRepo.find(docUrl as AnyDocumentId);
+      } else {
+        console.log("Creating local doc");
+        localDocHandle = await ClientDocService.createLocalDocFromServerDoc(
+          localRepo,
+          serverRepo,
+          docUrl
+        );
+        await db.docUrls.add({ docUrl: docUrl });
+      }
+    } catch (error) {
+      console.error("Could not find or create local doc. Reason:", error);
     }
-    if (!localDocUrl) {
+    if (!localDocHandle) {
       throw new Error("Local doc could not be initialized");
     }
-    await db.urlMappings.put({
-      serverUrl: serverDocUrl,
-      localUrl: localDocUrl,
-    });
     return new ClientDocService({
-      serverDocUrl: serverDocUrl,
-      localDocUrl: localDocUrl,
+      docUrl: docUrl,
       serverRepo: serverRepo,
       localRepo: localRepo,
+      websocketURL: websocketURL,
     });
   }
   /*
@@ -78,26 +74,36 @@ export class ClientDocService implements IClientDocService {
   private static async createLocalDocFromServerDoc(
     localRepo: Repo,
     serverRepo: Repo,
-    serverDocUrl: string
-  ) {
+    docUrl: string
+  ): Promise<DocHandle<KonvaNodeSchema> | null> {
     try {
-      // clone server doc to local doc
-      if (!isValidAutomergeUrl(serverDocUrl)) {
-        throw new Error("Invalid server doc URL");
-      }
-      const serverDocHandle = await serverRepo.find(
-        serverDocUrl as AnyDocumentId
+      const websocketAdapter = new BrowserWebSocketClientAdapter(
+        NEXT_PUBLIC_WEBSOCKET_URL
       );
-      await serverDocHandle.whenReady();
-      const clonedDocHandle = serverRepo.clone(serverDocHandle);
-      await clonedDocHandle.whenReady();
-      const localDocHandle = localRepo.create<KonvaNodeSchema>();
-      localDocHandle.merge(clonedDocHandle);
-      return localDocHandle.url;
+      localRepo.networkSubsystem.addNetworkAdapter(websocketAdapter);
+      const localDocHandle = localRepo.find(docUrl as AnyDocumentId);
+      await localDocHandle.whenReady();
+      websocketAdapter.disconnect();
+      return localDocHandle;
     } catch (error) {
       console.error("Error creating local doc from server doc", error);
-      return;
+      return null;
     }
+  }
+
+  canConnect(): boolean {
+    // Can connect if localDoc is not ahead of serverDoc
+    return true;
+  }
+
+  connect(): void {
+    this.localRepo.networkSubsystem.addNetworkAdapter(
+      new BrowserWebSocketClientAdapter(this.websocketURL)
+    );
+  }
+
+  getDocUrl(): string {
+    return this.docUrl;
   }
 
   updateServerData(docUrl: string): void {
@@ -109,7 +115,7 @@ export class ClientDocService implements IClientDocService {
   }
 
   deleteDoc(): void {
-    this.serverRepo.delete(this.serverDocUrl as AnyDocumentId);
-    this.localRepo.delete(this.localDocUrl as AnyDocumentId);
+    this.serverRepo.delete(this.docUrl as AnyDocumentId);
+    this.localRepo.delete(this.docUrl as AnyDocumentId);
   }
 }

@@ -11,7 +11,7 @@ export class BoardService implements IBoardService {
   async create(data: { name: string; teamId: string }): Promise<IBoard> {
     try {
       await dbConnect();
-      const serverRepo = createAutomergeServer(null, "server");
+      const serverRepo = await createAutomergeServer(null, "server");
       const handle = serverRepo.create<KonvaNodeSchema>();
       const docUrl = handle.url;
       const board = await Board.create({

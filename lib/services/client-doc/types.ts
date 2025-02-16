@@ -6,9 +6,8 @@ export interface ClientSyncStatus {
 }
 
 export interface IClientDocService {
-  create(serverDocUrl: string): Promise<IClientDocService>;
-  getLocalDocUrl(): string;
-  getServerDocUrl(): string;
+  create(docUrl: string): Promise<IClientDocService>;
+  getDocUrl(): string;
   //   getSyncStatus(): ClientSyncStatus;
   //   onStatusChange(callback: (status: ClientSyncStatus) => void): void;
   //   getIsLocalSynced(): boolean;
@@ -16,7 +15,8 @@ export interface IClientDocService {
   //   applyLocalChanges(changes: Uint8Array[]): void;
   //   discardLocalChanges(): void;
   updateServerData(docUrl: string): void;
-  connectToServer(docUrl: string): void;
+  connect(): void;
+  canConnect(): boolean;
   deleteDoc(): void;
   //   disconnectFromServer(): void;
 }

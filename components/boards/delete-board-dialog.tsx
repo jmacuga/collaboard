@@ -39,7 +39,10 @@ export function DeleteBoardDialog({
       });
       if (response.ok) {
         try {
-          const syncService = await ClientDocService.create(serverDocUrl);
+          console.log("Deleting board doc", serverDocUrl);
+          const syncService = await ClientDocService.create(
+            serverDocUrl.docUrl
+          );
           syncService.deleteDoc();
         } catch (error) {
           console.error(error);

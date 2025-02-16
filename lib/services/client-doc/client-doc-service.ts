@@ -81,6 +81,7 @@ export class ClientSyncService implements IClientSyncService {
         NEXT_PUBLIC_WEBSOCKET_URL
       );
       localRepo.networkSubsystem.addNetworkAdapter(websocketAdapter);
+      await localRepo.networkSubsystem.whenReady();
       const localDocHandle = localRepo.find(docUrl as AnyDocumentId);
       await localDocHandle.whenReady();
       websocketAdapter.disconnect();

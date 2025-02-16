@@ -7,7 +7,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "DELETE") {
+  if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
@@ -23,21 +23,12 @@ export default async function handler(
     }
 
     const boardService = new BoardService();
-    // const hasTeamAccess = await boardService.verifyTeamAccess(
-    //   session.user.id,
-    //   teamId
-    // );
-    // if (!hasTeamAccess) {
-    //   return res
-    //     .status(403)
-    //     .json({ message: "Forbidden: No access to this team" });
-    // }
 
-    const board = await boardService.delete(boardId);
+    const docUrl = await boardService.getDocUrl(boardId);
 
-    return res.status(200).json({ message: "Board deleted successfully" });
+    return res.status(200).json({ docUrl });
   } catch (error) {
-    console.error("Board deletion error:", error);
+    console.error("Board doc URL retrieval error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }

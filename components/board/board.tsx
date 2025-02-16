@@ -2,17 +2,21 @@
 import SideToolbar from "@/components/board/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Line, Shape, Rect } from "react-konva";
-import { AutomergeUrl } from "@automerge/automerge-repo";
-import { BoardContext } from "@/context/boardContext";
-import { useDrawing } from "@/components/board/hooks/useDrawing";
+import { BoardContext } from "@/components/board/context/board-context";
+import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { v4 as uuidv4 } from "uuid";
-import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
+import { useClientSync } from "@/components/board/context/client-doc-context";
+import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import { AnyDocumentId } from "@automerge/automerge-repo";
 
-export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
-  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(docUrl);
+export default function Board({}: {}) {
+  const clientSyncService = useClientSync();
+  const [localDoc, setLocalDoc] = useDocument<KonvaNodeSchema>(
+    clientSyncService.getDocUrl() as AnyDocumentId
+  );
   const { brushColor, setBrushColor, currentLineId, setCurrentLineId } =
     useContext(BoardContext);
   const [mode, setMode] = useState("selecting");
@@ -20,9 +24,7 @@ export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
   const [tool, setTool] = useState("pen");
   const isDrawing = useRef(false);
 
-  const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing({
-    docUrl: docUrl,
-  });
+  const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
 
   useEffect(() => {
     console.log(mode);
@@ -84,7 +86,7 @@ export default function Board({ docUrl }: { docUrl: AutomergeUrl }) {
           onTouchEnd={handleMouseUp}
         >
           <Layer>
-            {doc?.children?.map((shape) => {
+            {localDoc?.children?.map((shape: KonvaNodeSchema) => {
               if (shape.className == "Line") {
                 return (
                   <Line key={shape.attrs.id ?? "0"} {...shape.attrs}></Line>

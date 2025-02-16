@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 
 import { getBoardById } from "@/db/data";
-import { BoardContextProvider } from "@/context/boardContext";
+import { BoardContextProvider } from "@/components/board/context/board-context";
 import { BoardProvider } from "@/components/board/board-provider";
 
 interface BoardPageProps {

@@ -1,12 +1,14 @@
 "use client";
 
 import { useContext, useState, useCallback } from "react";
-import { BoardContext } from "@/context/boardContext";
-import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import { BoardContext } from "@/components/board/context/board-context";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
+import { useClientSync } from "../context/client-doc-context";
+import { useDocument } from "@automerge/automerge-repo-react-hooks";
+
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
 interface Point {
   x: number;
@@ -32,30 +34,30 @@ const getPointerPosition = (e: KonvaEvent): Point | null => {
   return stage?.getPointerPosition() ?? null;
 };
 
-function useDrawing({ docUrl }: { docUrl: string }) {
+function useDrawing() {
   const { currentLineId, brushColor } = useContext(BoardContext);
-  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
-    docUrl as AnyDocumentId
+  const clientSyncService = useClientSync();
+  const [localDoc, changeLocalDoc] = useDocument<KonvaNodeSchema>(
+    clientSyncService.getDocUrl() as AnyDocumentId
   );
-
   const [localPoints, setLocalPoints] = useState<number[]>([]);
 
   const updateAutomerge = useCallback(
     (points: number[]) => {
-      changeDoc((doc) => {
+      changeLocalDoc((doc: KonvaNodeSchema) => {
         if (!doc.children) doc.children = [];
         const currentLineIndex = doc.children.findIndex(
-          (child) => child.attrs.id === currentLineId
+          (child: KonvaNodeSchema) => child.attrs.id === currentLineId
         );
         if (currentLineIndex === -1) return;
         doc.children[currentLineIndex].attrs.points = points;
       });
     },
-    [changeDoc, currentLineId]
+    [changeLocalDoc, currentLineId]
   );
 
   const drawLine = (e: KonvaEvent) => {
-    if (!doc?.children) return;
+    // if (!doc?.children) return;
 
     const point = getPointerPosition(e);
     if (!point) return;
@@ -73,7 +75,7 @@ function useDrawing({ docUrl }: { docUrl: string }) {
     );
     const newLine = new Konva.Line(lineAttributes);
 
-    changeDoc((doc) => {
+    changeLocalDoc((doc: KonvaNodeSchema) => {
       if (!doc.children) doc.children = [];
       doc.children.push(newLine.toObject() as KonvaNodeSchema);
     });

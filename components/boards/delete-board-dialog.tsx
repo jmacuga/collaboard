@@ -12,13 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { AutomergeService } from "@/lib/services/automerge";
+import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
   teamId: string;
 }
-import { SyncService } from "@/lib/services/sync/syc-service";
 export function DeleteBoardDialog({
   boardId,
   boardName,
@@ -31,20 +30,20 @@ export function DeleteBoardDialog({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
+      const serverDocUrl = await fetch(`/api/boards/${boardId}/url`).then(
+        (res) => res.json()
+      );
       const response = await fetch(`/api/boards/${boardId}/delete`, {
         method: "DELETE",
         credentials: "include",
       });
       if (response.ok) {
         try {
-          const automergeService = new AutomergeService(
-            process.env.NEXT_PUBLIC_WEBSOCKET_URL || ""
+          console.log("Deleting board doc", serverDocUrl);
+          const syncService = await ClientSyncService.create(
+            serverDocUrl.docUrl
           );
-          const syncService = await SyncService.create(
-            automergeService,
-            boardId
-          );
-          syncService.deleteLocalDoc();
+          syncService.deleteDoc();
         } catch (error) {
           console.error(error);
           toast.error("Failed to delete board doc");

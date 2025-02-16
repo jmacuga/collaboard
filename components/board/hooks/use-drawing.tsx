@@ -18,12 +18,13 @@ interface Point {
 const createLine = (
   id: string,
   points: number[],
-  color: string
+  color: string,
+  size: number
 ): LineConfig => ({
   id,
   points: points,
   stroke: color,
-  strokeWidth: 5,
+  strokeWidth: size,
   tension: 0.5,
   lineCap: "round",
   lineJoin: "round",
@@ -35,7 +36,7 @@ const getPointerPosition = (e: KonvaEvent): Point | null => {
 };
 
 function useDrawing() {
-  const { currentLineId, brushColor } = useContext(BoardContext);
+  const { currentLineId, brushColor, brushSize } = useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<KonvaNodeSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
@@ -71,7 +72,8 @@ function useDrawing() {
     const lineAttributes = createLine(
       currentLineId,
       [point.x, point.y],
-      brushColor
+      brushColor,
+      brushSize
     );
     const newLine = new Konva.Line(lineAttributes);
 

@@ -13,6 +13,7 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
+import DrawingToolbar from "@/components/board/drawing-toolbar";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -30,6 +31,8 @@ export default function Board({}: {}) {
     setTool,
     selectedShapeIds,
     setSelectedShapeIds,
+    brushSize,
+    setBrushSize,
   } = useContext(BoardContext);
 
   const isDrawing = useRef(false);
@@ -65,7 +68,7 @@ export default function Board({}: {}) {
     const pos = e.target.getStage()?.getPointerPosition();
     if (!pos) return;
 
-    setLocalLine(createLine(currentLineId, localPoints, brushColor));
+    setLocalLine(createLine(currentLineId, localPoints, brushColor, brushSize));
   };
 
   const handleMouseUp = useCallback(() => {
@@ -97,6 +100,7 @@ export default function Board({}: {}) {
         <SideToolbar
           setCursorMode={setCursorMode}
           changeBrushColor={setBrushColor}
+          changeBrushSize={setBrushSize}
           cursorMode={mode}
         />
       </div>

@@ -12,12 +12,14 @@ interface SideToolbarProps {
   setCursorMode: (mode: string) => void;
   cursorMode: string;
   changeBrushColor: (color: string) => void;
+  changeBrushSize: (size: number) => void;
 }
 
 function SideToolbar({
   setCursorMode,
   cursorMode,
   changeBrushColor,
+  changeBrushSize,
 }: SideToolbarProps) {
   const toolbarItems = [
     {
@@ -54,7 +56,10 @@ function SideToolbar({
         <nav>
           <ul className="space-y-4" role="list">
             {cursorMode === "drawing" && (
-              <DrawingToolbar changeBrushColor={changeBrushColor} />
+              <DrawingToolbar
+                changeBrushColor={changeBrushColor}
+                changeBrushSize={changeBrushSize}
+              />
             )}
             {toolbarItems.map((item, index) => (
               <Tooltip key={item.mode || index}>

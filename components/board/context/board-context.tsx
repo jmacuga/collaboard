@@ -37,6 +37,8 @@ interface BoardContextType {
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isShapeSelected: (id: string) => boolean;
+  brushSize: number;
+  setBrushSize: (size: number) => void;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -51,7 +53,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [mode, setMode] = useState("selecting");
   const [tool, setTool] = useState("pen");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
-
+  const [brushSize, setBrushSize] = useState<number>(2);
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
   };
@@ -71,8 +73,18 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       selectedShapeIds,
       setSelectedShapeIds,
       isShapeSelected,
+      brushSize,
+      setBrushSize,
     }),
-    [stageRef, brushColor, currentLineId, mode, tool, selectedShapeIds]
+    [
+      stageRef,
+      brushColor,
+      currentLineId,
+      mode,
+      tool,
+      selectedShapeIds,
+      brushSize,
+    ]
   );
 
   return (

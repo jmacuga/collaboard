@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { ClientDocService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
@@ -40,7 +40,7 @@ export function DeleteBoardDialog({
       if (response.ok) {
         try {
           console.log("Deleting board doc", serverDocUrl);
-          const syncService = await ClientDocService.create(
+          const syncService = await ClientSyncService.create(
             serverDocUrl.docUrl
           );
           syncService.deleteDoc();

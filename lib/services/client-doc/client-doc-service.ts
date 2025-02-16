@@ -1,5 +1,5 @@
 "use client";
-import { IClientDocService } from "./types";
+import { IClientSyncService } from "./types";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import { Repo, AnyDocumentId, DocHandle } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
@@ -7,7 +7,7 @@ import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-index
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { db } from "@/lib/indexed-db";
 
-export class ClientDocService implements IClientDocService {
+export class ClientSyncService implements IClientSyncService {
   docUrl: string;
   serverRepo: Repo;
   localRepo: Repo;
@@ -30,7 +30,7 @@ export class ClientDocService implements IClientDocService {
     this.websocketURL = websocketURL;
   }
 
-  static async create(docUrl: string): Promise<ClientDocService> {
+  static async create(docUrl: string): Promise<ClientSyncService> {
     const websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
     const serverRepo = new Repo({
       network: [new BrowserWebSocketClientAdapter(websocketURL)],
@@ -47,7 +47,7 @@ export class ClientDocService implements IClientDocService {
         localDocHandle = localRepo.find(docUrl as AnyDocumentId);
       } else {
         console.log("Creating local doc");
-        localDocHandle = await ClientDocService.createLocalDocFromServerDoc(
+        localDocHandle = await ClientSyncService.createLocalDocFromServerDoc(
           localRepo,
           serverRepo,
           docUrl
@@ -60,7 +60,7 @@ export class ClientDocService implements IClientDocService {
     if (!localDocHandle) {
       throw new Error("Local doc could not be initialized");
     }
-    return new ClientDocService({
+    return new ClientSyncService({
       docUrl: docUrl,
       serverRepo: serverRepo,
       localRepo: localRepo,

@@ -6,7 +6,7 @@ import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
-import { useClientDoc } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
@@ -36,9 +36,9 @@ const getPointerPosition = (e: KonvaEvent): Point | null => {
 
 function useDrawing() {
   const { currentLineId, brushColor } = useContext(BoardContext);
-  const clientDocService = useClientDoc();
+  const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<KonvaNodeSchema>(
-    clientDocService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocUrl() as AnyDocumentId
   );
   const [localPoints, setLocalPoints] = useState<number[]>([]);
 

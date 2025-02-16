@@ -8,14 +8,14 @@ import { v4 as uuidv4 } from "uuid";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
-import { useClientDoc } from "@/components/board/context/client-doc-context";
+import { useClientSync } from "@/components/board/context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 
 export default function Board({}: {}) {
-  const clientDocService = useClientDoc();
+  const clientSyncService = useClientSync();
   const [localDoc, setLocalDoc] = useDocument<KonvaNodeSchema>(
-    clientDocService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocUrl() as AnyDocumentId
   );
   const { brushColor, setBrushColor, currentLineId, setCurrentLineId } =
     useContext(BoardContext);

@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { Repo } from "@automerge/automerge-repo";
 import Board from "@/components/board/board";
-import { ClientDocService } from "@/lib/services/client-doc/client-doc-service";
-import { ClientDocContext } from "./context/client-doc-context";
+import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncContext } from "./context/client-doc-context";
 
 interface BoardState {
   repo: Repo | null;
   docUrl: string;
-  clientDocService: ClientDocService | null;
+  clientSyncService: ClientSyncService | null;
 }
 
 export function BoardProvider({
@@ -22,35 +22,35 @@ export function BoardProvider({
   const [state, setState] = useState<BoardState>({
     repo: null,
     docUrl: docUrl || "",
-    clientDocService: null,
+    clientSyncService: null,
   });
 
   useEffect(() => {
     const initializeBoard = async () => {
-      const clientDocService = await ClientDocService.create(docUrl);
-      if (clientDocService.canConnect()) {
-        clientDocService.connect();
+      const clientSyncService = await ClientSyncService.create(docUrl);
+      if (clientSyncService.canConnect()) {
+        clientSyncService.connect();
       }
       setState({
-        repo: clientDocService.localRepo,
-        clientDocService,
-        docUrl: clientDocService.getDocUrl(),
+        repo: clientSyncService.localRepo,
+        clientSyncService,
+        docUrl: clientSyncService.getDocUrl(),
       });
     };
     initializeBoard();
   }, [docUrl]);
 
-  if (!state.repo || !state.clientDocService) {
+  if (!state.repo || !state.clientSyncService) {
     return <div>Loading board...</div>;
   }
 
   return (
     <RepoContext.Provider value={state.repo}>
-      <ClientDocContext.Provider
-        value={{ clientDocService: state.clientDocService }}
+      <ClientSyncContext.Provider
+        value={{ clientSyncService: state.clientSyncService }}
       >
         <Board />
-      </ClientDocContext.Provider>
+      </ClientSyncContext.Provider>
     </RepoContext.Provider>
   );
 }

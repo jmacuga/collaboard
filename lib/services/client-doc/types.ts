@@ -5,8 +5,8 @@ export interface ClientSyncStatus {
   isSynced: boolean;
 }
 
-export interface IClientDocService {
-  create(docUrl: string): Promise<IClientDocService>;
+export interface IClientSyncService {
+  create(docUrl: string): Promise<IClientSyncService>;
   getDocUrl(): string;
   //   getSyncStatus(): ClientSyncStatus;
   //   onStatusChange(callback: (status: ClientSyncStatus) => void): void;

@@ -77,15 +77,18 @@ export default function Board({}: {}) {
     }
   }, [mode, endLine, setCurrentLineId]);
 
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.target === e.target.getStage()) {
+      setSelectedShapeIds([]);
+    }
+  };
+
   const handleShapeClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (mode !== "selecting") return;
 
+    e.cancelBubble = true;
     const shapeId = e.target.attrs.id;
-    setSelectedShapeIds((prev: string[]): string[] => {
-      return prev.includes(shapeId)
-        ? prev.filter((id: string) => id !== shapeId)
-        : [...prev, shapeId];
-    });
+    setSelectedShapeIds([shapeId]);
   };
 
   return (
@@ -107,6 +110,7 @@ export default function Board({}: {}) {
           onTouchMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onTouchEnd={handleMouseUp}
+          onClick={handleStageClick}
         >
           <Layer>
             {localDoc?.children?.map((shape: KonvaNodeSchema) => {

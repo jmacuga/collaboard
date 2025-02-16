@@ -28,7 +28,6 @@ export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
         );
         if (shapeIndex === -1) return;
 
-        // Update transform properties
         doc.children[shapeIndex].attrs.x = node.x();
         doc.children[shapeIndex].attrs.y = node.y();
         doc.children[shapeIndex].attrs.scaleX = node.scaleX();

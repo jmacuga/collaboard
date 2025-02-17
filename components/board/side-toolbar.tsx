@@ -7,20 +7,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import DrawingToolbar from "@/components/board/drawing-toolbar";
+import { ModeType } from "@/components/board/context/board-context";
+import { useContext } from "react";
+import { BoardContext } from "@/components/board/context/board-context";
 
-interface SideToolbarProps {
-  setCursorMode: (mode: string) => void;
-  cursorMode: string;
-  changeBrushColor: (color: string) => void;
-  changeBrushSize: (size: number) => void;
-}
-
-function SideToolbar({
-  setCursorMode,
-  cursorMode,
-  changeBrushColor,
-  changeBrushSize,
-}: SideToolbarProps) {
+function SideToolbar() {
+  const { mode, setMode } = useContext(BoardContext);
   const toolbarItems = [
     {
       label: "Back to teams",
@@ -33,16 +25,9 @@ function SideToolbar({
     { label: "Select", icon: <MousePointer />, mode: "selecting" },
   ];
 
-  const handleItemClick = (mode: string) => {
+  const handleItemClick = (mode: ModeType) => {
     if (mode) {
-      setCursorMode(mode);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, mode: string) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleItemClick(mode);
+      setMode(mode);
     }
   };
 
@@ -55,12 +40,7 @@ function SideToolbar({
       >
         <nav>
           <ul className="space-y-4" role="list">
-            {cursorMode === "drawing" && (
-              <DrawingToolbar
-                changeBrushColor={changeBrushColor}
-                changeBrushSize={changeBrushSize}
-              />
-            )}
+            {(mode === "drawing" || "erasing") && <DrawingToolbar />}
             {toolbarItems.map((item, index) => (
               <Tooltip key={item.mode || index}>
                 <TooltipTrigger asChild>
@@ -69,8 +49,7 @@ function SideToolbar({
                     role="button"
                     tabIndex={0}
                     aria-label={item.label}
-                    onClick={() => handleItemClick(item.mode)}
-                    onKeyDown={(e) => handleKeyDown(e, item.mode)}
+                    onClick={() => handleItemClick(item.mode as ModeType)}
                   >
                     {item.href ? (
                       <Link

@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, useState, useMemo } from "react";
+import React, { createContext, useState, useMemo, useRef } from "react";
 import Konva from "konva";
 import { v4 as uuidv4 } from "uuid";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 
 export const fills = [
   "#6B7280",
@@ -24,6 +23,7 @@ export type UserCursor = {
   x: number;
   y: number;
 };
+export type ModeType = "drawing" | "erasing" | "selecting" | "drawing";
 
 interface BoardContextType {
   brushColor: string;
@@ -32,8 +32,6 @@ interface BoardContextType {
   setCurrentLineId: (id: string) => void;
   mode: string;
   setMode: (mode: string) => void;
-  tool: string;
-  setTool: (tool: string) => void;
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isShapeSelected: (id: string) => boolean;
@@ -50,8 +48,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
     useState<React.RefObject<Konva.Stage | null> | null>(null);
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [currentLineId, setCurrentLineId] = useState<string>(uuidv4());
-  const [mode, setMode] = useState("selecting");
-  const [tool, setTool] = useState("pen");
+  const [mode, setMode] = useState<ModeType>("selecting");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [brushSize, setBrushSize] = useState<number>(2);
   const isShapeSelected = (id: string): boolean => {
@@ -68,23 +65,13 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setCurrentLineId,
       mode,
       setMode,
-      tool,
-      setTool,
       selectedShapeIds,
       setSelectedShapeIds,
       isShapeSelected,
       brushSize,
       setBrushSize,
     }),
-    [
-      stageRef,
-      brushColor,
-      currentLineId,
-      mode,
-      tool,
-      selectedShapeIds,
-      brushSize,
-    ]
+    [stageRef, brushColor, currentLineId, mode, selectedShapeIds, brushSize]
   );
 
   return (

@@ -1,23 +1,17 @@
 import { Brush, Eraser, Circle, Palette } from "lucide-react";
 import ColorIcon from "./color-icon";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { BoardContext } from "./context/board-context";
 
-function DrawingToolbar({
-  changeBrushColor,
-  changeBrushSize,
-}: {
-  changeBrushColor: (color: string) => void;
-  changeBrushSize: (size: number) => void;
-}) {
+function DrawingToolbar() {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-
+  const { mode, setMode, setBrushColor, setBrushSize } =
+    useContext(BoardContext);
   const handleBrushColor = (e: React.MouseEvent<HTMLDivElement>) => {
     const rgbaColor = window.getComputedStyle(
       e.target as Element
     ).backgroundColor;
-    console.log("Brush color");
-    console.log(rgbaColor);
-    changeBrushColor(rgbaColor);
+    setBrushColor(rgbaColor);
   };
 
   const brushSizes = [
@@ -51,17 +45,29 @@ function DrawingToolbar({
   ];
 
   const mainTools = [
-    { label: "Brush", icon: <Brush /> },
-    { label: "Eraser", icon: <Eraser /> },
+    {
+      label: "Brush",
+      icon: <Brush />,
+      onClick: () => setMode("drawing"),
+      isActive: mode === "drawing",
+    },
+    {
+      label: "Eraser",
+      icon: <Eraser />,
+      onClick: () => setMode("erasing"),
+      isActive: mode === "erasing",
+    },
     ...brushSizes.map((size) => ({
       label: size.label,
       icon: size.icon,
-      onClick: () => changeBrushSize(size.size),
+      onClick: () => setBrushSize(size.size),
+      isActive: false,
     })),
     {
       label: "Colors",
       icon: <Palette />,
       onClick: () => setIsColorPaletteOpen(!isColorPaletteOpen),
+      isActive: isColorPaletteOpen,
     },
   ];
 
@@ -73,7 +79,8 @@ function DrawingToolbar({
             {mainTools.map((tool, index) => (
               <li
                 key={index}
-                className="flex flex-col items-center px-1 cursor-pointer rounded-xl transition-all transform hover:scale-110"
+                className={`flex flex-col items-center px-1 cursor-pointer rounded-xl transition-all transform hover:scale-110
+                  ${tool.isActive ? "bg-gray-300" : ""}`}
                 title={tool.label}
               >
                 <div onClick={tool.onClick} className="text-2xl">

@@ -2,7 +2,10 @@
 import SideToolbar from "@/components/board/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Line, Shape, Rect, Transformer } from "react-konva";
-import { BoardContext } from "@/components/board/context/board-context";
+import {
+  BoardContext,
+  ModeType,
+} from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { v4 as uuidv4 } from "uuid";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
@@ -13,7 +16,7 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
-import DrawingToolbar from "@/components/board/drawing-toolbar";
+import { useErasing } from "@/components/board/hooks/use-erasing";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -27,8 +30,6 @@ export default function Board({}: {}) {
     setCurrentLineId,
     mode,
     setMode,
-    tool,
-    setTool,
     selectedShapeIds,
     setSelectedShapeIds,
     brushSize,
@@ -36,16 +37,12 @@ export default function Board({}: {}) {
   } = useContext(BoardContext);
 
   const isDrawing = useRef(false);
-  const modeStateRef = useRef(mode);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
   const { draggingState, handleDragStart, handleDragEnd } = useDragging();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
+  const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
 
-  useEffect(() => {
-    modeStateRef.current = mode;
-  }, [mode]);
-
-  function setCursorMode(new_mode: string) {
+  function setCursorMode(new_mode: ModeType) {
     setMode(new_mode);
   }
 
@@ -55,6 +52,8 @@ export default function Board({}: {}) {
     if (mode === "drawing") {
       isDrawing.current = true;
       startLine(e);
+    } else if (mode === "erasing") {
+      handleEraseStart(e);
     }
   };
 
@@ -63,12 +62,17 @@ export default function Board({}: {}) {
   const handleMouseMove = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
   ) => {
-    if (!isDrawing.current || mode !== "drawing") return;
-    drawLine(e);
-    const pos = e.target.getStage()?.getPointerPosition();
-    if (!pos) return;
-
-    setLocalLine(createLine(currentLineId, localPoints, brushColor, brushSize));
+    if (mode === "drawing") {
+      if (!isDrawing.current) return;
+      drawLine(e);
+      const pos = e.target.getStage()?.getPointerPosition();
+      if (!pos) return;
+      setLocalLine(
+        createLine(currentLineId, localPoints, brushColor, brushSize)
+      );
+    } else if (mode === "erasing") {
+      handleEraseMove(e);
+    }
   };
 
   const handleMouseUp = useCallback(() => {
@@ -77,8 +81,10 @@ export default function Board({}: {}) {
       endLine();
       setCurrentLineId(uuidv4());
       setLocalLine(null);
+    } else if (mode === "erasing") {
+      handleEraseEnd();
     }
-  }, [mode, endLine, setCurrentLineId]);
+  }, [endLine, setCurrentLineId]);
 
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) {
@@ -97,14 +103,9 @@ export default function Board({}: {}) {
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
       <div className="z-10 flex-shrink ">
-        <SideToolbar
-          setCursorMode={setCursorMode}
-          changeBrushColor={setBrushColor}
-          changeBrushSize={setBrushSize}
-          cursorMode={mode}
-        />
+        <SideToolbar />
       </div>
-      <div className="flex-grow md:overflow-y-auto">
+      <div className={`${mode === "erasing" ? "cursor-crosshair" : ""}`}>
         <Stage
           width={window.innerWidth}
           height={window.innerHeight}

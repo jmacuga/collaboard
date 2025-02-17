@@ -43,7 +43,7 @@ function useDrawing() {
   );
   const [localPoints, setLocalPoints] = useState<number[]>([]);
 
-  const updateAutomerge = useCallback(
+  const addLineToDoc = useCallback(
     (points: number[]) => {
       changeLocalDoc((doc: KonvaNodeSchema) => {
         if (!doc.children) doc.children = [];
@@ -58,8 +58,6 @@ function useDrawing() {
   );
 
   const drawLine = (e: KonvaEvent) => {
-    // if (!doc?.children) return;
-
     const point = getPointerPosition(e);
     if (!point) return;
     setLocalPoints((prev) => [...prev, point.x, point.y]);
@@ -86,7 +84,7 @@ function useDrawing() {
   };
 
   const endLine = () => {
-    updateAutomerge(localPoints);
+    addLineToDoc(localPoints);
     setLocalPoints([]);
   };
 

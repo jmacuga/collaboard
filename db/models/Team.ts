@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 export interface ITeam extends mongoose.Document {
   _id: string;
-  id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;

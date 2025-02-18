@@ -40,7 +40,7 @@ function SideToolbar() {
       >
         <nav>
           <ul className="space-y-4" role="list">
-            {(mode === "drawing" || "erasing") && <DrawingToolbar />}
+            {(mode === "drawing" || mode === "erasing") && <DrawingToolbar />}
             {toolbarItems.map((item, index) => (
               <Tooltip key={item.mode || index}>
                 <TooltipTrigger asChild>

@@ -1,86 +1,73 @@
-import { FaPaintBrush, FaEraser } from "react-icons/fa";
-import ColorIcon from "./color-icon";
+import { Brush, Eraser, Circle, Palette } from "lucide-react";
+import { useContext, useState } from "react";
+import { BoardContext } from "./context/board-context";
+import { ToolbarContainer } from "./components/toolbar-container";
+import { ToolbarItem } from "./components/toolbar-item";
+import { ColorPalette } from "./components/color-palette";
 
-function DrawingToolbar({
-  changeBrushColor,
-}: {
-  changeBrushColor: (color: string) => void;
-}) {
-  const handleBrushColor = (e) => {
-    const rgbaColor = window.getComputedStyle(e.target).backgroundColor;
-    console.log("Brush color");
-    console.log(rgbaColor);
-    changeBrushColor(rgbaColor);
-  };
+const DrawingToolbar = () => {
+  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
+  const { mode, setMode, setBrushColor, setBrushSize } =
+    useContext(BoardContext);
 
-  const drawingTools = [
-    { label: "Brush", icon: <FaPaintBrush /> },
-    { label: "Eraser", icon: <FaEraser /> },
+  const brushSizes = [
     {
-      label: "White",
-      icon: <ColorIcon className="bg-white" />,
-      onclick: handleBrushColor,
+      label: "Small",
+      size: 2,
+      icon: <Circle className="w-3 h-3 fill-current" />,
     },
     {
-      label: "Black",
-      icon: <ColorIcon className="bg-black" />,
-      onclick: handleBrushColor,
+      label: "Medium",
+      size: 5,
+      icon: <Circle className="w-4 h-4 fill-current" />,
     },
     {
-      label: "Purple",
-      icon: <ColorIcon className="bg-purple-500" />,
-      onclick: handleBrushColor,
+      label: "Large",
+      size: 10,
+      icon: <Circle className="w-5 h-5 fill-current" />,
+    },
+  ];
+
+  const tools = [
+    {
+      label: "Brush",
+      icon: <Brush />,
+      onClick: () => setMode("drawing"),
+      isActive: mode === "drawing",
     },
     {
-      label: "Pink",
-      icon: <ColorIcon className="bg-pink-500" />,
-      onclick: handleBrushColor,
+      label: "Eraser",
+      icon: <Eraser />,
+      onClick: () => setMode("erasing"),
+      isActive: mode === "erasing",
     },
+    ...brushSizes.map((size) => ({
+      label: size.label,
+      icon: size.icon,
+      onClick: () => setBrushSize(size.size),
+      isActive: false,
+    })),
     {
-      label: "Red",
-      icon: <ColorIcon className="bg-red-500" />,
-      onclick: handleBrushColor,
-    },
-    {
-      label: "Orange",
-      icon: <ColorIcon className="bg-orange-400" />,
-      onclick: handleBrushColor,
-    },
-    {
-      label: "Yellow",
-      icon: <ColorIcon className="bg-yellow-400" />,
-      onclick: handleBrushColor,
-    },
-    {
-      label: "Green",
-      icon: <ColorIcon className="bg-green-500" />,
-      onclick: handleBrushColor,
-    },
-    {
-      label: "Blue",
-      icon: <ColorIcon className="bg-blue-400" />,
-      onclick: handleBrushColor,
+      label: "Colors",
+      icon: <Palette />,
+      onClick: () => setIsColorPaletteOpen(!isColorPaletteOpen),
+      isActive: isColorPaletteOpen,
     },
   ];
 
   return (
-    <div className="fixed top-6 left-20 h-auto bg-gray-200 text-bice-blue shadow-lg rounded-3xl p-1">
-      <nav>
-        <ul className="space-y-4 py-2">
-          {drawingTools.map((tool, index) => (
-            <li
-              key={index}
-              className="flex flex-col items-center px-1 cursor-pointer rounded-xl transition-all transform hover:scale-110"
-            >
-              <div onClick={tool.onclick ?? undefined} className="text-2xl ">
-                {tool.icon}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+    <>
+      <ToolbarContainer>
+        {tools.map((tool, index) => (
+          <ToolbarItem key={index} {...tool} />
+        ))}
+        <ColorPalette
+          isOpen={isColorPaletteOpen}
+          onColorSelect={setBrushColor}
+        />
+      </ToolbarContainer>
+    </>
   );
-}
+};
 
-export default DrawingToolbar;
+export { DrawingToolbar };

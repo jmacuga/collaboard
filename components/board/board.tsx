@@ -1,7 +1,15 @@
 "use client";
 import SideToolbar from "@/components/board/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
-import { Stage, Layer, Line, Shape, Rect, Transformer } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Line,
+  Rect,
+  Transformer,
+  Circle,
+  Arrow,
+} from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { v4 as uuidv4 } from "uuid";
@@ -13,38 +21,30 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
+import { useErasing } from "@/components/board/hooks/use-erasing";
+import { useShape } from "@/components/board/hooks/use-shape";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
-  const [localDoc, setLocalDoc] = useDocument<KonvaNodeSchema>(
+  const [localDoc] = useDocument<KonvaNodeSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const {
     brushColor,
-    setBrushColor,
+    brushSize,
     currentLineId,
     setCurrentLineId,
     mode,
     setMode,
-    tool,
-    setTool,
-    selectedShapeIds,
     setSelectedShapeIds,
   } = useContext(BoardContext);
 
   const isDrawing = useRef(false);
-  const modeStateRef = useRef(mode);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
-  const { draggingState, handleDragStart, handleDragEnd } = useDragging();
+  const { handleDragStart, handleDragEnd } = useDragging();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
-
-  useEffect(() => {
-    modeStateRef.current = mode;
-  }, [mode]);
-
-  function setCursorMode(new_mode: string) {
-    setMode(new_mode);
-  }
+  const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
+  const { addShape } = useShape();
 
   const handleMouseDown = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
@@ -52,6 +52,11 @@ export default function Board({}: {}) {
     if (mode === "drawing") {
       isDrawing.current = true;
       startLine(e);
+    } else if (mode === "erasing") {
+      handleEraseStart(e);
+    } else if (mode === "shapes") {
+      addShape(e as Konva.KonvaEventObject<MouseEvent>);
+      setMode("selecting");
     }
   };
 
@@ -60,12 +65,17 @@ export default function Board({}: {}) {
   const handleMouseMove = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
   ) => {
-    if (!isDrawing.current || mode !== "drawing") return;
-    drawLine(e);
-    const pos = e.target.getStage()?.getPointerPosition();
-    if (!pos) return;
-
-    setLocalLine(createLine(currentLineId, localPoints, brushColor));
+    if (mode === "drawing") {
+      if (!isDrawing.current) return;
+      drawLine(e);
+      const pos = e.target.getStage()?.getPointerPosition();
+      if (!pos) return;
+      setLocalLine(
+        createLine(currentLineId, localPoints, brushColor, brushSize)
+      );
+    } else if (mode === "erasing") {
+      handleEraseMove(e);
+    }
   };
 
   const handleMouseUp = useCallback(() => {
@@ -74,8 +84,10 @@ export default function Board({}: {}) {
       endLine();
       setCurrentLineId(uuidv4());
       setLocalLine(null);
+    } else if (mode === "erasing") {
+      handleEraseEnd();
     }
-  }, [mode, endLine, setCurrentLineId]);
+  }, [endLine, setCurrentLineId]);
 
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) {
@@ -94,13 +106,9 @@ export default function Board({}: {}) {
   return (
     <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
       <div className="z-10 flex-shrink ">
-        <SideToolbar
-          setCursorMode={setCursorMode}
-          changeBrushColor={setBrushColor}
-          cursorMode={mode}
-        />
+        <SideToolbar />
       </div>
-      <div className="flex-grow md:overflow-y-auto">
+      <div className={`${mode === "erasing" ? "cursor-crosshair" : ""}`}>
         <Stage
           width={window.innerWidth}
           height={window.innerHeight}
@@ -124,6 +132,54 @@ export default function Board({}: {}) {
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onTransformEnd={handleTransformEnd}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Rect") {
+                return (
+                  <Rect
+                    key={shape.attrs.id ?? "0"}
+                    {...shape.attrs}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Circle") {
+                return (
+                  <Circle
+                    key={shape.attrs.id ?? "0"}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    {...shape.attrs}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Arrow") {
+                return (
+                  <Arrow
+                    key={shape.attrs.id ?? "0"}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    {...shape.attrs}
                     ref={(node) => {
                       shape.attrs.ref = node;
                     }}

@@ -42,7 +42,7 @@ export class ClientSyncService implements IClientSyncService {
     let localDocHandle;
     try {
       const docExists = await db.docUrls.get(docUrl);
-      if (docExists) {
+      if (docExists && docExists.docUrl === docUrl) {
         console.log("Found doc in indexedDB", docExists);
         localDocHandle = localRepo.find(docUrl as AnyDocumentId);
       } else {

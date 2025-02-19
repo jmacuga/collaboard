@@ -8,7 +8,7 @@ import { useClientSync } from "../context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 import Konva from "konva";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { v4 as uuidv4 } from "uuid";
 
@@ -24,10 +24,10 @@ const useShape = () => {
   const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { currentLineId, setCurrentLineId } = useContext(BoardContext);
-
+  const { shapeColor } = useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
     changeDoc((doc: KonvaNodeSchema) => {
+      if (!doc.children) doc.children = [];
       doc.children?.push(shape);
     });
   };
@@ -35,14 +35,14 @@ const useShape = () => {
   const addRect = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
+    console.log(shapeColor);
     const rect = new Konva.Rect({
       id: uuidv4(),
       x: point.x - 50,
       y: point.y - 50,
       width: 100,
       height: 100,
-      fill: "red",
-      stroke: "black",
+      stroke: shapeColor,
       strokeWidth: 1,
       cornerRadius: 10,
     });

@@ -4,17 +4,6 @@ import React, { createContext, useState, useMemo, useRef } from "react";
 import Konva from "konva";
 import { v4 as uuidv4 } from "uuid";
 
-export const fills = [
-  "#6B7280",
-  "#EF4444",
-  "#F59E0B",
-  "#10B981",
-  "#3B82F6",
-  "#6366F1",
-  "#8B5CF6",
-  "#EC4899",
-];
-
 type Props = {
   children: React.ReactNode;
 };
@@ -23,20 +12,26 @@ export type UserCursor = {
   x: number;
   y: number;
 };
-export type ModeType = "drawing" | "erasing" | "selecting" | "drawing";
+export type ModeType = "drawing" | "erasing" | "selecting" | "shapes";
+
+export type ShapeType = "rectangle" | "circle" | "arrow";
 
 interface BoardContextType {
   brushColor: string;
   setBrushColor: (color: string) => void;
   currentLineId: string;
   setCurrentLineId: (id: string) => void;
-  mode: string;
-  setMode: (mode: string) => void;
+  mode: ModeType;
+  setMode: (mode: ModeType) => void;
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isShapeSelected: (id: string) => boolean;
   brushSize: number;
   setBrushSize: (size: number) => void;
+  shapeType: ShapeType;
+  setShapeType: (type: ShapeType) => void;
+  shapeColor: string;
+  setShapeColor: (color: string) => void;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -51,6 +46,8 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [mode, setMode] = useState<ModeType>("selecting");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [brushSize, setBrushSize] = useState<number>(2);
+  const [shapeType, setShapeType] = useState<ShapeType>("rectangle");
+  const [shapeColor, setShapeColor] = useState("rgb(0,0,0)");
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
   };
@@ -70,8 +67,21 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       isShapeSelected,
       brushSize,
       setBrushSize,
+      shapeType,
+      setShapeType,
+      shapeColor,
+      setShapeColor,
     }),
-    [stageRef, brushColor, currentLineId, mode, selectedShapeIds, brushSize]
+    [
+      stageRef,
+      brushColor,
+      currentLineId,
+      mode,
+      selectedShapeIds,
+      brushSize,
+      shapeType,
+      shapeColor,
+    ]
   );
 
   return (

@@ -6,11 +6,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import DrawingToolbar from "@/components/board/drawing-toolbar";
+import { DrawingToolbar } from "@/components/board/drawing-toolbar";
 import { ModeType } from "@/components/board/context/board-context";
 import { useContext } from "react";
 import { BoardContext } from "@/components/board/context/board-context";
-
+import { ShapesToolbar } from "@/components/board/shapes-toolbar";
 function SideToolbar() {
   const { mode, setMode } = useContext(BoardContext);
   const toolbarItems = [
@@ -42,6 +42,7 @@ function SideToolbar() {
         <nav>
           <ul className="space-y-4" role="list">
             {(mode === "drawing" || mode === "erasing") && <DrawingToolbar />}
+            {mode === "shapes" && <ShapesToolbar />}
             {toolbarItems.map((item, index) => (
               <Tooltip key={item.mode || index}>
                 <TooltipTrigger asChild>

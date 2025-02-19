@@ -6,7 +6,7 @@ import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "@/components/board/context/client-doc-context";
 
 interface DraggingState {
-  draggedLineId: string | null;
+  draggedShapeId: string | null;
   position: { x: number; y: number };
 }
 
@@ -17,31 +17,31 @@ export const useDragging = () => {
   );
 
   const [draggingState, setDraggingState] = useState<DraggingState>({
-    draggedLineId: null,
+    draggedShapeId: null,
     position: { x: 0, y: 0 },
   });
 
   const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-    const lineId = e.target.attrs.id;
+    const shapeId = e.target.attrs.id;
     setDraggingState({
-      draggedLineId: lineId,
+      draggedShapeId: shapeId,
       position: e.target.position(),
     });
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-    const lineId = e.target.attrs.id;
+    const shapeId = e.target.attrs.id;
     const newPos = e.target.position();
     changeDoc((doc: KonvaNodeSchema) => {
-      const line = doc.children?.find(
-        (child: KonvaNodeSchema) => child.attrs.id === lineId
+      const shape = doc.children?.find(
+        (child: KonvaNodeSchema) => child.attrs.id === shapeId
       );
-      if (line) {
-        line.attrs.position = newPos;
+      if (shape) {
+        shape.attrs.position = newPos;
       }
     });
     setDraggingState({
-      draggedLineId: null,
+      draggedShapeId: null,
       position: { x: 0, y: 0 },
     });
   };

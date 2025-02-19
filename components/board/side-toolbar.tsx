@@ -1,4 +1,4 @@
-import { Brush, Hand, MousePointer, Home } from "lucide-react";
+import { Brush, Hand, MousePointer, Home, Shapes } from "lucide-react";
 import Link from "next/link";
 import {
   Tooltip,
@@ -21,6 +21,7 @@ function SideToolbar() {
       href: "/teams",
     },
     { label: "Draw", icon: <Brush />, mode: "drawing" },
+    { label: "Shapes", icon: <Shapes />, mode: "shapes" },
     { label: "Drag", icon: <Hand />, mode: "dragging" },
     { label: "Select", icon: <MousePointer />, mode: "selecting" },
   ];

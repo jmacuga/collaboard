@@ -17,7 +17,7 @@ import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
-
+import { useShape } from "@/components/board/hooks/use-shape";
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
   const [localDoc, setLocalDoc] = useDocument<KonvaNodeSchema>(
@@ -41,7 +41,7 @@ export default function Board({}: {}) {
   const { draggingState, handleDragStart, handleDragEnd } = useDragging();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
-
+  const { addRect } = useShape();
   function setCursorMode(new_mode: ModeType) {
     setMode(new_mode);
   }
@@ -54,6 +54,8 @@ export default function Board({}: {}) {
       startLine(e);
     } else if (mode === "erasing") {
       handleEraseStart(e);
+    } else if (mode === "shapes") {
+      addRect(e as Konva.KonvaEventObject<MouseEvent>);
     }
   };
 
@@ -122,6 +124,22 @@ export default function Board({}: {}) {
               if (shape.className == "Line") {
                 return (
                   <Line
+                    key={shape.attrs.id ?? "0"}
+                    {...shape.attrs}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Rect") {
+                return (
+                  <Rect
                     key={shape.attrs.id ?? "0"}
                     {...shape.attrs}
                     draggable={mode === "selecting"}

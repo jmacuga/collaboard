@@ -24,7 +24,7 @@ const useShape = () => {
   const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { shapeColor } = useContext(BoardContext);
+  const { shapeColor, shapeType } = useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
     changeDoc((doc: KonvaNodeSchema) => {
       if (!doc.children) doc.children = [];
@@ -32,25 +32,52 @@ const useShape = () => {
     });
   };
 
-  const addRect = (e: KonvaEventObject<MouseEvent>) => {
+  const addShape = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
-    console.log(shapeColor);
-    const rect = new Konva.Rect({
-      id: uuidv4(),
-      x: point.x - 50,
-      y: point.y - 50,
-      width: 100,
-      height: 100,
-      stroke: shapeColor,
-      strokeWidth: 1,
-      cornerRadius: 10,
-    });
-
-    addToAutomerge(rect.toObject() as KonvaNodeSchema);
+    let shape: Konva.Rect | Konva.Circle | Konva.Arrow | null = null;
+    if (shapeType === "rectangle") {
+      shape = new Konva.Rect({
+        id: uuidv4(),
+        x: point.x - 50,
+        y: point.y - 50,
+        width: 100,
+        height: 100,
+        stroke: shapeColor,
+        strokeWidth: 3,
+        cornerRadius: 10,
+      });
+    }
+    if (shapeType === "circle") {
+      shape = new Konva.Circle({
+        id: uuidv4(),
+        x: point.x - 25,
+        y: point.y - 25,
+        radius: 50,
+        stroke: shapeColor,
+        strokeWidth: 3,
+      });
+      console.log(shape);
+    }
+    if (shapeType === "arrow") {
+      shape = new Konva.Arrow({
+        id: uuidv4(),
+        x: point.x - 50,
+        y: point.y,
+        points: [0, 0, 100, 0],
+        stroke: shapeColor,
+        strokeWidth: 3,
+        fill: shapeColor,
+        lineCap: "round",
+        lineJoin: "round",
+      });
+    }
+    if (shape) {
+      addToAutomerge(shape.toObject() as KonvaNodeSchema);
+    }
   };
 
-  return { addRect };
+  return { addShape };
 };
 
 export { useShape };

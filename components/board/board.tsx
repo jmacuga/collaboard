@@ -1,11 +1,16 @@
 "use client";
 import SideToolbar from "@/components/board/side-toolbar";
 import { useEffect, useContext, useState, useRef, useCallback } from "react";
-import { Stage, Layer, Line, Shape, Rect, Transformer } from "react-konva";
 import {
-  BoardContext,
-  ModeType,
-} from "@/components/board/context/board-context";
+  Stage,
+  Layer,
+  Line,
+  Rect,
+  Transformer,
+  Circle,
+  Arrow,
+} from "react-konva";
+import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { v4 as uuidv4 } from "uuid";
 import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
@@ -18,33 +23,28 @@ import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
 import { useShape } from "@/components/board/hooks/use-shape";
+
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
-  const [localDoc, setLocalDoc] = useDocument<KonvaNodeSchema>(
+  const [localDoc] = useDocument<KonvaNodeSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const {
     brushColor,
-    setBrushColor,
+    brushSize,
     currentLineId,
     setCurrentLineId,
     mode,
     setMode,
-    selectedShapeIds,
     setSelectedShapeIds,
-    brushSize,
-    setBrushSize,
   } = useContext(BoardContext);
 
   const isDrawing = useRef(false);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
-  const { draggingState, handleDragStart, handleDragEnd } = useDragging();
+  const { handleDragStart, handleDragEnd } = useDragging();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
-  const { addRect } = useShape();
-  function setCursorMode(new_mode: ModeType) {
-    setMode(new_mode);
-  }
+  const { addShape } = useShape();
 
   const handleMouseDown = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
@@ -55,7 +55,8 @@ export default function Board({}: {}) {
     } else if (mode === "erasing") {
       handleEraseStart(e);
     } else if (mode === "shapes") {
-      addRect(e as Konva.KonvaEventObject<MouseEvent>);
+      addShape(e as Konva.KonvaEventObject<MouseEvent>);
+      setMode("selecting");
     }
   };
 
@@ -147,6 +148,38 @@ export default function Board({}: {}) {
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onTransformEnd={handleTransformEnd}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Circle") {
+                return (
+                  <Circle
+                    key={shape.attrs.id ?? "0"}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    {...shape.attrs}
+                    ref={(node) => {
+                      shape.attrs.ref = node;
+                    }}
+                  />
+                );
+              }
+              if (shape.className == "Arrow") {
+                return (
+                  <Arrow
+                    key={shape.attrs.id ?? "0"}
+                    draggable={mode === "selecting"}
+                    onClick={handleShapeClick}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                    {...shape.attrs}
                     ref={(node) => {
                       shape.attrs.ref = node;
                     }}

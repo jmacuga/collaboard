@@ -49,7 +49,7 @@ export const useErasing = () => {
 
       const shapes = stage?.getAllIntersections(pos);
       shapes?.forEach((shape) => {
-        if (shape instanceof Konva.Line) {
+        if (shape instanceof Konva.Line && !(shape instanceof Konva.Arrow)) {
           handleErase(shape.attrs.id);
         }
       });

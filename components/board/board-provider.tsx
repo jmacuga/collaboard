@@ -5,7 +5,7 @@ import { Repo } from "@automerge/automerge-repo";
 import Board from "@/components/board/board";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 import { ClientSyncContext } from "./context/client-doc-context";
-
+import { BoardContextProvider } from "./context/board-context";
 interface BoardState {
   repo: Repo | null;
   docUrl: string;
@@ -27,9 +27,10 @@ export function BoardProvider({
 
   useEffect(() => {
     const initializeBoard = async () => {
-      const clientSyncService = await ClientSyncService.create(docUrl);
+      const clientSyncService = new ClientSyncService({ docUrl });
+      await clientSyncService.initializeRepo();
       if (clientSyncService.canConnect()) {
-        clientSyncService.connect();
+        await clientSyncService.connect();
       }
       setState({
         repo: clientSyncService.localRepo,
@@ -49,7 +50,9 @@ export function BoardProvider({
       <ClientSyncContext.Provider
         value={{ clientSyncService: state.clientSyncService }}
       >
-        <Board />
+        <BoardContextProvider>
+          <Board />
+        </BoardContextProvider>
       </ClientSyncContext.Provider>
     </RepoContext.Provider>
   );

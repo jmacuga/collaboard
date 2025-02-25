@@ -1,5 +1,5 @@
 import { Brush, Eraser, Circle, Palette } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { BoardContext } from "./context/board-context";
 import { ToolbarContainer } from "./components/toolbar-container";
 import { ToolbarItem } from "./components/toolbar-item";
@@ -7,24 +7,33 @@ import { ColorPalette } from "./components/color-palette";
 
 const DrawingToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-  const { mode, setMode, setBrushColor, setBrushSize } =
+  const [sizeChangeAnimation, setSizeChangeAnimation] = useState(false);
+  const { mode, setMode, setBrushColor, brushSize, setBrushSize, brushColor } =
     useContext(BoardContext);
+
+  useEffect(() => {
+    setSizeChangeAnimation(true);
+    const timer = setTimeout(() => {
+      setSizeChangeAnimation(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [brushSize]);
 
   const brushSizes = [
     {
       label: "Small",
       size: 2,
-      icon: <Circle className="w-3 h-3 fill-current" />,
+      icon: <Circle className="w-2.5 h-2.5 fill-current" />,
     },
     {
       label: "Medium",
       size: 5,
-      icon: <Circle className="w-4 h-4 fill-current" />,
+      icon: <Circle className="w-3.5 h-3.5 fill-current" />,
     },
     {
       label: "Large",
       size: 10,
-      icon: <Circle className="w-5 h-5 fill-current" />,
+      icon: <Circle className="w-4.5 h-4.5 fill-current" />,
     },
   ];
 
@@ -45,7 +54,7 @@ const DrawingToolbar = () => {
       label: size.label,
       icon: size.icon,
       onClick: () => setBrushSize(size.size),
-      isActive: false,
+      isActive: brushSize === size.size,
     })),
     {
       label: "Colors",

@@ -72,6 +72,10 @@ const DrawingToolbar = () => {
     },
   ];
 
+  // Get the current brush size label
+  const currentSizeLabel =
+    brushSizes.find((size) => size.size === brushSize)?.label || "Medium";
+
   return (
     <>
       <ToolbarContainer>
@@ -84,6 +88,26 @@ const DrawingToolbar = () => {
           onColorSelect={setBrushColor}
         />
       </ToolbarContainer>
+
+      {(mode === "drawing" || mode === "erasing") && (
+        <div
+          className={`fixed left-1/2 bottom-6 transform -translate-x-1/2 bg-gray-800/80 text-white px-3 py-1.5 rounded-full text-sm flex items-center gap-2 transition-opacity duration-300 ${
+            sizeChangeAnimation ? "opacity-100" : "opacity-60"
+          }`}
+        >
+          <div
+            className="rounded-full bg-current"
+            style={{
+              width: `${brushSize * 2}px`,
+              height: `${brushSize * 2}px`,
+              backgroundColor: mode === "erasing" ? "white" : brushColor,
+            }}
+          />
+          <span>
+            {mode === "drawing" ? "Brush" : "Eraser"}: {currentSizeLabel}
+          </span>
+        </div>
+      )}
     </>
   );
 };

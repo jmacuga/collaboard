@@ -23,7 +23,7 @@ export type ModeType =
   | "erasing"
   | "selecting"
   | "shapes"
-  | "dragging"
+  | "panning"
   | "teams";
 
 export type ShapeType = "rectangle" | "circle" | "arrow";

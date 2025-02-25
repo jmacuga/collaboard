@@ -23,7 +23,7 @@ function SideToolbar() {
     { label: "Draw", icon: <Brush />, mode: "drawing" },
     { label: "Erase", icon: <Eraser />, mode: "erasing" },
     { label: "Shapes", icon: <Shapes />, mode: "shapes" },
-    { label: "Drag", icon: <Hand />, mode: "dragging" },
+    { label: "Pan", icon: <Hand />, mode: "panning" },
     { label: "Select", icon: <MousePointer />, mode: "selecting" },
   ];
 

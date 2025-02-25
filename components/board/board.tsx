@@ -23,7 +23,9 @@ import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
 import { useShape } from "@/components/board/hooks/use-shape";
+import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
 import { OnlineToggle } from "./components/online-toggle";
+import { ResetPositionButton } from "./components/reset-position-button";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -47,6 +49,14 @@ export default function Board({}: {}) {
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
   const { addShape } = useShape();
+  const {
+    stagePosition,
+    handleBoardPanStart,
+    handleBoardPanMove,
+    handleBoardPanEnd,
+    resetPosition,
+  } = useBoardPanning();
+
   const handle = useHandle<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
@@ -72,6 +82,8 @@ export default function Board({}: {}) {
     } else if (mode === "shapes") {
       addShape(e as Konva.KonvaEventObject<MouseEvent>);
       setMode("selecting");
+    } else if (mode === "panning") {
+      handleBoardPanStart(e);
     }
   };
 
@@ -90,19 +102,26 @@ export default function Board({}: {}) {
       );
     } else if (mode === "erasing") {
       handleEraseMove(e);
+    } else if (mode === "panning") {
+      handleBoardPanMove(e);
     }
   };
 
-  const handleMouseUp = useCallback(() => {
-    if (mode === "drawing") {
-      isDrawing.current = false;
-      endLine();
-      setCurrentLineId(uuidv4());
-      setLocalLine(null);
-    } else if (mode === "erasing") {
-      handleEraseEnd();
-    }
-  }, [endLine, setCurrentLineId]);
+  const handleMouseUp = useCallback(
+    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+      if (mode === "drawing") {
+        isDrawing.current = false;
+        endLine();
+        setCurrentLineId(uuidv4());
+        setLocalLine(null);
+      } else if (mode === "erasing") {
+        handleEraseEnd();
+      } else if (mode === "panning") {
+        handleBoardPanEnd(e);
+      }
+    },
+    [endLine, setCurrentLineId, handleEraseEnd, handleBoardPanEnd, mode]
+  );
 
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) {
@@ -118,13 +137,21 @@ export default function Board({}: {}) {
     setSelectedShapeIds([shapeId]);
   };
 
+  // Show reset position button only when the board has been moved
+  const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
+
   return (
     <div className="relative w-full h-full">
       <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
         <div className="z-10 flex-shrink ">
           <SideToolbar />
         </div>
-        <div className={`${mode === "erasing" ? "cursor-crosshair" : ""}`}>
+        <div
+          className={`
+          ${mode === "erasing" ? "cursor-crosshair" : ""}
+          ${mode === "panning" ? "cursor-grab" : ""}
+        `}
+        >
           <Stage
             width={window.innerWidth}
             height={window.innerHeight}
@@ -135,6 +162,8 @@ export default function Board({}: {}) {
             onMouseUp={handleMouseUp}
             onTouchEnd={handleMouseUp}
             onClick={handleStageClick}
+            x={stagePosition.x}
+            y={stagePosition.y}
           >
             <Layer>
               {localDoc &&
@@ -218,6 +247,7 @@ export default function Board({}: {}) {
         </div>
       </div>
       <OnlineToggle />
+      {showResetButton && <ResetPositionButton onClick={resetPosition} />}
     </div>
   );
 }

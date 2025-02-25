@@ -28,11 +28,22 @@ export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
         );
         if (shapeIndex === -1) return;
 
-        doc.children[shapeIndex].attrs.x = node.x();
-        doc.children[shapeIndex].attrs.y = node.y();
-        doc.children[shapeIndex].attrs.scaleX = node.scaleX();
-        doc.children[shapeIndex].attrs.scaleY = node.scaleY();
-        doc.children[shapeIndex].attrs.rotation = node.rotation();
+        const shape_attrs = doc.children[shapeIndex].attrs;
+        if (shape_attrs.x !== node.x()) {
+          shape_attrs.x = node.x();
+        }
+        if (shape_attrs.y !== node.y()) {
+          shape_attrs.y = node.y();
+        }
+        if (shape_attrs.scaleX !== node.scaleX()) {
+          shape_attrs.scaleX = node.scaleX();
+        }
+        if (shape_attrs.scaleY !== node.scaleY()) {
+          shape_attrs.scaleY = node.scaleY();
+        }
+        if (shape_attrs.rotation !== node.rotation()) {
+          shape_attrs.rotation = node.rotation();
+        }
       });
     },
     [changeLocalDoc]
@@ -41,6 +52,7 @@ export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
   useEffect(() => {
     const transformer = transformerRef.current;
     if (transformer) {
+      transformer.ignoreStroke(true);
       transformer.nodes(
         localDoc?.children
           ?.filter((shape: KonvaNodeSchema) =>

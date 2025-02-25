@@ -49,10 +49,6 @@ export default function Board({}: {}) {
   const { addShape } = useShape();
 
   useEffect(() => {
-    console.log(localDoc);
-  }, [localDoc]);
-
-  useEffect(() => {
     console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
   }, [isOnline]);
 
@@ -143,6 +139,7 @@ export default function Board({}: {}) {
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onTransformEnd={handleTransformEnd}
+                      strokeScaleEnabled={false}
                       ref={(node) => {
                         shape.attrs.ref = node;
                       }}
@@ -159,6 +156,7 @@ export default function Board({}: {}) {
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onTransformEnd={handleTransformEnd}
+                      strokeScaleEnabled={false}
                       ref={(node) => {
                         shape.attrs.ref = node;
                       }}
@@ -174,6 +172,7 @@ export default function Board({}: {}) {
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onTransformEnd={handleTransformEnd}
+                      strokeScaleEnabled={false}
                       {...shape.attrs}
                       ref={(node) => {
                         shape.attrs.ref = node;
@@ -190,6 +189,7 @@ export default function Board({}: {}) {
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onTransformEnd={handleTransformEnd}
+                      strokeScaleEnabled={false}
                       {...shape.attrs}
                       ref={(node) => {
                         shape.attrs.ref = node;
@@ -205,13 +205,6 @@ export default function Board({}: {}) {
         </div>
       </div>
       <OnlineToggle />
-      <div
-        className={`status-indicator ${
-          isOnline ? "bg-green-500" : "bg-red-500"
-        }`}
-      >
-        {isOnline ? "Online" : "Offline"}
-      </div>
     </div>
   );
 }

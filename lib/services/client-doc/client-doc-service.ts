@@ -20,7 +20,6 @@ export class ClientSyncService implements IClientSyncService {
   websocketURL: string;
   localNetworkAdapter: BrowserWebSocketClientAdapter;
   peerId: PeerId;
-  isOnline: boolean;
 
   constructor({ docUrl }: { docUrl: string }) {
     this.docUrl = docUrl;
@@ -130,7 +129,21 @@ export class ClientSyncService implements IClientSyncService {
     throw new Error("Method not implemented.");
   }
 
-  syncLocalRepo(): void {}
+  async syncLocalRepo(): Promise<void> {
+    const serverDoc = this.serverRepo?.find(this.docUrl as AnyDocumentId);
+    if (!serverDoc) {
+      throw new Error("Server doc is not initialized");
+    }
+    await serverDoc.whenReady();
+    const localDoc = this.localRepo?.find(this.docUrl as AnyDocumentId);
+    if (!localDoc) {
+      throw new Error("Local doc is not initialized");
+    }
+    await localDoc.whenReady();
+    localDoc.merge(serverDoc);
+    console.log("Local doc merged with server doc");
+    await localDoc.whenReady();
+  }
 
   setOnline(online: boolean): void {
     if (!this.localRepo) {

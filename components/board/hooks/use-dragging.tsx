@@ -7,7 +7,8 @@ import { useClientSync } from "@/components/board/context/client-doc-context";
 
 interface DraggingState {
   draggedShapeId: string | null;
-  position: { x: number; y: number };
+  x: number;
+  y: number;
 }
 
 export const useDragging = () => {
@@ -18,31 +19,35 @@ export const useDragging = () => {
 
   const [draggingState, setDraggingState] = useState<DraggingState>({
     draggedShapeId: null,
-    position: { x: 0, y: 0 },
+    x: 0,
+    y: 0,
   });
 
   const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
     const shapeId = e.target.attrs.id;
     setDraggingState({
       draggedShapeId: shapeId,
-      position: e.target.position(),
+      x: e.target.x(),
+      y: e.target.y(),
     });
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     const shapeId = e.target.attrs.id;
-    const newPos = e.target.position();
+    const newPos = { x: e.target.x(), y: e.target.y() };
     changeDoc((doc: KonvaNodeSchema) => {
       const shape = doc.children?.find(
         (child: KonvaNodeSchema) => child.attrs.id === shapeId
       );
       if (shape) {
-        shape.attrs.position = newPos;
+        shape.attrs.x = newPos.x;
+        shape.attrs.y = newPos.y;
       }
     });
     setDraggingState({
       draggedShapeId: null,
-      position: { x: 0, y: 0 },
+      x: 0,
+      y: 0,
     });
   };
 

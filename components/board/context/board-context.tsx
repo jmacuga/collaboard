@@ -18,7 +18,13 @@ export type UserCursor = {
   x: number;
   y: number;
 };
-export type ModeType = "drawing" | "erasing" | "selecting" | "shapes";
+export type ModeType =
+  | "drawing"
+  | "erasing"
+  | "selecting"
+  | "shapes"
+  | "dragging"
+  | "teams";
 
 export type ShapeType = "rectangle" | "circle" | "arrow";
 

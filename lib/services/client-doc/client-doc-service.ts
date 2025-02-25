@@ -1,6 +1,6 @@
 "use client";
 import { IClientSyncService } from "./types";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
 import {
   Repo,
   AnyDocumentId,

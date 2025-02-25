@@ -67,6 +67,9 @@ const config: Config = {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      scale: {
+        "102": "1.02",
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

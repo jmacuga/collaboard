@@ -1,9 +1,15 @@
 "use client";
 
-import React, { createContext, useState, useMemo, useRef } from "react";
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 import Konva from "konva";
 import { v4 as uuidv4 } from "uuid";
-
+import { useClientSync } from "@/components/board/context/client-doc-context";
 type Props = {
   children: React.ReactNode;
 };
@@ -32,6 +38,9 @@ interface BoardContextType {
   setShapeType: (type: ShapeType) => void;
   shapeColor: string;
   setShapeColor: (color: string) => void;
+  isOnline: boolean;
+  setIsOnline: (online: boolean) => void;
+  toggleOnlineMode: () => void;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -48,8 +57,19 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [brushSize, setBrushSize] = useState<number>(2);
   const [shapeType, setShapeType] = useState<ShapeType>("rectangle");
   const [shapeColor, setShapeColor] = useState("rgb(0,0,0)");
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const clientSyncService = useClientSync();
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
+  };
+
+  const toggleOnlineMode = async () => {
+    try {
+      await clientSyncService.setOnline(!isOnline);
+      setIsOnline((prevOnline) => !prevOnline);
+    } catch (error) {
+      console.error("Failed to toggle online mode:", error);
+    }
   };
 
   const value = useMemo(
@@ -71,6 +91,9 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setShapeType,
       shapeColor,
       setShapeColor,
+      isOnline,
+      setIsOnline,
+      toggleOnlineMode,
     }),
     [
       stageRef,
@@ -81,6 +104,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       brushSize,
       shapeType,
       shapeColor,
+      isOnline,
     ]
   );
 

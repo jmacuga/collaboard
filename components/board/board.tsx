@@ -23,6 +23,7 @@ import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
 import { useShape } from "@/components/board/hooks/use-shape";
+import { OnlineToggle } from "./components/online-toggle";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -37,6 +38,7 @@ export default function Board({}: {}) {
     mode,
     setMode,
     setSelectedShapeIds,
+    isOnline,
   } = useContext(BoardContext);
 
   const isDrawing = useRef(false);
@@ -45,6 +47,14 @@ export default function Board({}: {}) {
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
   const { addShape } = useShape();
+
+  useEffect(() => {
+    console.log(localDoc);
+  }, [localDoc]);
+
+  useEffect(() => {
+    console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
+  }, [isOnline]);
 
   const handleMouseDown = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
@@ -104,93 +114,103 @@ export default function Board({}: {}) {
   };
 
   return (
-    <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
-      <div className="z-10 flex-shrink ">
-        <SideToolbar />
+    <div className="relative w-full h-full">
+      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
+        <div className="z-10 flex-shrink ">
+          <SideToolbar />
+        </div>
+        <div className={`${mode === "erasing" ? "cursor-crosshair" : ""}`}>
+          <Stage
+            width={window.innerWidth}
+            height={window.innerHeight}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onTouchMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onTouchEnd={handleMouseUp}
+            onClick={handleStageClick}
+          >
+            <Layer>
+              {localDoc?.children?.map((shape: KonvaNodeSchema) => {
+                if (shape.className == "Line") {
+                  return (
+                    <Line
+                      key={shape.attrs.id ?? "0"}
+                      {...shape.attrs}
+                      draggable={mode === "selecting"}
+                      onClick={handleShapeClick}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      ref={(node) => {
+                        shape.attrs.ref = node;
+                      }}
+                    />
+                  );
+                }
+                if (shape.className == "Rect") {
+                  return (
+                    <Rect
+                      key={shape.attrs.id ?? "0"}
+                      {...shape.attrs}
+                      draggable={mode === "selecting"}
+                      onClick={handleShapeClick}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      ref={(node) => {
+                        shape.attrs.ref = node;
+                      }}
+                    />
+                  );
+                }
+                if (shape.className == "Circle") {
+                  return (
+                    <Circle
+                      key={shape.attrs.id ?? "0"}
+                      draggable={mode === "selecting"}
+                      onClick={handleShapeClick}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      {...shape.attrs}
+                      ref={(node) => {
+                        shape.attrs.ref = node;
+                      }}
+                    />
+                  );
+                }
+                if (shape.className == "Arrow") {
+                  return (
+                    <Arrow
+                      key={shape.attrs.id ?? "0"}
+                      draggable={mode === "selecting"}
+                      onClick={handleShapeClick}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      {...shape.attrs}
+                      ref={(node) => {
+                        shape.attrs.ref = node;
+                      }}
+                    />
+                  );
+                }
+              })}
+              {localLine && <Line key={currentLineId} {...localLine} />}
+              <Transformer ref={transformerRef} />
+            </Layer>
+          </Stage>
+        </div>
       </div>
-      <div className={`${mode === "erasing" ? "cursor-crosshair" : ""}`}>
-        <Stage
-          width={window.innerWidth}
-          height={window.innerHeight}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onTouchMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onTouchEnd={handleMouseUp}
-          onClick={handleStageClick}
-        >
-          <Layer>
-            {localDoc?.children?.map((shape: KonvaNodeSchema) => {
-              if (shape.className == "Line") {
-                return (
-                  <Line
-                    key={shape.attrs.id ?? "0"}
-                    {...shape.attrs}
-                    draggable={mode === "selecting"}
-                    onClick={handleShapeClick}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onTransformEnd={handleTransformEnd}
-                    ref={(node) => {
-                      shape.attrs.ref = node;
-                    }}
-                  />
-                );
-              }
-              if (shape.className == "Rect") {
-                return (
-                  <Rect
-                    key={shape.attrs.id ?? "0"}
-                    {...shape.attrs}
-                    draggable={mode === "selecting"}
-                    onClick={handleShapeClick}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onTransformEnd={handleTransformEnd}
-                    ref={(node) => {
-                      shape.attrs.ref = node;
-                    }}
-                  />
-                );
-              }
-              if (shape.className == "Circle") {
-                return (
-                  <Circle
-                    key={shape.attrs.id ?? "0"}
-                    draggable={mode === "selecting"}
-                    onClick={handleShapeClick}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onTransformEnd={handleTransformEnd}
-                    {...shape.attrs}
-                    ref={(node) => {
-                      shape.attrs.ref = node;
-                    }}
-                  />
-                );
-              }
-              if (shape.className == "Arrow") {
-                return (
-                  <Arrow
-                    key={shape.attrs.id ?? "0"}
-                    draggable={mode === "selecting"}
-                    onClick={handleShapeClick}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onTransformEnd={handleTransformEnd}
-                    {...shape.attrs}
-                    ref={(node) => {
-                      shape.attrs.ref = node;
-                    }}
-                  />
-                );
-              }
-            })}
-            {localLine && <Line key={currentLineId} {...localLine} />}
-            <Transformer ref={transformerRef} />
-          </Layer>
-        </Stage>
+      <OnlineToggle />
+      <div
+        className={`status-indicator ${
+          isOnline ? "bg-green-500" : "bg-red-500"
+        }`}
+      >
+        {isOnline ? "Online" : "Offline"}
       </div>
     </div>
   );

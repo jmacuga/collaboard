@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import { Repo } from "@automerge/automerge-repo";
 import Board from "@/components/board/board";
@@ -24,9 +24,14 @@ export function BoardProvider({
     docUrl: docUrl || "",
     clientSyncService: null,
   });
+  const isInitialized = useRef(false);
 
   useEffect(() => {
-    const initializeBoard = async () => {
+    const initializeClientSyncService = async () => {
+      if (isInitialized.current || state.clientSyncService) {
+        return;
+      }
+      isInitialized.current = true;
       const clientSyncService = new ClientSyncService({ docUrl });
       await clientSyncService.initializeRepo();
       if (clientSyncService.canConnect()) {
@@ -38,7 +43,7 @@ export function BoardProvider({
         docUrl: clientSyncService.getDocUrl(),
       });
     };
-    initializeBoard();
+    initializeClientSyncService();
   }, [docUrl]);
 
   if (!state.repo || !state.clientSyncService) {

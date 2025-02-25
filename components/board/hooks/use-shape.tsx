@@ -11,7 +11,7 @@ import Konva from "konva";
 import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { v4 as uuidv4 } from "uuid";
-
+import { RawString } from "@automerge/automerge-repo";
 type Point = Vector2d;
 
 const getPointerPosition = (e: KonvaEventObject<MouseEvent>): Point | null => {
@@ -26,16 +26,26 @@ const useShape = () => {
   );
   const { shapeColor, shapeType } = useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
+    shape = objectStringToRawString(shape);
     changeDoc((doc: KonvaNodeSchema) => {
       if (!doc.children) doc.children = [];
       doc.children?.push(shape);
     });
   };
 
+  const objectStringToRawString = (obj: any) => {
+    Object.keys(obj).forEach((key) => {
+      if (typeof obj[key] === "string") {
+        obj[key] = new RawString(obj[key]);
+      }
+    });
+    return obj;
+  };
+
   const addShape = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
-    let shape: Konva.Rect | Konva.Circle | Konva.Arrow | null = null;
+    let shape: Konva.Rect | Konva.Circle | Konva.Arrow | null | any = null;
     if (shapeType === "rectangle") {
       shape = new Konva.Rect({
         id: uuidv4(),

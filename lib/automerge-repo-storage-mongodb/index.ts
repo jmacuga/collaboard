@@ -9,7 +9,7 @@ import {
   Chunk,
   StorageAdapterInterface,
   type StorageKey,
-} from "@automerge/automerge-repo/slim";
+} from "@automerge/automerge-repo";
 import { MongoClient, MongoClientOptions, Collection, BSON } from "mongodb";
 import assert from "node:assert";
 

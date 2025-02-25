@@ -23,4 +23,5 @@ export interface IClientSyncService {
   deleteDoc(): void;
   initializeRepo(): Promise<void>;
   createLocalDocFromServerDoc(): Promise<DocHandle<KonvaNodeSchema> | null>;
+  setOnline(online: boolean): void;
 }

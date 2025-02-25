@@ -13,11 +13,11 @@ import {
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { v4 as uuidv4 } from "uuid";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { LineConfig } from "konva/lib/shapes/Line";
 import { useClientSync } from "@/components/board/context/client-doc-context";
-import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
@@ -27,7 +27,7 @@ import { OnlineToggle } from "./components/online-toggle";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
-  const [localDoc] = useDocument<KonvaNodeSchema>(
+  const [localDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const {
@@ -47,10 +47,19 @@ export default function Board({}: {}) {
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
   const { addShape } = useShape();
-
+  const handle = useHandle<LayerSchema>(
+    clientSyncService.getDocUrl() as AnyDocumentId
+  );
   useEffect(() => {
     console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
   }, [isOnline]);
+
+  useEffect(() => {
+    if (!handle) return;
+    handle.on("change", (change) => {
+      console.log(change);
+    });
+  }, [handle]);
 
   const handleMouseDown = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
@@ -128,76 +137,80 @@ export default function Board({}: {}) {
             onClick={handleStageClick}
           >
             <Layer>
-              {localDoc?.children?.map((shape: KonvaNodeSchema) => {
-                if (shape.className == "Line") {
-                  return (
-                    <Line
-                      key={shape.attrs.id ?? "0"}
-                      {...shape.attrs}
-                      draggable={mode === "selecting"}
-                      onClick={handleShapeClick}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onTransformEnd={handleTransformEnd}
-                      strokeScaleEnabled={false}
-                      ref={(node) => {
-                        shape.attrs.ref = node;
-                      }}
-                    />
-                  );
-                }
-                if (shape.className == "Rect") {
-                  return (
-                    <Rect
-                      key={shape.attrs.id ?? "0"}
-                      {...shape.attrs}
-                      draggable={mode === "selecting"}
-                      onClick={handleShapeClick}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onTransformEnd={handleTransformEnd}
-                      strokeScaleEnabled={false}
-                      ref={(node) => {
-                        shape.attrs.ref = node;
-                      }}
-                    />
-                  );
-                }
-                if (shape.className == "Circle") {
-                  return (
-                    <Circle
-                      key={shape.attrs.id ?? "0"}
-                      draggable={mode === "selecting"}
-                      onClick={handleShapeClick}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onTransformEnd={handleTransformEnd}
-                      strokeScaleEnabled={false}
-                      {...shape.attrs}
-                      ref={(node) => {
-                        shape.attrs.ref = node;
-                      }}
-                    />
-                  );
-                }
-                if (shape.className == "Arrow") {
-                  return (
-                    <Arrow
-                      key={shape.attrs.id ?? "0"}
-                      draggable={mode === "selecting"}
-                      onClick={handleShapeClick}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onTransformEnd={handleTransformEnd}
-                      strokeScaleEnabled={false}
-                      {...shape.attrs}
-                      ref={(node) => {
-                        shape.attrs.ref = node;
-                      }}
-                    />
-                  );
-                }
-              })}
+              {localDoc &&
+                (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
+                  ([id, shape]) => {
+                    if (shape.className == "Line") {
+                      return (
+                        <Line
+                          key={id}
+                          {...shape.attrs}
+                          draggable={mode === "selecting"}
+                          onClick={handleShapeClick}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onTransformEnd={handleTransformEnd}
+                          strokeScaleEnabled={false}
+                          ref={(node) => {
+                            shape.attrs.ref = node;
+                          }}
+                        />
+                      );
+                    }
+                    if (shape.className == "Rect") {
+                      return (
+                        <Rect
+                          key={id}
+                          {...shape.attrs}
+                          draggable={mode === "selecting"}
+                          onClick={handleShapeClick}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onTransformEnd={handleTransformEnd}
+                          strokeScaleEnabled={false}
+                          ref={(node) => {
+                            shape.attrs.ref = node;
+                          }}
+                        />
+                      );
+                    }
+                    if (shape.className == "Circle") {
+                      return (
+                        <Circle
+                          key={id}
+                          draggable={mode === "selecting"}
+                          onClick={handleShapeClick}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onTransformEnd={handleTransformEnd}
+                          strokeScaleEnabled={false}
+                          {...shape.attrs}
+                          ref={(node) => {
+                            shape.attrs.ref = node;
+                          }}
+                        />
+                      );
+                    }
+                    if (shape.className == "Arrow") {
+                      return (
+                        <Arrow
+                          key={id}
+                          draggable={mode === "selecting"}
+                          onClick={handleShapeClick}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onTransformEnd={handleTransformEnd}
+                          strokeScaleEnabled={false}
+                          {...shape.attrs}
+                          ref={(node) => {
+                            shape.attrs.ref = node;
+                          }}
+                        />
+                      );
+                    }
+                    return null;
+                  }
+                )}
               {localLine && <Line key={currentLineId} {...localLine} />}
               <Transformer ref={transformerRef} />
             </Layer>

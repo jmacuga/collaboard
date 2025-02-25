@@ -1,6 +1,6 @@
 "use client";
 import { IClientSyncService } from "./types";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import {
   Repo,
   AnyDocumentId,
@@ -67,7 +67,7 @@ export class ClientSyncService implements IClientSyncService {
     return docExists && docExists.docUrl === this.docUrl;
   }
 
-  async getDocFromIndexedDB(): Promise<DocHandle<KonvaNodeSchema> | undefined> {
+  async getDocFromIndexedDB(): Promise<DocHandle<LayerSchema> | undefined> {
     return this.localRepo?.find(this.docUrl as AnyDocumentId);
   }
 
@@ -76,7 +76,7 @@ export class ClientSyncService implements IClientSyncService {
     await db.docUrls.add({ docUrl: this.docUrl });
   }
 
-  async createLocalDocFromServerDoc(): Promise<DocHandle<KonvaNodeSchema> | null> {
+  async createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null> {
     try {
       if (!this.localRepo || !this.serverRepo) {
         throw new Error("Local repo or server repo is not initialized");

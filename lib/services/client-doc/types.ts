@@ -1,4 +1,4 @@
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { DocHandle } from "@automerge/automerge-repo";
 
 export interface ClientSyncStatus {
@@ -22,6 +22,6 @@ export interface IClientSyncService {
   canConnect(): boolean;
   deleteDoc(): void;
   initializeRepo(): Promise<void>;
-  createLocalDocFromServerDoc(): Promise<DocHandle<KonvaNodeSchema> | null>;
+  createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null>;
   setOnline(online: boolean): void;
 }

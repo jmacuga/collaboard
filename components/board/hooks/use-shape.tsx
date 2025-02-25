@@ -1,7 +1,4 @@
-import { ShapeConfig } from "konva/lib/Shape";
-
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
-import { RectConfig } from "konva/lib/shapes/Rect";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useClientSync } from "../context/client-doc-context";
@@ -21,15 +18,15 @@ const getPointerPosition = (e: KonvaEventObject<MouseEvent>): Point | null => {
 
 const useShape = () => {
   const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
+  const [doc, changeDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const { shapeColor, shapeType } = useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
     shape = objectStringToRawString(shape);
-    changeDoc((doc: KonvaNodeSchema) => {
-      if (!doc.children) doc.children = [];
-      doc.children?.push(shape);
+    const shapeId = shape.attrs.id;
+    changeDoc((doc: LayerSchema) => {
+      doc[shapeId] = shape;
     });
   };
 

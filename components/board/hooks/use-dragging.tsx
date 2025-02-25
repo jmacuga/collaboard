@@ -2,7 +2,7 @@ import { useState } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "@/components/board/context/client-doc-context";
 
 interface DraggingState {
@@ -13,7 +13,7 @@ interface DraggingState {
 
 export const useDragging = () => {
   const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
+  const [doc, changeDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
 
@@ -35,13 +35,10 @@ export const useDragging = () => {
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     const shapeId = e.target.attrs.id;
     const newPos = { x: e.target.x(), y: e.target.y() };
-    changeDoc((doc: KonvaNodeSchema) => {
-      const shape = doc.children?.find(
-        (child: KonvaNodeSchema) => child.attrs.id === shapeId
-      );
-      if (shape) {
-        shape.attrs.x = newPos.x;
-        shape.attrs.y = newPos.y;
+    changeDoc((doc: LayerSchema) => {
+      if (doc[shapeId]) {
+        doc[shapeId].attrs.x = newPos.x;
+        doc[shapeId].attrs.y = newPos.y;
       }
     });
     setDraggingState({

@@ -12,7 +12,7 @@ import { ColorPalette } from "./components/color-palette";
 
 const ShapesToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-  const { mode, setMode, setShapeColor, shapeType, setShapeType } =
+  const { mode, setMode, setShapeColor, shapeType, setShapeType, shapeColor } =
     useContext(BoardContext);
 
   const tools = [
@@ -45,7 +45,15 @@ const ShapesToolbar = () => {
     },
     {
       label: "Colors",
-      icon: <Palette />,
+      icon: (
+        <div className="relative">
+          <Palette />
+          <div
+            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-gray-300 shadow-sm"
+            style={{ backgroundColor: shapeColor }}
+          />
+        </div>
+      ),
       onClick: () => setIsColorPaletteOpen(!isColorPaletteOpen),
       isActive: isColorPaletteOpen,
     },

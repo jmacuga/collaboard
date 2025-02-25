@@ -58,7 +58,15 @@ const DrawingToolbar = () => {
     })),
     {
       label: "Colors",
-      icon: <Palette />,
+      icon: (
+        <div className="relative">
+          <Palette />
+          <div
+            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-gray-300 shadow-sm"
+            style={{ backgroundColor: brushColor }}
+          />
+        </div>
+      ),
       onClick: () => setIsColorPaletteOpen(!isColorPaletteOpen),
       isActive: isColorPaletteOpen,
     },
@@ -70,6 +78,7 @@ const DrawingToolbar = () => {
         {tools.map((tool, index) => (
           <ToolbarItem key={index} {...tool} />
         ))}
+
         <ColorPalette
           isOpen={isColorPaletteOpen}
           onColorSelect={setBrushColor}

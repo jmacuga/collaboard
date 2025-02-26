@@ -26,6 +26,7 @@ import { useShape } from "@/components/board/hooks/use-shape";
 import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
 import { OnlineToggle } from "./components/online-toggle";
 import { ResetPositionButton } from "./components/reset-position-button";
+import { ShapeColorPalette } from "./components/shape-color-palette";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -247,6 +248,7 @@ export default function Board({}: {}) {
       </div>
       <OnlineToggle />
       {showResetButton && <ResetPositionButton onClick={resetPosition} />}
+      <ShapeColorPalette />
     </div>
   );
 }

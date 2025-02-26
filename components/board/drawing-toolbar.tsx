@@ -72,7 +72,6 @@ const DrawingToolbar = () => {
     },
   ];
 
-  // Get the current brush size label
   const currentSizeLabel =
     brushSizes.find((size) => size.size === brushSize)?.label || "Medium";
 

@@ -137,7 +137,6 @@ export default function Board({}: {}) {
     setSelectedShapeIds([shapeId]);
   };
 
-  // Show reset position button only when the board has been moved
   const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
 
   return (

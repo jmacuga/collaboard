@@ -18,7 +18,6 @@ export const useBoardPanning = () => {
         lastPosition.current = pointerPosition;
       }
 
-      // Change cursor style to grabbing (closed hand)
       const container = stage.container();
       container.style.cursor = "grabbing";
     },
@@ -57,7 +56,6 @@ export const useBoardPanning = () => {
       isPanning.current = false;
       lastPosition.current = null;
 
-      // Reset cursor style to grab (open hand)
       const container = stage.container();
       container.style.cursor = "grab";
     },

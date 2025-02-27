@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useContext } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
 
@@ -17,9 +17,6 @@ export const useBoardPanning = () => {
       if (pointerPosition) {
         lastPosition.current = pointerPosition;
       }
-
-      const container = stage.container();
-      container.style.cursor = "grabbing";
     },
     []
   );
@@ -32,17 +29,14 @@ export const useBoardPanning = () => {
       const pointerPosition = stage.getPointerPosition();
       if (!pointerPosition) return;
 
-      // Calculate how much the pointer has moved
       const dx = pointerPosition.x - lastPosition.current.x;
       const dy = pointerPosition.y - lastPosition.current.y;
 
-      // Update the stage position
       setStagePosition((prev) => ({
         x: prev.x + dx,
         y: prev.y + dy,
       }));
 
-      // Update the last position
       lastPosition.current = pointerPosition;
     },
     []
@@ -55,9 +49,6 @@ export const useBoardPanning = () => {
 
       isPanning.current = false;
       lastPosition.current = null;
-
-      const container = stage.container();
-      container.style.cursor = "grab";
     },
     []
   );

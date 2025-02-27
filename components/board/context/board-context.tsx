@@ -24,7 +24,8 @@ export type ModeType =
   | "selecting"
   | "shapes"
   | "panning"
-  | "teams";
+  | "teams"
+  | "text";
 
 export type ShapeType = "rectangle" | "circle" | "arrow";
 

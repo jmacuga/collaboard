@@ -1,4 +1,12 @@
-import { Brush, Hand, MousePointer, Home, Shapes, Eraser } from "lucide-react";
+import {
+  Brush,
+  Eraser,
+  MousePointer,
+  Move,
+  Home,
+  Square,
+  Type,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Tooltip,
@@ -6,25 +14,56 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DrawingToolbar } from "@/components/board/drawing-toolbar";
-import { ModeType } from "@/components/board/context/board-context";
 import { useContext } from "react";
-import { BoardContext } from "@/components/board/context/board-context";
+import {
+  BoardContext,
+  ModeType,
+} from "@/components/board/context/board-context";
+import { DrawingToolbar } from "@/components/board/drawing-toolbar";
 import { ShapesToolbar } from "@/components/board/shapes-toolbar";
+import { ToolbarContainer } from "@/components/board/components/toolbar-container";
+import { cn } from "@/lib/utils";
+import { TextToolbar } from "@/components/board/text-toolbar";
+
 function SideToolbar() {
   const { mode, setMode } = useContext(BoardContext);
   const toolbarItems = [
     {
+      icon: <Home size={20} />,
       label: "Back to teams",
-      icon: <Home />,
       mode: "teams",
       href: "/teams",
     },
-    { label: "Draw", icon: <Brush />, mode: "drawing" },
-    { label: "Erase", icon: <Eraser />, mode: "erasing" },
-    { label: "Shapes", icon: <Shapes />, mode: "shapes" },
-    { label: "Pan", icon: <Hand />, mode: "panning" },
-    { label: "Select", icon: <MousePointer />, mode: "selecting" },
+    {
+      icon: <Brush size={20} />,
+      label: "Drawing",
+      mode: "drawing",
+    },
+    {
+      icon: <Eraser size={20} />,
+      label: "Erasing",
+      mode: "erasing",
+    },
+    {
+      icon: <Square size={20} />,
+      label: "Shapes",
+      mode: "shapes",
+    },
+    {
+      icon: <Type size={20} />,
+      label: "Text",
+      mode: "text",
+    },
+    {
+      icon: <Move size={20} />,
+      label: "Panning",
+      mode: "panning",
+    },
+    {
+      icon: <MousePointer size={20} />,
+      label: "Selecting",
+      mode: "selecting",
+    },
   ];
 
   const handleItemClick = (mode: ModeType) => {
@@ -89,8 +128,9 @@ function SideToolbar() {
       </TooltipProvider>
 
       <div className="fixed top-4 left-24 ml-2 z-10">
-        {(mode === "drawing" || mode === "erasing") && <DrawingToolbar />}
+        {mode === "drawing" && <DrawingToolbar />}
         {mode === "shapes" && <ShapesToolbar />}
+        {mode === "text" && <TextToolbar />}
       </div>
     </>
   );

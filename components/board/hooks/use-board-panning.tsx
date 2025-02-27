@@ -1,8 +1,10 @@
-import { useCallback, useRef, useState, useContext } from "react";
+import { useCallback, useContext, useRef, useState } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
+import { BoardContext } from "../context/board-context";
 
 export const useBoardPanning = () => {
+  const { mode } = useContext(BoardContext);
   const [stagePosition, setStagePosition] = useState<Vector2d>({ x: 0, y: 0 });
   const isPanning = useRef(false);
   const lastPosition = useRef<Vector2d | null>(null);
@@ -14,9 +16,11 @@ export const useBoardPanning = () => {
 
       isPanning.current = true;
       const pointerPosition = stage.getPointerPosition();
-      if (pointerPosition) {
-        lastPosition.current = pointerPosition;
-      }
+      if (!pointerPosition) return;
+
+      lastPosition.current = pointerPosition;
+      const container = stage.container();
+      container.style.cursor = "grabbing";
     },
     []
   );
@@ -44,13 +48,24 @@ export const useBoardPanning = () => {
 
   const handleBoardPanEnd = useCallback(
     (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      const stage = e.target.getStage();
-      if (!stage) return;
-
       isPanning.current = false;
       lastPosition.current = null;
+
+      const container = e.target.getStage()?.container();
+      if (!container) return;
+
+      // Set cursor based on current mode
+      if (mode === "panning") {
+        container.style.cursor = "grab";
+      } else if (mode === "erasing") {
+        container.style.cursor = "crosshair";
+      } else if (mode === "text") {
+        container.style.cursor = "text";
+      } else {
+        container.style.cursor = "default";
+      }
     },
-    []
+    [mode]
   );
 
   const resetPosition = useCallback(() => {
@@ -59,7 +74,6 @@ export const useBoardPanning = () => {
 
   return {
     stagePosition,
-    setStagePosition,
     handleBoardPanStart,
     handleBoardPanMove,
     handleBoardPanEnd,

@@ -9,6 +9,7 @@ import {
   Transformer,
   Circle,
   Arrow,
+  Text,
 } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
@@ -27,6 +28,7 @@ import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
 import { OnlineToggle } from "./components/online-toggle";
 import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
+import { useText } from "./hooks/use-text";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -44,6 +46,9 @@ export default function Board({}: {}) {
     isOnline,
   } = useContext(BoardContext);
 
+  // Add a direct ref to the textarea
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const isDrawing = useRef(false);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
   const { handleDragStart, handleDragEnd } = useDragging();
@@ -57,6 +62,19 @@ export default function Board({}: {}) {
     handleBoardPanEnd,
     resetPosition,
   } = useBoardPanning();
+  const {
+    addText,
+    editingText,
+    textPosition,
+    handleTextBlur,
+    handleTextChange,
+    handleTextKeyDown,
+    textareaRef: textRef,
+    currentTextId,
+    setEditingText,
+    setTextPosition,
+    setCurrentTextId,
+  } = useText();
 
   const handle = useHandle<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
@@ -85,6 +103,12 @@ export default function Board({}: {}) {
       setMode("selecting");
     } else if (mode === "panning") {
       handleBoardPanStart(e);
+    } else if (mode === "text") {
+      console.log(
+        "Text mode activated, adding text at position:",
+        e.target.getStage()?.getPointerPosition()
+      );
+      addText(e as Konva.KonvaEventObject<MouseEvent>);
     }
   };
 
@@ -127,6 +151,27 @@ export default function Board({}: {}) {
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) {
       setSelectedShapeIds([]);
+
+      // Cancel text editing if active
+      if (editingText !== null) {
+        handleTextBlur();
+      }
+
+      // Reset cursor based on current mode
+      const container = document.querySelector(
+        ".konvajs-content"
+      ) as HTMLElement;
+      if (container) {
+        if (mode === "panning") {
+          container.style.cursor = "grab";
+        } else if (mode === "erasing") {
+          container.style.cursor = "crosshair";
+        } else if (mode === "text") {
+          container.style.cursor = "text";
+        } else {
+          container.style.cursor = "default";
+        }
+      }
     }
   };
 
@@ -136,6 +181,29 @@ export default function Board({}: {}) {
     e.cancelBubble = true;
     const shapeId = e.target.attrs.id;
     setSelectedShapeIds([shapeId]);
+  };
+
+  const handleTextDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (mode !== "selecting") return;
+
+    e.cancelBubble = true;
+    const textNode = e.target as Konva.Text;
+    const textPosition = {
+      x: textNode.x(),
+      y: textNode.y(),
+    };
+
+    // Set up the text editing state
+    setCurrentTextId(textNode.id());
+    setTextPosition(textPosition);
+    setEditingText(textNode.text());
+
+    // Focus the textarea when it's rendered
+    setTimeout(() => {
+      if (textRef.current) {
+        textRef.current.focus();
+      }
+    }, 10);
   };
 
   const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
@@ -150,6 +218,12 @@ export default function Board({}: {}) {
           className={`
           ${mode === "erasing" ? "cursor-crosshair" : ""}
           ${mode === "panning" ? "cursor-grab" : ""}
+          ${mode === "text" ? "cursor-text" : ""}
+          ${
+            mode === "selecting" || mode === "drawing" || mode === "shapes"
+              ? "cursor-default"
+              : ""
+          }
         `}
         >
           <Stage
@@ -237,6 +311,23 @@ export default function Board({}: {}) {
                         />
                       );
                     }
+                    if (shape.className == "Text") {
+                      return (
+                        <Text
+                          key={id}
+                          draggable={mode === "selecting"}
+                          onClick={handleShapeClick}
+                          onDblClick={handleTextDblClick}
+                          onDragStart={handleDragStart}
+                          onDragEnd={handleDragEnd}
+                          onTransformEnd={handleTransformEnd}
+                          {...shape.attrs}
+                          ref={(node) => {
+                            shape.attrs.ref = node;
+                          }}
+                        />
+                      );
+                    }
                     return null;
                   }
                 )}
@@ -246,6 +337,40 @@ export default function Board({}: {}) {
           </Stage>
         </div>
       </div>
+      {/* Textarea for text editing */}
+      {editingText !== null && textPosition && (
+        <div
+          style={{
+            position: "absolute",
+            top: textPosition.y + stagePosition.y,
+            left: textPosition.x + stagePosition.x,
+            zIndex: 9999,
+            pointerEvents: "auto", // Ensure it can receive pointer events
+          }}
+        >
+          <textarea
+            ref={textRef}
+            value={editingText}
+            onChange={handleTextChange}
+            // onBlur={handleTextBlur}
+            onKeyDown={handleTextKeyDown}
+            style={{
+              width: "300px",
+              minHeight: "50px",
+              padding: "5px",
+              fontSize: `20px`,
+              color: brushColor,
+              border: "2px solid #0000ff", // Blue border for visibility
+              borderRadius: "4px",
+              background: "rgba(255, 255, 255, 0.9)", // More opaque background
+              resize: "both",
+              outline: "none",
+              boxShadow: "0 0 10px rgba(0, 0, 255, 0.5)", // Blue glow for visibility
+            }}
+            autoFocus
+          />
+        </div>
+      )}
       <OnlineToggle />
       {showResetButton && <ResetPositionButton onClick={resetPosition} />}
       <ShapeColorPalette />

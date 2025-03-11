@@ -3,13 +3,13 @@
 import { useContext, useEffect, useRef, useCallback } from "react";
 import Konva from "konva";
 import { BoardContext } from "@/components/board/context/board-context";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 
 export const useTransformer = (localDoc: LayerSchema | undefined) => {
-  const { selectedShapeIds, shapeColor } = useContext(BoardContext);
+  const { selectedShapeIds } = useContext(BoardContext);
   const transformerRef = useRef<Konva.Transformer>(null);
   const clientSyncService = useClientSync();
   const [_, changeLocalDoc] = useDocument<LayerSchema>(
@@ -37,26 +37,6 @@ export const useTransformer = (localDoc: LayerSchema | undefined) => {
     [changeLocalDoc]
   );
 
-  const changeSelectedShapesColor = useCallback(
-    (color: string) => {
-      if (!selectedShapeIds.length || !localDoc) return;
-
-      changeLocalDoc((doc: LayerSchema) => {
-        selectedShapeIds.forEach((shapeId) => {
-          if (!doc[shapeId]) return;
-
-          const shape = doc[shapeId];
-          shape.attrs.stroke = color;
-
-          if (shape.className === "Arrow") {
-            shape.attrs.fill = color;
-          }
-        });
-      });
-    },
-    [selectedShapeIds, localDoc, changeLocalDoc]
-  );
-
   useEffect(() => {
     const transformer = transformerRef.current;
     if (transformer) {
@@ -73,5 +53,5 @@ export const useTransformer = (localDoc: LayerSchema | undefined) => {
     }
   }, [selectedShapeIds, localDoc]);
 
-  return { transformerRef, handleTransformEnd, changeSelectedShapesColor };
+  return { transformerRef, handleTransformEnd };
 };

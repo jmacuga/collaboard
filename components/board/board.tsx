@@ -29,7 +29,6 @@ import { OnlineToggle } from "./components/online-toggle";
 import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
 import { useText } from "./hooks/use-text";
-
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
   const [localDoc] = useDocument<LayerSchema>(
@@ -38,6 +37,7 @@ export default function Board({}: {}) {
   const {
     brushColor,
     brushSize,
+    textColor,
     currentLineId,
     setCurrentLineId,
     mode,
@@ -45,9 +45,6 @@ export default function Board({}: {}) {
     setSelectedShapeIds,
     isOnline,
   } = useContext(BoardContext);
-
-  // Add a direct ref to the textarea
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const isDrawing = useRef(false);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
@@ -104,10 +101,6 @@ export default function Board({}: {}) {
     } else if (mode === "panning") {
       handleBoardPanStart(e);
     } else if (mode === "text") {
-      console.log(
-        "Text mode activated, adding text at position:",
-        e.target.getStage()?.getPointerPosition()
-      );
       addText(e as Konva.KonvaEventObject<MouseEvent>);
     }
   };
@@ -152,12 +145,10 @@ export default function Board({}: {}) {
     if (e.target === e.target.getStage()) {
       setSelectedShapeIds([]);
 
-      // Cancel text editing if active
       if (editingText !== null) {
         handleTextBlur();
       }
 
-      // Reset cursor based on current mode
       const container = document.querySelector(
         ".konvajs-content"
       ) as HTMLElement;
@@ -193,12 +184,10 @@ export default function Board({}: {}) {
       y: textNode.y(),
     };
 
-    // Set up the text editing state
     setCurrentTextId(textNode.id());
     setTextPosition(textPosition);
     setEditingText(textNode.text());
 
-    // Focus the textarea when it's rendered
     setTimeout(() => {
       if (textRef.current) {
         textRef.current.focus();
@@ -337,7 +326,6 @@ export default function Board({}: {}) {
           </Stage>
         </div>
       </div>
-      {/* Textarea for text editing */}
       {editingText !== null && textPosition && (
         <div
           style={{
@@ -345,27 +333,26 @@ export default function Board({}: {}) {
             top: textPosition.y + stagePosition.y,
             left: textPosition.x + stagePosition.x,
             zIndex: 9999,
-            pointerEvents: "auto", // Ensure it can receive pointer events
+            pointerEvents: "auto",
           }}
         >
           <textarea
             ref={textRef}
             value={editingText}
             onChange={handleTextChange}
-            // onBlur={handleTextBlur}
             onKeyDown={handleTextKeyDown}
             style={{
               width: "300px",
               minHeight: "50px",
               padding: "5px",
               fontSize: `20px`,
-              color: brushColor,
-              border: "2px solid #0000ff", // Blue border for visibility
+              color: textColor,
+              border: "2px solid #0000ff",
               borderRadius: "4px",
-              background: "rgba(255, 255, 255, 0.9)", // More opaque background
+              background: "rgba(255, 255, 255, 0.9)",
               resize: "both",
               outline: "none",
-              boxShadow: "0 0 10px rgba(0, 0, 255, 0.5)", // Blue glow for visibility
+              boxShadow: "0 0 10px rgba(0, 0, 255, 0.5)",
             }}
             autoFocus
           />

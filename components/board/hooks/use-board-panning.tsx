@@ -54,7 +54,6 @@ export const useBoardPanning = () => {
       const container = e.target.getStage()?.container();
       if (!container) return;
 
-      // Set cursor based on current mode
       if (mode === "panning") {
         container.style.cursor = "grab";
       } else if (mode === "erasing") {

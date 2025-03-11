@@ -1,8 +1,7 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useCallback } from "react";
 import { BoardContext } from "../context/board-context";
 import { colorTools } from "./color-palette";
 import ColorIcon from "../color-icon";
-import { useTransformer } from "../hooks/use-transformer";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { useClientSync } from "../context/client-doc-context";
 import { AnyDocumentId } from "@automerge/automerge-repo";
@@ -12,24 +11,47 @@ import { Palette } from "lucide-react";
 const ShapeColorPalette = () => {
   const { selectedShapeIds, mode } = useContext(BoardContext);
   const clientSyncService = useClientSync();
-  const [localDoc] = useDocument<LayerSchema>(
+  const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { changeSelectedShapesColor } = useTransformer(localDoc);
   const [isOpen, setIsOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("rgb(0,0,0)");
+
+  const changeSelectedShapesColor = useCallback(
+    (color: string) => {
+      if (!selectedShapeIds.length || !localDoc) return;
+
+      changeLocalDoc((doc: LayerSchema) => {
+        selectedShapeIds.forEach((shapeId) => {
+          if (!doc[shapeId]) return;
+
+          if (doc[shapeId].className === "Text") {
+            doc[shapeId].attrs.fill = color;
+          } else {
+            doc[shapeId].attrs.stroke = color;
+          }
+
+          if (doc[shapeId].className === "Arrow") {
+            doc[shapeId].attrs.fill = color;
+          }
+        });
+      });
+    },
+    [selectedShapeIds, localDoc, changeLocalDoc]
+  );
 
   useEffect(() => {
     if (selectedShapeIds.length > 0 && localDoc) {
       const shapeId = selectedShapeIds[0];
       const shape = localDoc[shapeId];
-      if (shape && shape.attrs.stroke) {
+      if (shape && shape.className === "Text") {
+        setCurrentColor(shape.attrs.fill);
+      } else if (shape && shape.attrs.stroke) {
         setCurrentColor(shape.attrs.stroke);
       }
     }
   }, [selectedShapeIds, localDoc]);
 
-  // Don't render if no shapes are selected or not in selecting mode
   if (selectedShapeIds.length === 0 || mode !== "selecting") {
     return null;
   }

@@ -3,25 +3,19 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useClientSync } from "../context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
-import { Vector2d } from "konva/lib/types";
 import Konva from "konva";
 import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { v4 as uuidv4 } from "uuid";
 import { RawString } from "@automerge/automerge-repo";
-type Point = Vector2d;
-
-const getPointerPosition = (e: KonvaEventObject<MouseEvent>): Point | null => {
-  const stage = e.target.getStage();
-  return stage?.getPointerPosition() ?? null;
-};
 
 const useShape = () => {
   const clientSyncService = useClientSync();
   const [doc, changeDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { shapeColor, shapeType } = useContext(BoardContext);
+  const { shapeColor, shapeType, getPointerPosition } =
+    useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
     shape = objectStringToRawString(shape);
     const shapeId = shape.attrs.id;

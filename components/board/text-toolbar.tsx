@@ -7,10 +7,9 @@ import { Palette, Type } from "lucide-react";
 
 const TextToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-  const { mode, setMode, setBrushColor, brushColor, brushSize, setBrushSize } =
+  const { setTextColor, textColor, textFontSize, setTextFontSize } =
     useContext(BoardContext);
 
-  // Font size options
   const fontSizes = [
     {
       label: "Small",
@@ -29,16 +28,14 @@ const TextToolbar = () => {
     },
   ];
 
-  // We'll use brushColor for text color as well
   const tools = [
     ...fontSizes.map((fontSize) => ({
       label: fontSize.label,
       icon: fontSize.icon,
       onClick: () => {
-        // We'll use brushSize to store the font size
-        setBrushSize(fontSize.size);
+        setTextFontSize(fontSize.size);
       },
-      isActive: brushSize === fontSize.size,
+      isActive: textFontSize === fontSize.size,
     })),
     {
       label: "Colors",
@@ -47,7 +44,7 @@ const TextToolbar = () => {
           <Palette />
           <div
             className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-gray-300 shadow-sm"
-            style={{ backgroundColor: brushColor }}
+            style={{ backgroundColor: textColor }}
           />
         </div>
       ),
@@ -64,7 +61,7 @@ const TextToolbar = () => {
         ))}
         <ColorPalette
           isOpen={isColorPaletteOpen}
-          onColorSelect={setBrushColor}
+          onColorSelect={setTextColor}
         />
       </ToolbarContainer>
     </>

@@ -1,58 +1,58 @@
 "use client";
 import { IClientSyncService } from "./types";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
-import { Repo, AnyDocumentId, DocHandle } from "@automerge/automerge-repo";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
+import {
+  Repo,
+  AnyDocumentId,
+  DocHandle,
+  PeerId,
+} from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { db } from "@/lib/indexed-db";
+import { v4 as uuidv4 } from "uuid";
 
 export class ClientSyncService implements IClientSyncService {
   docUrl: string;
-  serverRepo: Repo;
-  localRepo: Repo;
+  serverRepo: Repo | null;
+  localRepo: Repo | null;
   websocketURL: string;
+  localNetworkAdapter: BrowserWebSocketClientAdapter;
+  peerId: PeerId;
 
-  private constructor({
-    docUrl,
-    serverRepo,
-    localRepo,
-    websocketURL,
-  }: {
-    docUrl: string;
-    serverRepo: Repo;
-    localRepo: Repo;
-    websocketURL: string;
-  }) {
+  constructor({ docUrl }: { docUrl: string }) {
     this.docUrl = docUrl;
-    this.serverRepo = serverRepo;
-    this.localRepo = localRepo;
-    this.websocketURL = websocketURL;
+    this.serverRepo = null;
+    this.localRepo = null;
+    this.websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
+    this.localNetworkAdapter = new BrowserWebSocketClientAdapter(
+      this.websocketURL,
+      10000000
+    );
+    this.peerId = uuidv4() as PeerId;
   }
 
-  static async create(docUrl: string): Promise<ClientSyncService> {
-    const websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
-    const serverRepo = new Repo({
-      network: [new BrowserWebSocketClientAdapter(websocketURL)],
+  async initializeRepo(): Promise<void> {
+    this.serverRepo = new Repo({
+      network: [new BrowserWebSocketClientAdapter(this.websocketURL)],
     });
-    const localRepo = new Repo({
+    this.localRepo = new Repo({
       network: [],
       storage: new IndexedDBStorageAdapter(),
+      peerId: this.peerId,
     });
     let localDocHandle;
+
     try {
-      const docExists = await db.docUrls.get(docUrl);
-      if (docExists && docExists.docUrl === docUrl) {
+      const docExists = await this.docExistsInIndexedDB();
+      if (docExists === true) {
         console.log("Found doc in indexedDB", docExists);
-        localDocHandle = localRepo.find(docUrl as AnyDocumentId);
+        localDocHandle = await this.getDocFromIndexedDB();
       } else {
         console.log("Creating local doc");
-        localDocHandle = await ClientSyncService.createLocalDocFromServerDoc(
-          localRepo,
-          serverRepo,
-          docUrl
-        );
-        await db.docUrls.add({ docUrl: docUrl });
+        localDocHandle = await this.createLocalDocFromServerDoc();
+        await this.addUrlToIndexedDB();
       }
     } catch (error) {
       console.error("Could not find or create local doc. Reason:", error);
@@ -60,31 +60,31 @@ export class ClientSyncService implements IClientSyncService {
     if (!localDocHandle) {
       throw new Error("Local doc could not be initialized");
     }
-    return new ClientSyncService({
-      docUrl: docUrl,
-      serverRepo: serverRepo,
-      localRepo: localRepo,
-      websocketURL: websocketURL,
-    });
   }
-  /*
-  This function creates a local doc from a server doc.
-  It clones the server doc and merges it into the local doc.
-  */
-  private static async createLocalDocFromServerDoc(
-    localRepo: Repo,
-    serverRepo: Repo,
-    docUrl: string
-  ): Promise<DocHandle<KonvaNodeSchema> | null> {
+
+  async docExistsInIndexedDB(): Promise<boolean | undefined> {
+    const docExists = await db.docUrls.get(this.docUrl);
+    return docExists && docExists.docUrl === this.docUrl;
+  }
+
+  async getDocFromIndexedDB(): Promise<DocHandle<LayerSchema> | undefined> {
+    return this.localRepo?.find(this.docUrl as AnyDocumentId);
+  }
+
+  async addUrlToIndexedDB(): Promise<void> {
+    console.log("Adding url to indexedDB", this.docUrl);
+    await db.docUrls.add({ docUrl: this.docUrl });
+  }
+
+  async createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null> {
     try {
-      const websocketAdapter = new BrowserWebSocketClientAdapter(
-        NEXT_PUBLIC_WEBSOCKET_URL
-      );
-      localRepo.networkSubsystem.addNetworkAdapter(websocketAdapter);
-      await localRepo.networkSubsystem.whenReady();
-      const localDocHandle = localRepo.find(docUrl as AnyDocumentId);
+      if (!this.localRepo || !this.serverRepo) {
+        throw new Error("Local repo or server repo is not initialized");
+      }
+      this.connect();
+      const localDocHandle = this.localRepo.find(this.docUrl as AnyDocumentId);
       await localDocHandle.whenReady();
-      websocketAdapter.disconnect();
+      this.disconnect();
       return localDocHandle;
     } catch (error) {
       console.error("Error creating local doc from server doc", error);
@@ -97,10 +97,28 @@ export class ClientSyncService implements IClientSyncService {
     return true;
   }
 
-  connect(): void {
-    this.localRepo.networkSubsystem.addNetworkAdapter(
-      new BrowserWebSocketClientAdapter(this.websocketURL)
-    );
+  async connect(): Promise<void> {
+    if (!this.localRepo) {
+      throw new Error("Local repo is not initialized");
+    }
+    console.log("Connecting to server");
+    if (this.localNetworkAdapter.socket?.readyState !== WebSocket.OPEN) {
+      this.localNetworkAdapter = new BrowserWebSocketClientAdapter(
+        this.websocketURL,
+        10000000
+      );
+      this.localRepo.networkSubsystem.addNetworkAdapter(
+        this.localNetworkAdapter
+      );
+    } else {
+      console.log("Already connected to server");
+    }
+  }
+
+  disconnect(): void {
+    this.localNetworkAdapter.disconnect();
+    this.localNetworkAdapter.socket?.close();
+    console.log("Disconnected from server");
   }
 
   getDocUrl(): string {
@@ -111,12 +129,35 @@ export class ClientSyncService implements IClientSyncService {
     throw new Error("Method not implemented.");
   }
 
-  connectToServer(docUrl: string): void {
-    throw new Error("Method not implemented.");
+  async syncLocalRepo(): Promise<void> {
+    const serverDoc = this.serverRepo?.find(this.docUrl as AnyDocumentId);
+    if (!serverDoc) {
+      throw new Error("Server doc is not initialized");
+    }
+    await serverDoc.whenReady();
+    const localDoc = this.localRepo?.find(this.docUrl as AnyDocumentId);
+    if (!localDoc) {
+      throw new Error("Local doc is not initialized");
+    }
+    await localDoc.whenReady();
+    localDoc.merge(serverDoc);
+    console.log("Local doc merged with server doc");
+    await localDoc.whenReady();
+  }
+
+  setOnline(online: boolean): void {
+    if (!this.localRepo) {
+      throw new Error("Local repo is not initialized");
+    }
+    if (online) {
+      this.connect();
+    } else {
+      this.disconnect();
+    }
   }
 
   deleteDoc(): void {
-    this.serverRepo.delete(this.docUrl as AnyDocumentId);
-    this.localRepo.delete(this.docUrl as AnyDocumentId);
+    this.serverRepo?.delete(this.docUrl as AnyDocumentId);
+    this.localRepo?.delete(this.docUrl as AnyDocumentId);
   }
 }

@@ -10,11 +10,7 @@ interface BoardPageProps {
 }
 
 export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
-  return (
-    <BoardContextProvider>
-      <BoardProvider boardId={boardId} docUrl={docUrl} />
-    </BoardContextProvider>
-  );
+  return <BoardProvider boardId={boardId} docUrl={docUrl} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {

@@ -1,41 +1,42 @@
-import { ShapeConfig } from "konva/lib/Shape";
-
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
-import { RectConfig } from "konva/lib/shapes/Rect";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useClientSync } from "../context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
-import { Vector2d } from "konva/lib/types";
 import Konva from "konva";
 import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { v4 as uuidv4 } from "uuid";
-
-type Point = Vector2d;
-
-const getPointerPosition = (e: KonvaEventObject<MouseEvent>): Point | null => {
-  const stage = e.target.getStage();
-  return stage?.getPointerPosition() ?? null;
-};
+import { RawString } from "@automerge/automerge-repo";
 
 const useShape = () => {
   const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<KonvaNodeSchema>(
+  const [doc, changeDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { shapeColor, shapeType } = useContext(BoardContext);
+  const { shapeColor, shapeType, getPointerPosition } =
+    useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
-    changeDoc((doc: KonvaNodeSchema) => {
-      if (!doc.children) doc.children = [];
-      doc.children?.push(shape);
+    shape = objectStringToRawString(shape);
+    const shapeId = shape.attrs.id;
+    changeDoc((doc: LayerSchema) => {
+      doc[shapeId] = shape;
     });
+  };
+
+  const objectStringToRawString = (obj: any) => {
+    Object.keys(obj).forEach((key) => {
+      if (typeof obj[key] === "string") {
+        obj[key] = new RawString(obj[key]);
+      }
+    });
+    return obj;
   };
 
   const addShape = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
-    let shape: Konva.Rect | Konva.Circle | Konva.Arrow | null = null;
+    let shape: Konva.Rect | Konva.Circle | Konva.Arrow | null | any = null;
     if (shapeType === "rectangle") {
       shape = new Konva.Rect({
         id: uuidv4(),

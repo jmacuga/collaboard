@@ -1,3 +1,6 @@
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { DocHandle } from "@automerge/automerge-repo";
+
 export interface ClientSyncStatus {
   isOnline: boolean;
   lastSynced: Date | null;
@@ -6,7 +9,6 @@ export interface ClientSyncStatus {
 }
 
 export interface IClientSyncService {
-  create(docUrl: string): Promise<IClientSyncService>;
   getDocUrl(): string;
   //   getSyncStatus(): ClientSyncStatus;
   //   onStatusChange(callback: (status: ClientSyncStatus) => void): void;
@@ -16,7 +18,10 @@ export interface IClientSyncService {
   //   discardLocalChanges(): void;
   updateServerData(docUrl: string): void;
   connect(): void;
+  disconnect(): void;
   canConnect(): boolean;
   deleteDoc(): void;
-  //   disconnectFromServer(): void;
+  initializeRepo(): Promise<void>;
+  createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null>;
+  setOnline(online: boolean): void;
 }

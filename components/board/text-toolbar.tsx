@@ -1,48 +1,42 @@
-import {
-  Square,
-  Circle as CircleIcon,
-  ArrowRight,
-  Palette,
-} from "lucide-react";
 import { useContext, useState } from "react";
 import { BoardContext } from "./context/board-context";
 import { ToolbarContainer } from "./components/toolbar-container";
 import { ToolbarItem } from "./components/toolbar-item";
 import { ColorPalette } from "./components/color-palette";
+import { Palette, Type } from "lucide-react";
 
-const ShapesToolbar = () => {
+const TextToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-  const { mode, setMode, setShapeColor, shapeType, setShapeType, shapeColor } =
+  const { setTextColor, textColor, textFontSize, setTextFontSize } =
     useContext(BoardContext);
 
+  const fontSizes = [
+    {
+      label: "Small",
+      size: 16,
+      icon: <Type size={16} />,
+    },
+    {
+      label: "Medium",
+      size: 24,
+      icon: <Type size={20} />,
+    },
+    {
+      label: "Large",
+      size: 32,
+      icon: <Type size={24} />,
+    },
+  ];
+
   const tools = [
-    {
-      label: "Rectangle",
-      icon: <Square className="fill-none" />,
+    ...fontSizes.map((fontSize) => ({
+      label: fontSize.label,
+      icon: fontSize.icon,
       onClick: () => {
-        setMode("shapes");
-        setShapeType("rectangle");
+        setTextFontSize(fontSize.size);
       },
-      isActive: mode === "shapes" && shapeType === "rectangle",
-    },
-    {
-      label: "Circle",
-      icon: <CircleIcon className="fill-none" />,
-      onClick: () => {
-        setMode("shapes");
-        setShapeType("circle");
-      },
-      isActive: mode === "shapes" && shapeType === "circle",
-    },
-    {
-      label: "Arrow",
-      icon: <ArrowRight />,
-      onClick: () => {
-        setMode("shapes");
-        setShapeType("arrow");
-      },
-      isActive: mode === "shapes" && shapeType === "arrow",
-    },
+      isActive: textFontSize === fontSize.size,
+    })),
     {
       label: "Colors",
       icon: (
@@ -50,7 +44,7 @@ const ShapesToolbar = () => {
           <Palette />
           <div
             className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-gray-300 shadow-sm"
-            style={{ backgroundColor: shapeColor }}
+            style={{ backgroundColor: textColor }}
           />
         </div>
       ),
@@ -67,11 +61,11 @@ const ShapesToolbar = () => {
         ))}
         <ColorPalette
           isOpen={isColorPaletteOpen}
-          onColorSelect={setShapeColor}
+          onColorSelect={setTextColor}
         />
       </ToolbarContainer>
     </>
   );
 };
 
-export { ShapesToolbar };
+export { TextToolbar };

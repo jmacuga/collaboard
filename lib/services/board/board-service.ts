@@ -2,7 +2,7 @@
 import { IBoard, Board } from "@/db/models/Board";
 import { IBoardService } from "./types";
 import dbConnect from "@/db/dbConnect";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { createAutomergeServer } from "@/lib/automerge-server";
 
 export class BoardService implements IBoardService {
@@ -12,7 +12,7 @@ export class BoardService implements IBoardService {
     try {
       await dbConnect();
       const serverRepo = await createAutomergeServer(null, "server");
-      const handle = serverRepo.create<KonvaNodeSchema>();
+      const handle = serverRepo.create<LayerSchema>();
       const docUrl = handle.url;
       const board = await Board.create({
         name: data.name,

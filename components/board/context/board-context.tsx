@@ -1,8 +1,17 @@
 "use client";
 
-import React, { createContext, useState, useMemo, useRef } from "react";
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 import Konva from "konva";
 import { v4 as uuidv4 } from "uuid";
+import { useClientSync } from "@/components/board/context/client-doc-context";
+import { KonvaEventObject } from "konva/lib/Node";
+import { Vector2d } from "konva/lib/types";
 
 type Props = {
   children: React.ReactNode;
@@ -12,13 +21,23 @@ export type UserCursor = {
   x: number;
   y: number;
 };
-export type ModeType = "drawing" | "erasing" | "selecting" | "shapes";
+export type ModeType =
+  | "drawing"
+  | "erasing"
+  | "selecting"
+  | "shapes"
+  | "panning"
+  | "teams"
+  | "text";
 
 export type ShapeType = "rectangle" | "circle" | "arrow";
+export type Point = Vector2d;
 
 interface BoardContextType {
   brushColor: string;
   setBrushColor: (color: string) => void;
+  textColor: string;
+  setTextColor: (color: string) => void;
   currentLineId: string;
   setCurrentLineId: (id: string) => void;
   mode: ModeType;
@@ -28,10 +47,16 @@ interface BoardContextType {
   isShapeSelected: (id: string) => boolean;
   brushSize: number;
   setBrushSize: (size: number) => void;
+  textFontSize: number;
+  setTextFontSize: (size: number) => void;
   shapeType: ShapeType;
   setShapeType: (type: ShapeType) => void;
   shapeColor: string;
   setShapeColor: (color: string) => void;
+  isOnline: boolean;
+  setIsOnline: (online: boolean) => void;
+  toggleOnlineMode: () => void;
+  getPointerPosition: (e: KonvaEventObject<MouseEvent>) => Point | null;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -48,8 +73,33 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [brushSize, setBrushSize] = useState<number>(2);
   const [shapeType, setShapeType] = useState<ShapeType>("rectangle");
   const [shapeColor, setShapeColor] = useState("rgb(0,0,0)");
+  const [textColor, setTextColor] = useState("rgb(0,0,0)");
+  const [textFontSize, setTextFontSize] = useState<number>(24);
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const clientSyncService = useClientSync();
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
+  };
+
+  const getPointerPosition = (
+    e: KonvaEventObject<MouseEvent>
+  ): Point | null => {
+    const stage = e.target.getStage();
+    const point = stage?.getPointerPosition() ?? null;
+    const stagePosition = stage?.getPosition() ?? null;
+    if (point !== null && stagePosition !== null) {
+      point.x = point.x - stagePosition.x;
+      point.y = point.y - stagePosition.y;
+    }
+    return point;
+  };
+  const toggleOnlineMode = async () => {
+    try {
+      await clientSyncService.setOnline(!isOnline);
+      setIsOnline((prevOnline) => !prevOnline);
+    } catch (error) {
+      console.error("Failed to toggle online mode:", error);
+    }
   };
 
   const value = useMemo(
@@ -71,6 +121,14 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setShapeType,
       shapeColor,
       setShapeColor,
+      isOnline,
+      setIsOnline,
+      toggleOnlineMode,
+      textColor,
+      setTextColor,
+      textFontSize,
+      setTextFontSize,
+      getPointerPosition,
     }),
     [
       stageRef,
@@ -81,6 +139,12 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       brushSize,
       shapeType,
       shapeColor,
+      isOnline,
+      textColor,
+      setTextColor,
+      textFontSize,
+      setTextFontSize,
+      getPointerPosition,
     ]
   );
 

@@ -4,4 +4,6 @@ interface KonvaNodeSchema {
   children?: KonvaNodeSchema[];
 }
 
-export { KonvaNodeSchema };
+interface LayerSchema extends Record<string, KonvaNodeSchema> {}
+
+export { KonvaNodeSchema, LayerSchema };

@@ -1,14 +1,14 @@
 import { useCallback, useRef } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { useClientSync } from "../context/client-doc-context";
 
 export const useErasing = () => {
   const clientSyncService = useClientSync();
-  const [doc, setDoc] = useDocument<KonvaNodeSchema>(
+  const [doc, setDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const isErasing = useRef(false);
@@ -16,13 +16,10 @@ export const useErasing = () => {
   const handleErase = useCallback(
     (lineId: string) => {
       if (!doc) return;
-      setDoc((currentDoc: KonvaNodeSchema) => {
-        if (!currentDoc.children) return;
-        const lineToEraseIndex = currentDoc.children.findIndex(
-          (child: KonvaNodeSchema) => child.attrs.id === lineId
-        );
-        if (lineToEraseIndex === -1) return;
-        currentDoc.children.splice(lineToEraseIndex, 1);
+      setDoc((currentDoc: LayerSchema) => {
+        if (currentDoc[lineId]) {
+          delete currentDoc[lineId];
+        }
       });
     },
     [doc, setDoc]
@@ -41,7 +38,7 @@ export const useErasing = () => {
 
   const handleEraseMove = useCallback(
     (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
-      if (!isErasing) return;
+      if (!isErasing.current) return;
 
       const stage = e.target.getStage();
       const pos = stage?.getPointerPosition();
@@ -49,12 +46,12 @@ export const useErasing = () => {
 
       const shapes = stage?.getAllIntersections(pos);
       shapes?.forEach((shape) => {
-        if (shape instanceof Konva.Line) {
+        if (shape instanceof Konva.Line && !(shape instanceof Konva.Arrow)) {
           handleErase(shape.attrs.id);
         }
       });
     },
-    [isErasing, handleErase]
+    [handleErase]
   );
 
   const handleEraseEnd = useCallback(() => {

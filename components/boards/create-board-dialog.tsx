@@ -75,7 +75,7 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="bg-burnt-sienna hover:bg-burnt-sienna-darker"
+          className="bg-burnt-sienna hover:bg-burnt-sienna-darker ms-10"
           aria-label="Create new board"
         >
           <Plus className="mr-2 h-4 w-4" />

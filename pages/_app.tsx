@@ -11,8 +11,19 @@ type AppPropsWithSession = AppProps & {
   };
 };
 function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
+  console.log(router.pathname);
   const isTeamRoute = router.pathname.startsWith("/teams");
+  const isTeamsRoute = router.pathname === "/teams";
 
+  if (isTeamsRoute) {
+    return (
+      <AuthProvider>
+        <AppLayout>
+          <Component {...pageProps} />
+        </AppLayout>
+      </AuthProvider>
+    );
+  }
   if (isTeamRoute) {
     return (
       <AuthProvider>

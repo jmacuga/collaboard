@@ -3,16 +3,16 @@
 import { useContext, useEffect, useRef, useCallback } from "react";
 import Konva from "konva";
 import { BoardContext } from "@/components/board/context/board-context";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 
-export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
+export const useTransformer = (localDoc: LayerSchema | undefined) => {
   const { selectedShapeIds } = useContext(BoardContext);
   const transformerRef = useRef<Konva.Transformer>(null);
   const clientSyncService = useClientSync();
-  const [_, changeLocalDoc] = useDocument<KonvaNodeSchema>(
+  const [_, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
 
@@ -21,18 +21,17 @@ export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
       const node = e.target;
       const shapeId = node.attrs.id;
 
-      changeLocalDoc((doc: KonvaNodeSchema) => {
-        if (!doc.children) return;
-        const shapeIndex = doc.children.findIndex(
-          (child: KonvaNodeSchema) => child.attrs.id === shapeId
-        );
-        if (shapeIndex === -1) return;
+      changeLocalDoc((doc: LayerSchema) => {
+        if (!doc[shapeId]) return;
 
-        doc.children[shapeIndex].attrs.x = node.x();
-        doc.children[shapeIndex].attrs.y = node.y();
-        doc.children[shapeIndex].attrs.scaleX = node.scaleX();
-        doc.children[shapeIndex].attrs.scaleY = node.scaleY();
-        doc.children[shapeIndex].attrs.rotation = node.rotation();
+        const shape = doc[shapeId];
+        const attrs = node.attrs;
+
+        shape.attrs.x = attrs.x;
+        shape.attrs.y = attrs.y;
+        shape.attrs.scaleX = attrs.scaleX;
+        shape.attrs.scaleY = attrs.scaleY;
+        shape.attrs.rotation = attrs.rotation;
       });
     },
     [changeLocalDoc]
@@ -41,13 +40,15 @@ export const useTransformer = (localDoc: KonvaNodeSchema | undefined) => {
   useEffect(() => {
     const transformer = transformerRef.current;
     if (transformer) {
-      transformer.nodes(
-        localDoc?.children
-          ?.filter((shape: KonvaNodeSchema) =>
-            selectedShapeIds.includes(shape.attrs.id)
-          )
-          .map((shape: KonvaNodeSchema) => shape.attrs.ref) || []
-      );
+      transformer.ignoreStroke(true);
+
+      const nodes = localDoc
+        ? Object.entries(localDoc)
+            .filter(([id, shape]) => selectedShapeIds.includes(id))
+            .map(([_, shape]) => shape.attrs.ref)
+        : [];
+
+      transformer.nodes(nodes);
       transformer.getLayer()?.batchDraw();
     }
   }, [selectedShapeIds, localDoc]);

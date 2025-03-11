@@ -2,7 +2,7 @@
 
 import { useContext, useState, useCallback } from "react";
 import { BoardContext } from "@/components/board/context/board-context";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
@@ -38,20 +38,17 @@ const getPointerPosition = (e: KonvaEvent): Point | null => {
 function useDrawing() {
   const { currentLineId, brushColor, brushSize } = useContext(BoardContext);
   const clientSyncService = useClientSync();
-  const [localDoc, changeLocalDoc] = useDocument<KonvaNodeSchema>(
+  const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
   const [localPoints, setLocalPoints] = useState<number[]>([]);
 
   const addLineToDoc = useCallback(
     (points: number[]) => {
-      changeLocalDoc((doc: KonvaNodeSchema) => {
-        if (!doc.children) doc.children = [];
-        const currentLineIndex = doc.children.findIndex(
-          (child: KonvaNodeSchema) => child.attrs.id === currentLineId
-        );
-        if (currentLineIndex === -1) return;
-        doc.children[currentLineIndex].attrs.points = points;
+      changeLocalDoc((doc: LayerSchema) => {
+        if (doc[currentLineId]) {
+          doc[currentLineId].attrs.points = points;
+        }
       });
     },
     [changeLocalDoc, currentLineId]
@@ -74,10 +71,10 @@ function useDrawing() {
       brushSize
     );
     const newLine = new Konva.Line(lineAttributes);
+    const lineObject = newLine.toObject() as KonvaNodeSchema;
 
-    changeLocalDoc((doc: KonvaNodeSchema) => {
-      if (!doc.children) doc.children = [];
-      doc.children.push(newLine.toObject() as KonvaNodeSchema);
+    changeLocalDoc((doc: LayerSchema) => {
+      doc[currentLineId] = lineObject;
     });
 
     setLocalPoints([point.x, point.y]);

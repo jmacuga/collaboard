@@ -22,11 +22,9 @@ const AuthLayout = ({
 
       <div className="flex min-h-screen flex-col">
         <header className="border-b border-border py-4">
-          <div className="container">
+          <div className="container mx-auto">
             <Link href="/">
-              <a className="text-2xl font-bold">
-                Colla<span className="text-primary">Board</span>
-              </a>
+              <a className="text-2xl font-bold">CollaBoard</a>
             </Link>
           </div>
         </header>

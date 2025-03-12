@@ -19,7 +19,7 @@ export function LoginForm() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     try {
-      const { error, isLoading } = await authenticate(undefined, formData);
+      const { error, isLoading } = await authenticate(formData);
       if (error) {
         setErrorMessage(error);
       }

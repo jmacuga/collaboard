@@ -68,6 +68,18 @@ Add `.env` file based on `.env.example`
 
 `docker compose up`
 
+5. Generate prisma client
+
+```
+npx prisma generate
+```
+
+6. Initialize MariaDB by applying migrations
+
+```
+npx prisma migrate
+```
+
 3. Run app node.js development server
 
 `npm run dev`

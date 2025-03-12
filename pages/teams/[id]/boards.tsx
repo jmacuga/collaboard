@@ -2,24 +2,24 @@ import { GetServerSideProps } from "next";
 import { getTeamBoards, getTeam } from "@/db/data";
 import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
-import { IBoard } from "@/db/models/Board";
-import { ITeam } from "@/db/models/Team";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 
 interface BoardsPageProps {
-  boards: IBoard[];
-  team: ITeam;
+  boards: string;
+  team: string;
 }
 
 export default function BoardsPage({ boards, team }: BoardsPageProps) {
+  const parsedBoards = JSON.parse(boards);
+  const parsedTeam = JSON.parse(team);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">{team.name} Boards</h1>
-        <CreateBoardDialog teamId={team._id as string} />
+        <h1 className="text-3xl font-bold">{parsedTeam.name} Boards</h1>
+        <CreateBoardDialog teamId={parsedTeam.id as string} />
       </div>
 
-      {boards && <BoardCards teamBoards={boards} />}
+      {parsedBoards && <BoardCards teamBoards={parsedBoards} />}
     </div>
   );
 }
@@ -49,8 +49,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      boards,
-      team,
+      boards: JSON.stringify(boards),
+      team: JSON.stringify(team),
     },
   };
 };

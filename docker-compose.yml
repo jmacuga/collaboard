@@ -10,10 +10,28 @@ services:
     volumes:
       - mongo-data:/data/db
     networks:
-      - mongo-network
+      - app-network
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb_container
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root1234
+      MARIADB_DATABASE: collaboard
+      MARIADB_USER: user
+      MARIADB_PASSWORD: user1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - app-network
 
 volumes:
   mongo-data:
+  mariadb-data:
 
 networks:
-  mongo-network:
+  app-network:
+    driver: bridge

@@ -1,4 +1,4 @@
-import { IBoard } from "@/db/models/Board";
+import { Board } from "@prisma/client";
 import {
   Card,
   CardHeader,
@@ -13,12 +13,12 @@ import { getColorForIndex } from "@/lib/utils/colors";
 import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 
-export function BoardCards({ teamBoards }: { teamBoards: IBoard[] | null }) {
+export function BoardCards({ teamBoards }: { teamBoards: Board[] | null }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamBoards ? (
         teamBoards.map((board, index) => (
-          <Card key={board._id as string} className="relative group">
+          <Card key={board.id} className="relative group">
             <div
               className="absolute inset-0 opacity-5"
               style={{
@@ -35,7 +35,7 @@ export function BoardCards({ teamBoards }: { teamBoards: IBoard[] | null }) {
                 {board.name}
               </CardTitle>
               <DeleteBoardDialog
-                boardId={board._id as string}
+                boardId={board.id}
                 boardName={board.name}
                 teamId={board.teamId}
               />
@@ -47,7 +47,7 @@ export function BoardCards({ teamBoards }: { teamBoards: IBoard[] | null }) {
               </p>
             </CardContent>
             <CardFooter className="relative justify-end">
-              <Link href={`/board/${board._id}`} className="ml-auto">
+              <Link href={`/board/${board.id}`} className="ml-auto">
                 <Button
                   variant="ghost"
                   className="hover:bg-accent/50 transition-colors flex items-center gap-2"

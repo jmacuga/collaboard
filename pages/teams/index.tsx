@@ -3,16 +3,15 @@ import { getUser, getUserTeams } from "@/db/data";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TeamsCards from "@/components/teams/teams-cards";
-import { useState } from "react";
 import { getSession } from "next-auth/react";
-import { ITeam } from "@/db/models/Team";
 
 interface TeamsPageProps {
-  teams: ITeam[];
+  teams: string;
   userId: string;
 }
 
 export default function TeamsPage({ teams, userId }: TeamsPageProps) {
+  const parsedTeams = JSON.parse(teams);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -23,7 +22,7 @@ export default function TeamsPage({ teams, userId }: TeamsPageProps) {
         </Button>
       </div>
 
-      <TeamsCards teams={teams} />
+      <TeamsCards teams={parsedTeams} />
     </div>
   );
 }
@@ -55,7 +54,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      teams,
+      teams: JSON.stringify(teams),
       userId: user.id,
     },
   };

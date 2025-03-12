@@ -1,0 +1,190 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ReviewRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum MergeRequestStatus {
+  OPEN
+  PENDING
+  MERGED
+  CLOSED
+}
+
+enum BoardActionName {
+  CREATE
+  DELETE
+  UPDATE
+  REVERT_HISTORY
+  MERGE
+}
+
+// Models
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  name          String
+  surname       String
+  passwordHash  String
+  username      String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  teamMembers      TeamMember[]
+  hostedInvites    TeamInvitation[] @relation("HostedInvites")
+  receivedInvites  TeamInvitation[] @relation("ReceivedInvites")
+  mergeRequests    MergeRequest[]
+  reviewRequests   ReviewRequest[]
+  comments         Comment[]
+  boardLogs        BoardLog[]
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members     TeamMember[]
+  boards      Board[]
+  invitations TeamInvitation[]
+}
+
+model TeamMember {
+  id        String    @id @default(uuid())
+  teamId    String
+  userId    String
+  roleId    String
+
+  // Relations
+  team      Team      @relation(fields: [teamId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  role      TeamRole  @relation(fields: [roleId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model TeamRole {
+  id        String      @id @default(uuid())
+  name      String
+
+  // Relations
+  members   TeamMember[]
+}
+
+model TeamInvitation {
+  id        String              @id @default(uuid())
+  status    TeamInvitationStatus
+  teamId    String
+  hostId    String
+  inviteeId String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Relations
+  team      Team               @relation(fields: [teamId], references: [id])
+  host      User              @relation("HostedInvites", fields: [hostId], references: [id])
+  invitee   User              @relation("ReceivedInvites", fields: [inviteeId], references: [id])
+}
+
+model Board {
+  id                    String    @id @default(uuid())
+  name                  String
+  teamId               String
+  isMergeRequestRequired Boolean  @default(true)
+  docUrl               String?
+  archived             Boolean  @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations
+  team           Team            @relation(fields: [teamId], references: [id])
+  mergeRequests  MergeRequest[]  @relation("BoardMergeRequests")
+  reviewRequests ReviewRequest[] @relation("BoardReviewRequests")
+  comments       Comment[]       @relation("BoardComments")
+  boardLogs      BoardLog[]      @relation("BoardLogs")
+}
+
+model MergeRequest {
+  id          String            @id @default(uuid())
+  boardId     String
+  requesterId String
+  status      MergeRequestStatus
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  changesId   String?
+
+  // Relations
+  board           Board            @relation("BoardMergeRequests", fields: [boardId], references: [id], onDelete: Cascade)
+  requester       User             @relation(fields: [requesterId], references: [id])
+  reviewRequests  ReviewRequest[]
+}
+
+model ReviewRequest {
+  id              String    @id @default(uuid())
+  boardId         String
+  reviewerId      String
+  status          ReviewRequestStatus
+  mergeRequestId  String
+
+  // Relations
+  board          Board         @relation("BoardReviewRequests", fields: [boardId], references: [id], onDelete: Cascade)
+  reviewer       User          @relation(fields: [reviewerId], references: [id])
+  mergeRequest   MergeRequest  @relation(fields: [mergeRequestId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  boardId   String
+  userId    String
+  text      String    @db.Text
+  objectId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  board     Board     @relation("BoardComments", fields: [boardId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+}
+
+model BoardLog {
+  id        String      @id @default(uuid())
+  boardId   String
+  userId    String
+  actionId  String
+  objectId  String?
+  headId    String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  action    BoardAction @relation(fields: [actionId], references: [id])
+  board     Board       @relation("BoardLogs", fields: [boardId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id])
+} 
+
+model BoardAction {
+  id        String    @id @default(uuid())
+  name      String
+  reversable Boolean @default(true)
+
+  // Relations
+  boardLogs BoardLog[]
+}

@@ -1,31 +1,27 @@
 "use server";
 
-import { Board, IBoard } from "@/db/models/Board";
-import dbConnect from "@/db/dbConnect";
-import { ObjectId } from "mongoose";
-import { IUser, User } from "@/db/models/User";
-import { ITeam, Team } from "@/db/models/Team";
-import { TeamMember } from "@/db/models/TeamMember";
-import { IDoc, Doc } from "@/db/models/Doc";
+import { prisma } from "@/db/prisma";
+import { Board, Team, User } from "@prisma/client";
 
-export async function createTeam({
+export async function createBoard({
   name,
   teamId,
   isMergeRequestRequired,
-  docId,
+  docUrl,
 }: {
   name: string;
-  teamId: ObjectId;
+  teamId: string;
   isMergeRequestRequired?: boolean;
-  docId?: string;
-}): Promise<IBoard | null> {
+  docUrl?: string;
+}): Promise<Board | null> {
   try {
-    await dbConnect();
-    const board = await Board.create({
-      name,
-      teamId,
-      isMergeRequestRequired,
-      docId,
+    const board = await prisma.board.create({
+      data: {
+        name,
+        teamId,
+        isMergeRequestRequired: isMergeRequestRequired ?? true,
+        docUrl,
+      },
     });
     return board;
   } catch (e) {
@@ -34,60 +30,81 @@ export async function createTeam({
   }
 }
 
-export async function getBoardById(id: string): Promise<IBoard | null> {
+export async function deleteBoard(boardId: string): Promise<Board | null> {
   try {
-    if (!id) {
-      console.error("Board ID is required");
-      return null;
-    }
-    await dbConnect();
-    const board = await Board.findById(id);
-    return JSON.parse(JSON.stringify(board));
+    const board = await prisma.board.delete({
+      where: { id: boardId },
+    });
+    return board;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function getUser(email: string): Promise<IUser | null> {
+export async function getBoardById(id: string): Promise<Board | null> {
   try {
-    await dbConnect();
-    return await User.findOne({ email: email });
+    if (!id) {
+      console.error("Board ID is required");
+      return null;
+    }
+    const board = await prisma.board.findUnique({
+      where: { id },
+    });
+    return board;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getUser(email: string): Promise<User | null> {
+  try {
+    return await prisma.user.findUnique({
+      where: { email },
+    });
   } catch (error) {
     console.error("Failed to fetch user:", error);
     return null;
   }
 }
 
-export async function getUserTeams(userId: string): Promise<ITeam[] | null> {
+export async function getUserTeams(userId: string): Promise<Team[] | null> {
   try {
-    await dbConnect();
-    const userTeamMemberships = await TeamMember.find({ userId });
-    const teamIds = userTeamMemberships.map((membership) => membership.teamId);
-    const teams = await Team.find({ _id: { $in: teamIds } });
-    return JSON.parse(JSON.stringify(teams));
+    const teams = await prisma.team.findMany({
+      where: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+    });
+    return teams;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function getTeamBoards(teamId: string): Promise<IBoard[] | null> {
+export async function getTeamBoards(teamId: string): Promise<Board[] | null> {
   try {
-    await dbConnect();
-    const boards = await Board.find({ teamId });
-    return JSON.parse(JSON.stringify(boards));
+    const boards = await prisma.board.findMany({
+      where: { teamId },
+    });
+    return boards;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function getTeam(id: string): Promise<ITeam | null> {
+export async function getTeam(id: string): Promise<Team | null> {
   try {
-    await dbConnect();
-    const team = await Team.findById(id);
-    return JSON.parse(JSON.stringify(team));
+    const team = await prisma.team.findUnique({
+      where: { id },
+    });
+    return team;
   } catch (e) {
     console.error(e);
     return null;
@@ -96,15 +113,17 @@ export async function getTeam(id: string): Promise<ITeam | null> {
 
 export async function updateBoard(
   boardId: string,
-  updateData: Partial<IBoard>
-) {
+  updateData: Partial<Board>
+): Promise<Board | null> {
   if (!boardId) {
     console.error("Board ID is required");
     return null;
   }
   try {
-    await dbConnect();
-    return await Board.findByIdAndUpdate(boardId, updateData);
+    return await prisma.board.update({
+      where: { id: boardId },
+      data: updateData,
+    });
   } catch (e) {
     console.error(e);
     return null;
@@ -113,8 +132,10 @@ export async function updateBoard(
 
 export async function getBoardDocUrl(boardId: string): Promise<string | null> {
   try {
-    await dbConnect();
-    const board = await Board.findById(boardId);
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      select: { docUrl: true },
+    });
     return board?.docUrl || null;
   } catch (e) {
     console.error(e);

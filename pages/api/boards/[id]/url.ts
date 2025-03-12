@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { BoardService } from "@/lib/services/board";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
+import { getBoardDocUrl } from "@/db/data";
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,9 +22,7 @@ export default async function handler(
       return res.status(400).json({ message: "Board ID is required" });
     }
 
-    const boardService = new BoardService();
-
-    const docUrl = await boardService.getDocUrl(boardId);
+    const docUrl = await getBoardDocUrl(boardId);
 
     return res.status(200).json({ docUrl });
   } catch (error) {

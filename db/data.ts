@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/db/prisma";
-import { Board, Team, User } from "@prisma/client";
+import { Board, Team, TeamMember, User } from "@prisma/client";
 
 export async function createBoard({
   name,
@@ -137,6 +137,25 @@ export async function getBoardDocUrl(boardId: string): Promise<string | null> {
       select: { docUrl: true },
     });
     return board?.docUrl || null;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getTeamMembers(
+  teamId: string
+): Promise<TeamMember[] | null> {
+  try {
+    const members = await prisma.teamMember.findMany({
+      where: { teamId },
+      include: {
+        user: true,
+        role: true,
+      },
+    });
+
+    return members;
   } catch (e) {
     console.error(e);
     return null;

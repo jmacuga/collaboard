@@ -77,7 +77,7 @@ npx prisma generate
 6. Initialize MariaDB by applying migrations
 
 ```
-npx prisma migrate
+npx prisma migrate dev
 ```
 
 3. Run app node.js development server

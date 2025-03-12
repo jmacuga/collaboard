@@ -2,6 +2,8 @@
 import { LayoutDashboard, Users, Settings } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { ConnectionStates } from "mongoose";
 
 interface TeamNavProps {
   teamId: string;
@@ -10,6 +12,8 @@ interface TeamNavProps {
 
 export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+
   const navItems = [
     {
       value: "boards",
@@ -28,11 +32,27 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
     },
   ];
 
+  useEffect(() => {
+    if (router.isReady) {
+      const path = router.asPath;
+      const pathSegments = path.split("/");
+      const lastSegment = pathSegments[pathSegments.length - 2];
+
+      const matchingTab = navItems.find((item) => item.value === lastSegment);
+
+      if (matchingTab) {
+        setActiveTab(matchingTab.value);
+      }
+    }
+  }, [router.asPath, router.isReady, navItems]);
+
   return (
     <Tabs
+      value={activeTab}
       defaultValue={defaultTab}
       className="w-full"
       onValueChange={(value: string) => {
+        setActiveTab(value);
         router.push(`/teams/${teamId}/${value}`);
       }}
     >
@@ -48,12 +68,6 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
           </TabsTrigger>
         ))}
       </TabsList>
-
-      <TabsContent value="boards">{}</TabsContent>
-
-      <TabsContent value="members">{}</TabsContent>
-
-      <TabsContent value="settings">{}</TabsContent>
     </Tabs>
   );
 }

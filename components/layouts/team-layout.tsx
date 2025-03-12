@@ -11,9 +11,9 @@ const TeamLayout = ({ children }: TeamLayoutProps) => {
   const { id } = router.query;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="w-full max-w-full flex flex-col gap-6">
       <TeamNav teamId={id as string} />
-      {children}
+      <div className="flex-1 w-full max-w-full">{children}</div>
     </div>
   );
 };

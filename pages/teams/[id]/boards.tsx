@@ -15,7 +15,7 @@ export default function BoardsPage({ boards, team }: BoardsPageProps) {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">{parsedTeam.name} Boards</h1>
+        <h1 className="text-3xl font-bold">{parsedTeam.name} - Boards</h1>
         <CreateBoardDialog teamId={parsedTeam.id as string} />
       </div>
 

@@ -26,13 +26,6 @@ enum MergeRequestStatus {
   CLOSED
 }
 
-enum BoardActionName {
-  CREATE
-  DELETE
-  UPDATE
-  REVERT_HISTORY
-  MERGE
-}
 
 // Models
 model User {
@@ -83,10 +76,11 @@ model TeamMember {
 
 model TeamRole {
   id        String      @id @default(uuid())
-  name      String
+  name      String      @unique
 
   // Relations
   members   TeamMember[]
+
 }
 
 model TeamInvitation {
@@ -120,6 +114,8 @@ model Board {
   reviewRequests ReviewRequest[] @relation("BoardReviewRequests")
   comments       Comment[]       @relation("BoardComments")
   boardLogs      BoardLog[]      @relation("BoardLogs")
+
+  @@unique([teamId, name])
 }
 
 model MergeRequest {
@@ -187,4 +183,6 @@ model BoardAction {
 
   // Relations
   boardLogs BoardLog[]
+
+  @@unique([name])
 }

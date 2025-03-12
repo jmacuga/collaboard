@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { schemaBoard } from "@/styles/schemas/board.schema";
+import { schemaBoard } from "@/lib/schemas/board.schema";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { schemaLogin } from "@/styles/schemas/login.schema";
+import { schemaLogin } from "@/lib/schemas/login.schema";
 import { signIn } from "next-auth/react";
 
 export default async function handler(

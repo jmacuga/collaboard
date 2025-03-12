@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { schemaBoard } from "@/styles/schemas/board.schema";
+import { schemaBoard } from "@/lib/schemas/board.schema";
 import { BoardService } from "@/lib/services/board";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";

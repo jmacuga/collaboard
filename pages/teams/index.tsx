@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TeamsCards from "@/components/teams/teams-cards";
 import { getSession } from "next-auth/react";
-
+import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 interface TeamsPageProps {
   teams: string;
   userId: string;
@@ -16,10 +16,7 @@ export default function TeamsPage({ teams, userId }: TeamsPageProps) {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Teams</h1>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create Team
-        </Button>
+        <CreateTeamDialog />
       </div>
 
       <TeamsCards teams={parsedTeams} />

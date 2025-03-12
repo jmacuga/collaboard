@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { schemaRegister } from "@/styles/schemas/register.schema";
+import { schemaRegister } from "@/lib/schemas/register.schema";
 import { prisma } from "@/db/prisma";
 import { hash } from "bcryptjs";
 

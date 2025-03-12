@@ -3,16 +3,21 @@ import { getTeamBoards, getTeam } from "@/db/data";
 import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
-import { hasTeamPermission } from "@/lib/auth/permission-utils";
-import { getToken } from "next-auth/jwt";
+import { TeamService } from "@/lib/services/team/team-service";
 interface BoardsPageProps {
   boards: string;
   team: string;
+  userRole: string;
 }
 
-export default function BoardsPage({ boards, team }: BoardsPageProps) {
+export default function BoardsPage({
+  boards,
+  team,
+  userRole,
+}: BoardsPageProps) {
   const parsedBoards = JSON.parse(boards);
   const parsedTeam = JSON.parse(team);
+  const parsedUserRole = JSON.parse(userRole);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -20,7 +25,9 @@ export default function BoardsPage({ boards, team }: BoardsPageProps) {
         <CreateBoardDialog teamId={parsedTeam.id as string} />
       </div>
 
-      {parsedBoards && <BoardCards teamBoards={parsedBoards} />}
+      {parsedBoards && (
+        <BoardCards teamBoards={parsedBoards} userRole={parsedUserRole} />
+      )}
     </div>
   );
 }
@@ -37,9 +44,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
   const teamId = context.params?.id as string;
-  const hasPermission = await hasTeamPermission(session.user.id, teamId);
+  const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
 
-  if (!hasPermission) {
+  if (!userRole) {
     return {
       notFound: true,
     };
@@ -59,6 +66,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: {
       boards: JSON.stringify(boards),
       team: JSON.stringify(team),
+      userRole: JSON.stringify(userRole),
     },
   };
 };

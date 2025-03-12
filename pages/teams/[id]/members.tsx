@@ -9,11 +9,17 @@ import { hasTeamPermission } from "@/lib/auth/permission-utils";
 interface MembersPageProps {
   members: string;
   team: string;
+  userRole: string;
 }
 
-export default function MembersPage({ members, team }: MembersPageProps) {
+export default function MembersPage({
+  members,
+  team,
+  userRole,
+}: MembersPageProps) {
   const parsedTeam = JSON.parse(team);
   const parsedMembers = JSON.parse(members);
+  const parsedUserRole = JSON.parse(userRole);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -40,9 +46,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const teamId = context.params?.id as string;
   const team = await getTeam(teamId);
-  const hasPermission = await hasTeamPermission(session.user.id, teamId);
+  const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
 
-  if (!hasPermission) {
+  if (!userRole) {
     return {
       notFound: true,
     };
@@ -54,6 +60,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: {
       members: JSON.stringify(members),
       team: JSON.stringify(team),
+      userRole: JSON.stringify(userRole),
     },
   };
 };

@@ -7,18 +7,27 @@ const publicPaths = [
   "/auth/register",
   "/auth/error",
   "/auth/verify",
-  "/api/auth/",
+  "/api/auth",
   "/api/socket",
 ];
 
 const isPublicPath = (path: string) => {
+  const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path;
+  console.log(`Checking path: ${normalizedPath}`);
+
   return publicPaths.some(
-    (publicPath) => path === publicPath || path.startsWith(`${publicPath}/`)
+    (publicPath) =>
+      normalizedPath === publicPath ||
+      normalizedPath.startsWith(`${publicPath}/`)
   );
 };
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === "/api/auth/session" || pathname === "/api/auth/session/") {
+    return NextResponse.next();
+  }
 
   if (isPublicPath(pathname)) {
     return NextResponse.next();
@@ -32,7 +41,6 @@ export async function middleware(request: NextRequest) {
   if (!token && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
-    url.searchParams.set("callbackUrl", encodeURI(request.url));
     return NextResponse.redirect(url);
   }
 

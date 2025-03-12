@@ -19,7 +19,9 @@ export default async function handler(
     });
 
     if (emailExists) {
-      return res.status(400).json({ error: "Email already exists" });
+      return res
+        .status(400)
+        .json({ error: "Account with this email already exists" });
     }
 
     if (parsedData.password !== parsedData.confirmPassword) {
@@ -31,7 +33,9 @@ export default async function handler(
     });
 
     if (usernameExists) {
-      return res.status(400).json({ error: "Username already exists" });
+      return res
+        .status(400)
+        .json({ error: "Account with this username already exists" });
     }
 
     const hashedPassword = await hash(parsedData.password, 10);

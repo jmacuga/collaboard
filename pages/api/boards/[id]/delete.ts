@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { BoardService } from "@/lib/services/board";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
+import { isBoardAdmin } from "@/lib/auth/permission-utils";
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,15 +24,12 @@ export default async function handler(
     }
 
     const boardService = new BoardService();
-    // const hasTeamAccess = await boardService.verifyTeamAccess(
-    //   session.user.id,
-    //   teamId
-    // );
-    // if (!hasTeamAccess) {
-    //   return res
-    //     .status(403)
-    //     .json({ message: "Forbidden: No access to this team" });
-    // }
+    const isAdmin = await isBoardAdmin(session.user.id, boardId);
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: No access to this board" });
+    }
 
     const board = await boardService.delete(boardId);
 

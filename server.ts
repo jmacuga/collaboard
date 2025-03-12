@@ -6,7 +6,13 @@ import { createAutomergeServer } from "@/lib/automerge-server";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
-const app = next({ dev });
+const app = next({
+  dev,
+  hostname,
+  port,
+
+  customServer: true,
+});
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -28,7 +34,7 @@ app.prepare().then(() => {
   server.on("upgrade", (request, socket, head) => {
     if (!request.url) return socket.destroy();
 
-    const { pathname } = new URL(request.url, `http://${hostname}`);
+    const { pathname } = new URL(request.url, `http://${hostname}:${port}`);
 
     if (pathname === "/_next/webpack-hmr") {
       return;

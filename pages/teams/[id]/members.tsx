@@ -4,6 +4,7 @@ import { MembersList } from "@/components/teams/members-list";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
 import { Button } from "@/components/ui/button";
+import { hasTeamPermission } from "@/lib/auth/permission-utils";
 
 interface MembersPageProps {
   members: string;
@@ -39,17 +40,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const teamId = context.params?.id as string;
   const team = await getTeam(teamId);
+  const hasPermission = await hasTeamPermission(session.user.id, teamId);
 
-  const isUserMemberOfTeam = await TeamService.isUserMemberOfTeam(
-    session.user.id,
-    teamId
-  );
-  if (!isUserMemberOfTeam) {
+  if (!hasPermission) {
     return {
-      redirect: {
-        destination: "/teams",
-        permanent: false,
-      },
+      notFound: true,
     };
   }
 

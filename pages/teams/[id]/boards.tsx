@@ -3,7 +3,8 @@ import { getTeamBoards, getTeam } from "@/db/data";
 import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
-
+import { hasTeamPermission } from "@/lib/auth/permission-utils";
+import { getToken } from "next-auth/jwt";
 interface BoardsPageProps {
   boards: string;
   team: string;
@@ -35,8 +36,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   }
-
   const teamId = context.params?.id as string;
+  const hasPermission = await hasTeamPermission(session.user.id, teamId);
+
+  if (!hasPermission) {
+    return {
+      notFound: true,
+    };
+  }
+
   const team = await getTeam(teamId);
 
   if (!team) {

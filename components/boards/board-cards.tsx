@@ -47,7 +47,7 @@ export function BoardCards({ teamBoards }: { teamBoards: Board[] | null }) {
               </p>
             </CardContent>
             <CardFooter className="relative justify-end">
-              <Link href={`/board/${board.id}`} className="ml-auto">
+              <Link href={`/boards/${board.id}`} className="ml-auto">
                 <Button
                   variant="ghost"
                   className="hover:bg-accent/50 transition-colors flex items-center gap-2"

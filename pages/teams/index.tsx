@@ -51,7 +51,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   const teams = await getUserTeams(user.id);
-
+  console.log("user.id", user.email);
   return {
     props: {
       teams: JSON.stringify(teams),

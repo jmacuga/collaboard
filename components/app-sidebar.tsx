@@ -24,6 +24,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
+import SignOutModal from "@/components/auth/sign-out-modal";
 
 const data = {
   navMain: [
@@ -114,11 +115,35 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {item.items.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={item.isActive}>
-                            <a href={item.url}>{item.title}</a>
-                          </SidebarMenuButton>
+                      {item.items.map((subItem) => (
+                        <SidebarMenuItem key={subItem.title}>
+                          {subItem.title === "Logout" ? (
+                            <SignOutModal>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={subItem.isActive}
+                              >
+                                <button className="flex w-full items-center">
+                                  {subItem.icon && (
+                                    <subItem.icon className="mr-2" />
+                                  )}
+                                  {subItem.title}
+                                </button>
+                              </SidebarMenuButton>
+                            </SignOutModal>
+                          ) : (
+                            <SidebarMenuButton
+                              asChild
+                              isActive={subItem.isActive}
+                            >
+                              <a href={subItem.url}>
+                                {subItem.icon && (
+                                  <subItem.icon className="mr-2" />
+                                )}
+                                {subItem.title}
+                              </a>
+                            </SidebarMenuButton>
+                          )}
                         </SidebarMenuItem>
                       ))}
                     </SidebarMenu>

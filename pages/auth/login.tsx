@@ -1,5 +1,6 @@
 import AuthLayout from "@/components/layouts/auth-layout";
-import { LoginForm } from "@/components/auth/login/login-form";
+import { LoginForm } from "@/components/auth/login-form";
+import Link from "next/link";
 
 const LoginPage = () => {
   return (
@@ -13,6 +14,12 @@ const LoginPage = () => {
             <div className="w-32 text-white md:w-36"></div>
           </div>
           <LoginForm />
+          <p className="text-center text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link href="/auth/register" className="text-blue-500">
+              Sign up
+            </Link>
+          </p>
         </div>
       </main>
     </AuthLayout>

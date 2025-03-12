@@ -6,10 +6,11 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
-import { Button } from "../../ui/button";
+import { Button } from "../ui/button";
 import { authenticate } from "@/lib/auth/actions";
 import { useState } from "react";
 import { useRouter } from "next/router";
+
 export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,20 +18,27 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage("");
+
     const formData = new FormData(e.currentTarget);
+
     try {
-      const { error, isLoading } = await authenticate(undefined, formData);
+      const { error } = await authenticate(formData);
+
       if (error) {
         setErrorMessage(error);
+        setIsLoading(false);
+        return;
       }
-      if (isLoading) {
-        setIsLoading(true);
-      }
-      if (!error && !isLoading) {
-        router.push("/teams");
-      }
+
+      // If no error, authentication was successful and session is initialized
+      // Redirect to teams page
+      router.push("/teams");
     } catch (error) {
-      setErrorMessage("An error occurred");
+      console.error("Login error:", error);
+      setErrorMessage("An unexpected error occurred. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -79,8 +87,11 @@ export function LoginForm() {
             </div>
           </div>
         </div>
-        <Button className="mt-4 w-full" type="submit">
-          Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+        <Button className="mt-4 w-full" type="submit" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Log in"}
+          {!isLoading && (
+            <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+          )}
         </Button>
         <div
           className="flex h-8 items-end space-x-1"

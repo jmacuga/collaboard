@@ -1,9 +1,10 @@
 import type { AppProps } from "next/app";
 import { Session } from "next-auth";
-import AuthProvider from "@/components/auth/providers/session-provider";
+import AuthProvider from "@/components/auth/session-provider";
 import "@/styles/global.css";
 import TeamLayout from "@/components/layouts/team-layout";
 import { AppLayout } from "@/components/layouts/app-layout";
+import { ToastProvider } from "@/components/providers/toast-provider";
 
 type AppPropsWithSession = AppProps & {
   pageProps: {
@@ -20,6 +21,7 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
       <AuthProvider>
         <AppLayout>
           <Component {...pageProps} />
+          <ToastProvider />
         </AppLayout>
       </AuthProvider>
     );
@@ -30,6 +32,7 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
         <AppLayout>
           <TeamLayout>
             <Component {...pageProps} />
+            <ToastProvider />
           </TeamLayout>
         </AppLayout>
       </AuthProvider>
@@ -38,6 +41,7 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
   return (
     <AuthProvider>
       <Component {...pageProps} />
+      <ToastProvider />
     </AuthProvider>
   );
 }

@@ -8,7 +8,7 @@ import { Board } from "@prisma/client";
 export class BoardService implements IBoardService {
   constructor() {}
 
-  async create(data: { name: string; teamId: string }): Promise<Board> {
+  async create(data: { name: string; teamId: string }): Promise<Board | null> {
     try {
       await dbConnect();
       const serverRepo = await createAutomergeServer(null, "server");

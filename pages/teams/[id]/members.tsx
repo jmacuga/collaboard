@@ -4,15 +4,22 @@ import { MembersList } from "@/components/teams/members-list";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
 import { Button } from "@/components/ui/button";
+import { hasTeamPermission } from "@/lib/auth/permission-utils";
 
 interface MembersPageProps {
   members: string;
   team: string;
+  userRole: string;
 }
 
-export default function MembersPage({ members, team }: MembersPageProps) {
+export default function MembersPage({
+  members,
+  team,
+  userRole,
+}: MembersPageProps) {
   const parsedTeam = JSON.parse(team);
   const parsedMembers = JSON.parse(members);
+  const parsedUserRole = JSON.parse(userRole);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -39,17 +46,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const teamId = context.params?.id as string;
   const team = await getTeam(teamId);
+  const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
 
-  const isUserMemberOfTeam = await TeamService.isUserMemberOfTeam(
-    session.user.id,
-    teamId
-  );
-  if (!isUserMemberOfTeam) {
+  if (!userRole) {
     return {
-      redirect: {
-        destination: "/teams",
-        permanent: false,
-      },
+      notFound: true,
     };
   }
 
@@ -59,6 +60,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: {
       members: JSON.stringify(members),
       team: JSON.stringify(team),
+      userRole: JSON.stringify(userRole),
     },
   };
 };

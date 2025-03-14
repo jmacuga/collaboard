@@ -13,7 +13,14 @@ import { getColorForIndex } from "@/lib/utils/colors";
 import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 
-export function BoardCards({ teamBoards }: { teamBoards: Board[] | null }) {
+export function BoardCards({
+  teamBoards,
+  userRole,
+}: {
+  teamBoards: Board[] | null;
+  userRole: string;
+}) {
+  console.log(userRole);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {teamBoards ? (
@@ -34,11 +41,13 @@ export function BoardCards({ teamBoards }: { teamBoards: Board[] | null }) {
                 />
                 {board.name}
               </CardTitle>
-              <DeleteBoardDialog
-                boardId={board.id}
-                boardName={board.name}
-                teamId={board.teamId}
-              />
+              {userRole === "Admin" && (
+                <DeleteBoardDialog
+                  boardId={board.id}
+                  boardName={board.name}
+                  teamId={board.teamId}
+                />
+              )}
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <p>
@@ -47,7 +56,7 @@ export function BoardCards({ teamBoards }: { teamBoards: Board[] | null }) {
               </p>
             </CardContent>
             <CardFooter className="relative justify-end">
-              <Link href={`/board/${board.id}`} className="ml-auto">
+              <Link href={`/boards/${board.id}`} className="ml-auto">
                 <Button
                   variant="ghost"
                   className="hover:bg-accent/50 transition-colors flex items-center gap-2"

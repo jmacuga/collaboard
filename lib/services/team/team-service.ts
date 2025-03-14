@@ -5,13 +5,32 @@ export class TeamService {
     userId: string,
     teamId: string
   ): Promise<boolean> {
-    const member = await prisma.teamMember.findFirst({
+    const teamMember = await prisma.teamMember.findFirst({
       where: {
         userId,
         teamId,
       },
     });
+    return teamMember !== null;
+  }
 
-    return !!member;
+  static async getUserTeamRole(
+    userId: string,
+    teamId: string
+  ): Promise<string | null> {
+    const teamMember = await prisma.teamMember.findFirst({
+      where: {
+        userId,
+        teamId,
+      },
+      include: {
+        role: true,
+      },
+    });
+    if (teamMember == null) {
+      return null;
+    }
+
+    return teamMember.role.name;
   }
 }

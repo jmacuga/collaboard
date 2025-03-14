@@ -5,6 +5,7 @@ import "@/styles/global.css";
 import TeamLayout from "@/components/layouts/team-layout";
 import { AppLayout } from "@/components/layouts/app-layout";
 import { ToastProvider } from "@/components/providers/toast-provider";
+import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
 
 type AppPropsWithSession = AppProps & {
   pageProps: {
@@ -18,29 +19,35 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
   if (isTeamsRoute) {
     return (
       <AuthProvider>
-        <AppLayout>
-          <Component {...pageProps} />
-          <ToastProvider />
-        </AppLayout>
+        <NetworkStatusProvider>
+          <AppLayout>
+            <Component {...pageProps} />
+            <ToastProvider />
+          </AppLayout>
+        </NetworkStatusProvider>
       </AuthProvider>
     );
   }
   if (isTeamRoute) {
     return (
       <AuthProvider>
-        <AppLayout>
-          <TeamLayout>
-            <Component {...pageProps} />
-            <ToastProvider />
-          </TeamLayout>
-        </AppLayout>
+        <NetworkStatusProvider>
+          <AppLayout>
+            <TeamLayout>
+              <Component {...pageProps} />
+              <ToastProvider />
+            </TeamLayout>
+          </AppLayout>
+        </NetworkStatusProvider>
       </AuthProvider>
     );
   }
   return (
     <AuthProvider>
-      <Component {...pageProps} />
-      <ToastProvider />
+      <NetworkStatusProvider>
+        <Component {...pageProps} />
+        <ToastProvider />
+      </NetworkStatusProvider>
     </AuthProvider>
   );
 }

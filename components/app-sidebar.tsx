@@ -23,8 +23,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import SignOutModal from "@/components/auth/sign-out-modal";
+import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
 
 const data = {
   navMain: [
@@ -154,6 +156,9 @@ export function AppSidebar() {
           </Collapsible>
         ))}
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t">
+        <NetworkStatusIndicator showText className="justify-center" />
+      </SidebarFooter>
     </Sidebar>
   );
 }

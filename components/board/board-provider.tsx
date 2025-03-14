@@ -6,6 +6,8 @@ import Board from "@/components/board/board";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 import { ClientSyncContext } from "./context/client-doc-context";
 import { BoardContextProvider } from "./context/board-context";
+import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
+
 interface BoardState {
   repo: Repo | null;
   docUrl: string;
@@ -51,14 +53,16 @@ export function BoardProvider({
   }
 
   return (
-    <RepoContext.Provider value={state.repo}>
-      <ClientSyncContext.Provider
-        value={{ clientSyncService: state.clientSyncService }}
-      >
-        <BoardContextProvider>
-          <Board />
-        </BoardContextProvider>
-      </ClientSyncContext.Provider>
-    </RepoContext.Provider>
+    <NetworkStatusProvider>
+      <RepoContext.Provider value={state.repo}>
+        <ClientSyncContext.Provider
+          value={{ clientSyncService: state.clientSyncService }}
+        >
+          <BoardContextProvider>
+            <Board />
+          </BoardContextProvider>
+        </ClientSyncContext.Provider>
+      </RepoContext.Provider>
+    </NetworkStatusProvider>
   );
 }

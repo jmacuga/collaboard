@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useClientSync } from "@/components/board/context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
+import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -77,6 +78,8 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [textFontSize, setTextFontSize] = useState<number>(24);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const clientSyncService = useClientSync();
+  const { networkStatus } = useNetworkStatusContext();
+
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
   };
@@ -93,8 +96,28 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
     }
     return point;
   };
+
+  useEffect(() => {
+    if (networkStatus === "OFFLINE") {
+      setIsOnline(false);
+      const setOfflineMode = async () => {
+        try {
+          await clientSyncService.setOnline(false);
+        } catch (error: unknown) {
+          console.error("Failed to set offline mode:", error);
+        }
+      };
+      setOfflineMode();
+    }
+  }, [networkStatus, clientSyncService]);
+
   const toggleOnlineMode = async () => {
     try {
+      if (!isOnline && networkStatus !== "ONLINE") {
+        console.warn("Cannot switch to online mode when network is offline");
+        return;
+      }
+
       await clientSyncService.setOnline(!isOnline);
       setIsOnline((prevOnline) => !prevOnline);
     } catch (error) {

@@ -28,6 +28,7 @@ import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
 import { OnlineToggle } from "./components/online-toggle";
 import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
+import { NetworkStatusBadge } from "./components/network-status-badge";
 import { useText } from "./hooks/use-text";
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -359,6 +360,7 @@ export default function Board({}: {}) {
         </div>
       )}
       <OnlineToggle />
+      <NetworkStatusBadge />
       {showResetButton && <ResetPositionButton onClick={resetPosition} />}
       <ShapeColorPalette />
     </div>

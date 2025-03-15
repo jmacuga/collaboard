@@ -1,19 +1,38 @@
-import { getUser } from "@/db/data";
 import { NextApiRequest, NextApiResponse } from "next";
 import { TeamService } from "@/lib/services/team/team-service";
-export default async function handler(
+import { withTeamApi } from "@/lib/middleware";
+import { ApiResponse } from "@/lib/middleware/with-api-auth";
+
+/**
+ * API endpoint for rejecting a team invitation
+ *
+ * @param req - The Next.js API request
+ * @param res - The Next.js API response
+ * @returns A JSON response indicating success or failure
+ */
+async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse<ApiResponse>,
+  session: any
 ) {
-  const id = req.query.id as string;
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  const invitationId = req.query.id as string;
+  if (!invitationId) {
+    return res.status(400).json({
+      success: false,
+      error: "Missing invitation ID",
+    });
   }
 
-  const invitation = await TeamService.rejectInvitation(id as string);
-  if (invitation == null) {
-    return res.status(400).json({ error: "Failed to reject invitation" });
-  }
-  return res.status(200).json({ message: "Invitation rejected" });
+  const invitation = await TeamService.rejectInvitation(invitationId);
+
+  return res.status(200).json({
+    success: true,
+    message: "Invitation rejected successfully",
+    data: invitation,
+  });
 }
+
+export default withTeamApi(handler, {
+  methods: ["POST"],
+  requireAuth: true,
+});

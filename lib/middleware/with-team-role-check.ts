@@ -24,15 +24,18 @@ export type TeamRoleCheckOptions = {
   resourceType?: ResourceType;
 
   /**
-   * The role that the user must have
+   * The role(s) that the user must have - can be a single role or an array of roles
+   * If an array is provided, the user must have at least one of the specified roles
    */
-  role: string;
+  role: string | string[];
 };
 
 /**
  * Default options for team role check
  */
-const defaultOptions: Required<TeamRoleCheckOptions> = {
+const defaultOptions: Required<Omit<TeamRoleCheckOptions, "role">> & {
+  role: string;
+} = {
   getResourceId: (req) => {
     return req.query.id as string | undefined;
   },
@@ -91,21 +94,17 @@ export function withTeamRoleCheck<T = any>(
       }
       teamId = team.id;
     } else {
-      // Default to using the resource ID as the team ID
       teamId = resourceId;
     }
 
-    const member = await TeamService.isUserMemberOfTeam(
-      session.user.id,
-      teamId
-    );
-    console.log("member", member);
+    const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
+    const requiredRoles = Array.isArray(mergedOptions.role)
+      ? mergedOptions.role
+      : [mergedOptions.role];
 
-    console.log("session.user.id", session.user.id);
-    console.log("teamId", teamId);
-    const role = await TeamService.getUserTeamRole(session.user.id, teamId);
-    console.log("role", role);
-    if (!role || role !== mergedOptions.role) {
+    const hasRequiredRole = userRole && requiredRoles.includes(userRole);
+
+    if (!hasRequiredRole) {
       return res.status(403).json({
         success: false,
         error: "Forbidden. You do not have the required role for this team.",

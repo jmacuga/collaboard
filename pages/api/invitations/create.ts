@@ -33,5 +33,5 @@ export default withTeamRoleApi(handler, {
   requireAuth: true,
   getResourceId: (req) => req.body.teamId,
   resourceType: "team",
-  role: "Member",
+  role: ["Admin", "Member"],
 });

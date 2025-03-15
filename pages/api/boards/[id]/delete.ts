@@ -23,6 +23,6 @@ export default withTeamRoleApi(handler, {
   methods: ["DELETE"],
   requireAuth: true,
   resourceType: "board",
-  role: "Admin",
+  role: ["Admin"],
   getResourceId: (req) => req.query.id as string,
 });

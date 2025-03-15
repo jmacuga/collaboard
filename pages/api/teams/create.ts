@@ -2,7 +2,6 @@ import { prisma } from "@/db/prisma";
 import { authOptions } from "@/lib/auth/auth";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import { ZodError } from "zod";
 import { withApiAuth } from "@/lib/middleware";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {

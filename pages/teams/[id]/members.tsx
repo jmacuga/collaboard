@@ -4,6 +4,7 @@ import { MembersList } from "@/components/teams/members-list";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
 import { InviteMembersDialog } from "@/components/teams/invite-members-dialog";
+import { withTeamRolePage } from "@/lib/middleware";
 
 interface MembersPageProps {
   members: string;
@@ -31,27 +32,12 @@ export default function MembersPage({
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+const getServerSidePropsFunc: GetServerSideProps = async (context) => {
   const session = await getSession(context);
-
-  if (!session?.user) {
-    return {
-      redirect: {
-        destination: "/auth/signin",
-        permanent: false,
-      },
-    };
-  }
 
   const teamId = context.params?.id as string;
   const team = await getTeam(teamId);
-  const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
-
-  if (!userRole) {
-    return {
-      notFound: true,
-    };
-  }
+  const userRole = await TeamService.getUserTeamRole(session!.user.id, teamId);
 
   const members = await getTeamMembers(teamId);
 
@@ -63,3 +49,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     },
   };
 };
+
+export const getServerSideProps = withTeamRolePage(getServerSidePropsFunc, {
+  resourceType: "team",
+  role: ["Admin", "Member"],
+});

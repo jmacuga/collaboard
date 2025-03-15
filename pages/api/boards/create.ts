@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { schemaBoard } from "@/lib/schemas/board.schema";
 import { BoardService } from "@/lib/services/board";
 import { ZodError } from "zod";
-import { withTeamMemberApi } from "@/lib/middleware";
+import { withTeamRoleApi } from "@/lib/middleware";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -31,8 +31,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTeamMemberApi(handler, {
+export default withTeamRoleApi(handler, {
   methods: ["POST"],
   requireAuth: true,
-  getTeamId: (req) => req.body.teamId,
+  resourceType: "team",
+  role: ["Admin", "Member"],
+  getResourceId: (req) => req.body.teamId,
 });

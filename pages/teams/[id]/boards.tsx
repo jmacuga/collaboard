@@ -4,6 +4,7 @@ import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 import { TeamService } from "@/lib/services/team/team-service";
+import { withTeamRolePage } from "@/lib/middleware";
 interface BoardsPageProps {
   boards: string;
   team: string;
@@ -32,25 +33,11 @@ export default function BoardsPage({
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+const getServerSidePropsFunc: GetServerSideProps = async (context) => {
   const session = await getSession(context);
 
-  if (!session?.user) {
-    return {
-      redirect: {
-        destination: "/auth/signin",
-        permanent: false,
-      },
-    };
-  }
   const teamId = context.params?.id as string;
-  const userRole = await TeamService.getUserTeamRole(session.user.id, teamId);
-
-  if (!userRole) {
-    return {
-      notFound: true,
-    };
-  }
+  const userRole = await TeamService.getUserTeamRole(session!.user.id, teamId);
 
   const team = await getTeam(teamId);
 
@@ -70,3 +57,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     },
   };
 };
+
+export const getServerSideProps = withTeamRolePage(getServerSidePropsFunc, {
+  resourceType: "team",
+  role: ["Admin", "Member"],
+});

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import SignOutModal from "@/components/auth/sign-out-modal";
 import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
+import { useRouter } from "next/router";
 
 const data = {
   navMain: [
@@ -41,13 +42,8 @@ const data = {
           icon: Users,
         },
         {
-          title: "Create Team",
-          url: "#",
-          icon: UserPlus,
-        },
-        {
           title: "Team Invitations",
-          url: "#",
+          url: "/profile/invitations",
           icon: Inbox,
         },
       ],
@@ -59,9 +55,8 @@ const data = {
       items: [
         {
           title: "Settings",
-          url: "#",
+          url: "/profile/settings",
           icon: Files,
-          isActive: true,
         },
         {
           title: "Logout",
@@ -74,12 +69,13 @@ const data = {
       title: "Review Requests",
       url: "#",
       icon: GitPullRequest,
-      isActive: false,
     },
   ],
 };
 
 export function AppSidebar() {
+  const router = useRouter();
+  const pathname = router.pathname;
   return (
     <Sidebar>
       <SidebarHeader>
@@ -105,7 +101,7 @@ export function AppSidebar() {
                     <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   </CollapsibleTrigger>
                 ) : (
-                  <SidebarMenuButton asChild isActive={item.isActive}>
+                  <SidebarMenuButton asChild>
                     <a href={item.url}>
                       {item.icon && <item.icon className="mr-2" />}
                       {item.title}
@@ -121,10 +117,7 @@ export function AppSidebar() {
                         <SidebarMenuItem key={subItem.title}>
                           {subItem.title === "Logout" ? (
                             <SignOutModal>
-                              <SidebarMenuButton
-                                asChild
-                                isActive={subItem.isActive}
-                              >
+                              <SidebarMenuButton asChild>
                                 <button className="flex w-full items-center">
                                   {subItem.icon && (
                                     <subItem.icon className="mr-2" />
@@ -136,7 +129,7 @@ export function AppSidebar() {
                           ) : (
                             <SidebarMenuButton
                               asChild
-                              isActive={subItem.isActive}
+                              isActive={pathname === subItem.url}
                             >
                               <a href={subItem.url}>
                                 {subItem.icon && (

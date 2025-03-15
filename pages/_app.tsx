@@ -13,10 +13,11 @@ type AppPropsWithSession = AppProps & {
   };
 };
 function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
-  const isTeamRoute = router.pathname.startsWith("/teams");
+  const isTeamDetailRoute = router.pathname.startsWith("/teams");
   const isTeamsRoute = router.pathname === "/teams";
+  const isProfileRoute = router.pathname.startsWith("/profile");
 
-  if (isTeamsRoute) {
+  if (isTeamsRoute || isProfileRoute) {
     return (
       <AuthProvider>
         <NetworkStatusProvider>
@@ -28,7 +29,7 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
       </AuthProvider>
     );
   }
-  if (isTeamRoute) {
+  if (isTeamDetailRoute) {
     return (
       <AuthProvider>
         <NetworkStatusProvider>

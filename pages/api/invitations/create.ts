@@ -5,12 +5,10 @@ import { authOptions } from "@/lib/auth/auth";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getUser } from "@/db/data";
 
-// Export a default handler function for Pages Router
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Only allow POST method
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -19,7 +17,16 @@ export default async function handler(
   if (!session) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  const teamId = req.query.id as string;
+
+  let email;
+  let teamId;
+  try {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    email = body.email;
+    teamId = body.teamId;
+  } catch (error) {
+    return res.status(400).json({ message: "Invalid request body" });
+  }
 
   const hasPermission = await TeamService.isUserMemberOfTeam(
     session.user.id,
@@ -27,15 +34,6 @@ export default async function handler(
   );
   if (!hasPermission) {
     return res.status(403).json({ message: "Forbidden" });
-  }
-
-  // Parse the request body
-  let email;
-  try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    email = body.email;
-  } catch (error) {
-    return res.status(400).json({ message: "Invalid request body" });
   }
 
   const { success } = schemaTeamInvitation.safeParse({ email });

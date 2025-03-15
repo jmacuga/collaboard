@@ -34,7 +34,6 @@ export function MembersList({
 }: {
   members: TeamMemberWithRelations[];
 }) {
-  // Function to get initials from name
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -43,7 +42,6 @@ export function MembersList({
       .toUpperCase();
   };
 
-  // Function to get role badge color
   const getRoleBadgeColor = (roleName: string) => {
     switch (roleName.toLowerCase()) {
       case "admin":

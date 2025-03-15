@@ -91,4 +91,82 @@ export class TeamService {
 
     return teamInvitation;
   }
+
+  static async acceptInvitation(invitationId: string) {
+    const invitation = await prisma.teamInvitation.findUnique({
+      where: { id: invitationId },
+      include: {
+        team: true,
+      },
+    });
+    if (invitation == null) {
+      console.error("Invitation not found");
+      return null;
+    }
+    if (invitation.status !== "PENDING") {
+      console.error("Invitation not pending");
+      return null;
+    }
+    const user = await getUser(invitation.email);
+    if (user == null) {
+      console.error("User not found");
+      return null;
+    }
+    const memberRole = await prisma.teamRole.findUnique({
+      where: { name: "Member" },
+    });
+    if (memberRole == null) {
+      console.error("Member role not found");
+      return null;
+    }
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        const teamMember = await tx.teamMember.create({
+          data: {
+            userId: user.id,
+            teamId: invitation.team.id,
+            roleId: memberRole.id,
+          },
+        });
+        if (teamMember == null) {
+          throw new Error("Failed to add member to team");
+        }
+        await tx.teamInvitation.update({
+          where: { id: invitationId },
+          data: { status: "ACCEPTED" },
+        });
+        return teamMember;
+      });
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  static async rejectInvitation(invitationId: string) {
+    const invitation = await prisma.teamInvitation.update({
+      where: { id: invitationId },
+      data: { status: "REJECTED" },
+    });
+    return invitation;
+  }
+
+  static async addMemberToTeam(teamId: string, userId: string) {
+    try {
+      const memberRole = await prisma.teamRole.findUnique({
+        where: { name: "Member" },
+      });
+      if (memberRole == null) {
+        return null;
+      }
+      const teamMember = await prisma.teamMember.create({
+        data: { userId, teamId, roleId: memberRole.id },
+      });
+      return teamMember;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
 }

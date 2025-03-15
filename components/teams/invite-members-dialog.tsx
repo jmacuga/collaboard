@@ -44,12 +44,12 @@ export function InviteMembersDialog() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/teams/${teamId}/invite`, {
+      const response = await fetch(`/api/invitations/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, teamId }),
         credentials: "include",
       });
 

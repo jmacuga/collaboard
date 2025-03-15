@@ -13,7 +13,6 @@ const publicPaths = [
 
 const isPublicPath = (path: string) => {
   const normalizedPath = path.endsWith("/") ? path.slice(0, -1) : path;
-  console.log(`Checking path: ${normalizedPath}`);
 
   return publicPaths.some(
     (publicPath) =>

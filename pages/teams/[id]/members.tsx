@@ -3,8 +3,7 @@ import { getTeamMembers, getTeam } from "@/db/data";
 import { MembersList } from "@/components/teams/members-list";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
-import { Button } from "@/components/ui/button";
-import { hasTeamPermission } from "@/lib/auth/permission-utils";
+import { InviteMembersDialog } from "@/components/teams/invite-members-dialog";
 
 interface MembersPageProps {
   members: string;
@@ -24,7 +23,7 @@ export default function MembersPage({
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">{parsedTeam.name} - Members </h1>
-        <Button>Add Member</Button>
+        <InviteMembersDialog />
       </div>
 
       {parsedMembers && <MembersList members={parsedMembers} />}

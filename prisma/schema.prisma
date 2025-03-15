@@ -41,7 +41,6 @@ model User {
   // Relations
   teamMembers      TeamMember[]
   hostedInvites    TeamInvitation[] @relation("HostedInvites")
-  receivedInvites  TeamInvitation[] @relation("ReceivedInvites")
   mergeRequests    MergeRequest[]
   reviewRequests   ReviewRequest[]
   comments         Comment[]
@@ -85,17 +84,16 @@ model TeamRole {
 
 model TeamInvitation {
   id        String              @id @default(uuid())
-  status    TeamInvitationStatus
+  status    TeamInvitationStatus @default(PENDING)
   teamId    String
   hostId    String
-  inviteeId String
+  email String
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
   // Relations
   team      Team               @relation(fields: [teamId], references: [id])
   host      User              @relation("HostedInvites", fields: [hostId], references: [id])
-  invitee   User              @relation("ReceivedInvites", fields: [inviteeId], references: [id])
 }
 
 model Board {

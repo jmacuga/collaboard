@@ -46,6 +46,12 @@ export function BoardProvider({
       });
     };
     initializeClientSyncService();
+
+    return () => {
+      if (state.clientSyncService) {
+        state.clientSyncService.disconnect();
+      }
+    };
   }, [docUrl]);
 
   if (!state.repo || !state.clientSyncService) {

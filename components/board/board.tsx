@@ -30,11 +30,14 @@ import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
 import { NetworkStatusBadge } from "./components/network-status-badge";
 import { useText } from "./hooks/use-text";
+import { ActiveUsersList } from "./components/active-users-list";
+import { useActiveUsers } from "./hooks/use-active-users";
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
-  const [localDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
-  );
+  const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
+  const [localDoc] = useDocument<LayerSchema>(docUrl);
+  const handle = useHandle<LayerSchema>(docUrl);
+
   const {
     brushColor,
     brushSize,
@@ -68,15 +71,13 @@ export default function Board({}: {}) {
     handleTextChange,
     handleTextKeyDown,
     textareaRef: textRef,
-    currentTextId,
     setEditingText,
     setTextPosition,
     setCurrentTextId,
   } = useText();
 
-  const handle = useHandle<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
-  );
+  const { activeUsers } = useActiveUsers();
+
   useEffect(() => {
     console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
   }, [isOnline]);
@@ -204,6 +205,9 @@ export default function Board({}: {}) {
         <div className="z-10 flex-shrink ">
           <SideToolbar />
         </div>
+        {isOnline && activeUsers.length > 0 && (
+          <ActiveUsersList users={activeUsers} />
+        )}
         <div
           className={`
           ${mode === "erasing" ? "cursor-crosshair" : ""}

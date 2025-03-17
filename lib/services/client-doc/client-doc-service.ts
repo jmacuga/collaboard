@@ -160,4 +160,19 @@ export class ClientSyncService implements IClientSyncService {
     this.serverRepo?.delete(this.docUrl as AnyDocumentId);
     this.localRepo?.delete(this.docUrl as AnyDocumentId);
   }
+
+  sendEphemeralMessage(message: any) {
+    const docHandle = this.localRepo?.find(this.docUrl as AnyDocumentId);
+    if (docHandle) {
+      docHandle.broadcast(message);
+    }
+  }
+
+  onEphemeralMessage(callback: (message: any) => void) {
+    const docHandle = this.localRepo?.find(this.docUrl as AnyDocumentId);
+    if (docHandle) {
+      return docHandle.on("ephemeral-message", callback);
+    }
+    return () => {};
+  }
 }

@@ -32,6 +32,8 @@ import { NetworkStatusBadge } from "./components/network-status-badge";
 import { useText } from "./hooks/use-text";
 import { ActiveUsersList } from "./components/active-users-list";
 import { useActiveUsers } from "./hooks/use-active-users";
+import useToggleOnline from "./hooks/use-toggle-online";
+
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
@@ -75,7 +77,7 @@ export default function Board({}: {}) {
     setTextPosition,
     setCurrentTextId,
   } = useText();
-
+  const { toggleOnlineMode } = useToggleOnline();
   const { activeUsers } = useActiveUsers();
 
   useEffect(() => {
@@ -205,7 +207,7 @@ export default function Board({}: {}) {
         <div className="z-10 flex-shrink ">
           <SideToolbar />
         </div>
-        {isOnline && activeUsers.length > 0 && (
+        {isOnline && activeUsers && activeUsers.length > 0 && (
           <ActiveUsersList users={activeUsers} />
         )}
         <div

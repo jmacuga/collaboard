@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
+import { useState, useEffect, useContext, useRef } from "react";
+import { useHandle } from "@automerge/automerge-repo-react-hooks";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "../context/client-doc-context";
 import { v4 as uuidv4 } from "uuid";
@@ -10,18 +10,20 @@ import {
 } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { User } from "@/types/User";
+import { BoardContext } from "../context/board-context";
 
 export const useActiveUsers = () => {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
-  const [localDoc] = useDocument<LayerSchema>(docUrl);
   const handle = useHandle<LayerSchema>(docUrl);
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
-
+  const { isOnline } = useContext(BoardContext);
   const { data: session } = useSession();
 
   const localUserId = session?.user.id ?? uuidv4();
-  if (!handle) return;
+
+  if (!handle) return { activeUsers: [] };
+
   const [localAwareness, setLocalAwareness] = useLocalAwareness({
     handle,
     userId: localUserId,
@@ -32,6 +34,7 @@ export const useActiveUsers = () => {
     localUserId,
     getTime: () => Date.now(),
   });
+  const interval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!peerStates) return;
@@ -66,7 +69,6 @@ export const useActiveUsers = () => {
 
   useEffect(() => {
     if (!session?.user) return;
-
     const currentUser = {
       user: {
         id: session.user.id as string,
@@ -78,20 +80,30 @@ export const useActiveUsers = () => {
       cursor: { x: 0, y: 0 },
     };
 
-    setLocalAwareness(currentUser);
+    if (!interval.current && isOnline) {
+      setLocalAwareness(currentUser);
+      interval.current = setInterval(() => {
+        setLocalAwareness({
+          ...currentUser,
+          timestamp: Date.now(),
+        });
+      }, 5000);
+    }
+    if (interval.current && !isOnline) {
+      clearInterval(interval.current);
+      interval.current = null;
+    }
+  }, [session, isOnline]);
 
-    const interval = setInterval(() => {
-      setLocalAwareness({
-        ...currentUser,
-        timestamp: Date.now(),
-      });
-    }, 5000);
-
+  useEffect(() => {
     return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+        interval.current = null;
+      }
       setLocalAwareness(null);
-      clearInterval(interval);
     };
-  }, [session]);
+  }, []);
 
   return { activeUsers };
 };

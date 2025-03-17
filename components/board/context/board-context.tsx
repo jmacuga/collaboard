@@ -9,10 +9,8 @@ import React, {
 } from "react";
 import Konva from "konva";
 import { v4 as uuidv4 } from "uuid";
-import { useClientSync } from "@/components/board/context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Vector2d } from "konva/lib/types";
-import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 
 type Props = {
   children: React.ReactNode;
@@ -56,7 +54,6 @@ interface BoardContextType {
   setShapeColor: (color: string) => void;
   isOnline: boolean;
   setIsOnline: (online: boolean) => void;
-  toggleOnlineMode: () => void;
   getPointerPosition: (e: KonvaEventObject<MouseEvent>) => Point | null;
 }
 
@@ -77,8 +74,6 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [textColor, setTextColor] = useState("rgb(0,0,0)");
   const [textFontSize, setTextFontSize] = useState<number>(24);
   const [isOnline, setIsOnline] = useState<boolean>(true);
-  const clientSyncService = useClientSync();
-  const { networkStatus } = useNetworkStatusContext();
 
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
@@ -95,34 +90,6 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       point.y = point.y - stagePosition.y;
     }
     return point;
-  };
-
-  useEffect(() => {
-    if (networkStatus === "OFFLINE") {
-      setIsOnline(false);
-      const setOfflineMode = async () => {
-        try {
-          await clientSyncService.setOnline(false);
-        } catch (error: unknown) {
-          console.error("Failed to set offline mode:", error);
-        }
-      };
-      setOfflineMode();
-    }
-  }, [networkStatus, clientSyncService]);
-
-  const toggleOnlineMode = async () => {
-    try {
-      if (!isOnline && networkStatus !== "ONLINE") {
-        console.warn("Cannot switch to online mode when network is offline");
-        return;
-      }
-
-      await clientSyncService.setOnline(!isOnline);
-      setIsOnline((prevOnline) => !prevOnline);
-    } catch (error) {
-      console.error("Failed to toggle online mode:", error);
-    }
   };
 
   const value = useMemo(
@@ -146,7 +113,6 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setShapeColor,
       isOnline,
       setIsOnline,
-      toggleOnlineMode,
       textColor,
       setTextColor,
       textFontSize,

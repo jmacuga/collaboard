@@ -2,11 +2,12 @@ import { Wifi, WifiOff } from "lucide-react";
 import { useContext } from "react";
 import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
+import useToggleOnline from "../hooks/use-toggle-online";
 
 const OnlineToggle = () => {
-  const { isOnline, toggleOnlineMode } = useContext(BoardContext);
+  const { isOnline } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
-
+  const { toggleOnlineMode } = useToggleOnline();
   const isDisabled = !isOnline && networkStatus !== "ONLINE";
 
   return (

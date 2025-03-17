@@ -9,8 +9,6 @@ import { BoardContextProvider } from "./context/board-context";
 import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
 
 interface BoardState {
-  repo: Repo | null;
-  docUrl: string;
   clientSyncService: ClientSyncService | null;
 }
 
@@ -22,8 +20,6 @@ export function BoardProvider({
   docUrl: string;
 }) {
   const [state, setState] = useState<BoardState>({
-    repo: null,
-    docUrl: docUrl || "",
     clientSyncService: null,
   });
   const isInitialized = useRef(false);
@@ -40,9 +36,7 @@ export function BoardProvider({
         await clientSyncService.connect();
       }
       setState({
-        repo: clientSyncService.localRepo,
         clientSyncService,
-        docUrl: clientSyncService.getDocUrl(),
       });
     };
     initializeClientSyncService();
@@ -54,13 +48,13 @@ export function BoardProvider({
     };
   }, [docUrl]);
 
-  if (!state.repo || !state.clientSyncService) {
+  if (!state.clientSyncService) {
     return <div>Loading board...</div>;
   }
 
   return (
     <NetworkStatusProvider>
-      <RepoContext.Provider value={state.repo}>
+      <RepoContext.Provider value={state.clientSyncService.repo}>
         <ClientSyncContext.Provider
           value={{ clientSyncService: state.clientSyncService }}
         >

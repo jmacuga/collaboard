@@ -33,6 +33,7 @@ export function BoardProvider({
       const clientSyncService = new ClientSyncService({ docUrl });
       await clientSyncService.initializeRepo();
       if (clientSyncService.canConnect()) {
+        console.log("connecting on entry");
         await clientSyncService.connect();
       }
       setState({
@@ -42,6 +43,7 @@ export function BoardProvider({
     initializeClientSyncService();
 
     return () => {
+      console.log("disconnecting on exit");
       if (state.clientSyncService) {
         state.clientSyncService.disconnect();
       }
@@ -54,7 +56,7 @@ export function BoardProvider({
 
   return (
     <NetworkStatusProvider>
-      <RepoContext.Provider value={state.clientSyncService.repo}>
+      <RepoContext.Provider value={state.clientSyncService.getRepo()}>
         <ClientSyncContext.Provider
           value={{ clientSyncService: state.clientSyncService }}
         >

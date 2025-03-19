@@ -81,12 +81,20 @@ export const useActiveUsers = () => {
     };
 
     if (!interval.current && isOnline) {
-      setLocalAwareness(currentUser);
+      try {
+        setLocalAwareness(currentUser);
+      } catch (error) {
+        console.error("Error setting local awareness", error);
+      }
       interval.current = setInterval(() => {
-        setLocalAwareness({
-          ...currentUser,
-          timestamp: Date.now(),
-        });
+        try {
+          setLocalAwareness({
+            ...currentUser,
+            timestamp: Date.now(),
+          });
+        } catch (error) {
+          console.error("Error setting local awareness", error);
+        }
       }, 5000);
     }
     if (interval.current && !isOnline) {
@@ -101,7 +109,11 @@ export const useActiveUsers = () => {
         clearInterval(interval.current);
         interval.current = null;
       }
-      setLocalAwareness(null);
+      try {
+        setLocalAwareness(null);
+      } catch (error) {
+        console.error("Error setting local awareness", error);
+      }
     };
   }, []);
 

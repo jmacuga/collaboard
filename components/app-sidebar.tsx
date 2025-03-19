@@ -149,9 +149,6 @@ export function AppSidebar() {
           </Collapsible>
         ))}
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t">
-        <NetworkStatusIndicator showText className="justify-center" />
-      </SidebarFooter>
     </Sidebar>
   );
 }

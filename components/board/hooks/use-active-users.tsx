@@ -19,6 +19,8 @@ export const useActiveUsers = () => {
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
   const { isOnline } = useContext(BoardContext);
   const { data: session } = useSession();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const [localUserId, setLocalUserId] = useState(session?.user.id ?? uuidv4());
 
@@ -33,29 +35,53 @@ export const useActiveUsers = () => {
   const [peerStates, heartbeats] = useRemoteAwareness({
     handle,
     localUserId,
-    offlineTimeout: 3000,
+    offlineTimeout: 2000,
     getTime: () => Date.now(),
   });
 
   useEffect(() => {
-    if (!peerStates) return;
-    console.log("peerStates", peerStates);
-    const users = Object.entries(peerStates)
-      .filter(([peerId, data]) => {
-        const timestamp = heartbeats[peerId];
-        const hasUserData = data?.user?.id || data?.user?.email;
-        const isRecent = timestamp && Date.now() - timestamp < 1000;
-        return hasUserData && isRecent;
-      })
-      .map(([peerId, data]) => ({
-        id: data.user.id || peerId,
-        name: data.user.name || null,
-        email: data.user.email || null,
-        image: data.user.image || null,
-        lastSeen: data.timestamp || Date.now(),
-      }));
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
 
-    if (session?.user && !users.some((user) => user.id === session.user.id)) {
+    if (isOnline && session?.user) {
+      intervalRef.current = setInterval(() => {
+        setUpdateTrigger((prev) => prev + 1);
+      }, 3000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isOnline, session]);
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const users: User[] = [];
+
+    if (peerStates) {
+      const peerUsers = Object.entries(peerStates)
+        .filter(([peerId, data]) => {
+          const timestamp = heartbeats[peerId];
+          const isRecent = timestamp && Date.now() - timestamp < 1000;
+          const hasUserData = data?.user?.id || data?.user?.email;
+          return hasUserData && isRecent;
+        })
+        .map(([peerId, data]) => ({
+          id: data.user.id || peerId,
+          name: data.user.name || null,
+          email: data.user.email || null,
+          image: data.user.image || null,
+          lastSeen: data.timestamp || Date.now(),
+        }));
+
+      users.push(...peerUsers);
+    }
+
+    if (!users.some((user) => user.id === session.user.id)) {
       users.push({
         id: session.user.id as string,
         name: session.user.name || null,
@@ -66,7 +92,7 @@ export const useActiveUsers = () => {
     }
 
     setActiveUsers(users);
-  }, [peerStates, session, heartbeats]);
+  }, [peerStates, heartbeats, session, updateTrigger]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -83,6 +109,7 @@ export const useActiveUsers = () => {
 
     if (isOnline) {
       try {
+        setLocalUserId(session.user.id as string);
         setLocalAwareness(currentUser);
       } catch (error) {
         console.error("Error setting local awareness", error);

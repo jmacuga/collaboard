@@ -126,6 +126,10 @@ export class ClientSyncService implements IClientSyncService {
     return true;
   }
 
+  public getRepo(): Repo | null {
+    return this.repo;
+  }
+
   /**
    * Connects to the server
    * Creates a new network adapter if needed

@@ -80,7 +80,11 @@ npx prisma generate
 npx prisma migrate dev
 ```
 
-3. Run app node.js development server
+7. Seed the db
+
+`npx prisma db seed`
+
+8. Run app node.js development server
 
 `npm run dev`
 

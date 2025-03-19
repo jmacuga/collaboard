@@ -20,7 +20,7 @@ export const useActiveUsers = () => {
   const { isOnline } = useContext(BoardContext);
   const { data: session } = useSession();
 
-  const localUserId = session?.user.id ?? uuidv4();
+  const [localUserId, setLocalUserId] = useState(session?.user.id ?? uuidv4());
 
   if (!handle) return { activeUsers: [] };
 
@@ -28,17 +28,18 @@ export const useActiveUsers = () => {
     handle,
     userId: localUserId,
     initialState: [],
+    heartbeatTime: 1000,
   });
   const [peerStates, heartbeats] = useRemoteAwareness({
     handle,
     localUserId,
+    offlineTimeout: 3000,
     getTime: () => Date.now(),
   });
-  const interval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!peerStates) return;
-
+    console.log("peerStates", peerStates);
     const users = Object.entries(peerStates)
       .filter(([peerId, data]) => {
         const timestamp = heartbeats[peerId];
@@ -65,7 +66,7 @@ export const useActiveUsers = () => {
     }
 
     setActiveUsers(users);
-  }, [peerStates, session]);
+  }, [peerStates, session, heartbeats]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -80,35 +81,20 @@ export const useActiveUsers = () => {
       cursor: { x: 0, y: 0 },
     };
 
-    if (!interval.current && isOnline) {
+    if (isOnline) {
       try {
         setLocalAwareness(currentUser);
       } catch (error) {
         console.error("Error setting local awareness", error);
       }
-      interval.current = setInterval(() => {
-        try {
-          setLocalAwareness({
-            ...currentUser,
-            timestamp: Date.now(),
-          });
-        } catch (error) {
-          console.error("Error setting local awareness", error);
-        }
-      }, 5000);
     }
-    if (interval.current && !isOnline) {
-      clearInterval(interval.current);
-      interval.current = null;
+    if (!isOnline) {
+      setLocalUserId("");
     }
   }, [session, isOnline]);
 
   useEffect(() => {
     return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
-        interval.current = null;
-      }
       try {
         setLocalAwareness(null);
       } catch (error) {

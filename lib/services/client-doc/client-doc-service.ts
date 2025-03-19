@@ -171,7 +171,11 @@ export class ClientSyncService implements IClientSyncService {
       return;
     }
 
-    this.networkAdapter.disconnect();
+    try {
+      this.networkAdapter.disconnect();
+    } catch (error) {
+      console.error("Error disconnecting from server", error);
+    }
 
     if (this.networkAdapter.socket?.readyState === WebSocket.OPEN) {
       this.networkAdapter.socket.close();

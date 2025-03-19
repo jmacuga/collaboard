@@ -45,7 +45,11 @@ const useToggleOnline = () => {
         return;
       }
       if (isOnline) {
-        setLocalAwareness(null);
+        try {
+          setLocalAwareness(null);
+        } catch (error) {
+          console.error("Error setting local awareness", error);
+        }
       }
       await clientSyncService.setOnline(!isOnline);
       setIsOnline(!isOnline);

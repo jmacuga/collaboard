@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { User } from "@/types/User";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { useSession } from "next-auth/react";
+import { ActiveUser } from "../hooks/use-active-users";
 
 type ActiveUsersListProps = {
-  users: User[];
+  users: ActiveUser[];
 };
 
 export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
-  const [displayUsers, setDisplayUsers] = useState<User[]>([]);
+  const [displayUsers, setDisplayUsers] = useState<ActiveUser[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -29,7 +29,7 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
 
   const showFullList = displayUsers.length <= 2 || isExpanded;
 
-  const getDisplayName = (user: User) => {
+  const getDisplayName = (user: ActiveUser) => {
     if (user.id === currentUserId) {
       return "You";
     }
@@ -76,7 +76,14 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
+                  style={{
+                    backgroundColor:
+                      user.color ||
+                      (user.id === currentUserId ? "#3B82F6" : "#4B5563"),
+                  }}
+                >
                   {user.id === currentUserId
                     ? "Y"
                     : (user.name || user.email || "U").charAt(0).toUpperCase()}
@@ -85,7 +92,6 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
               <span className="text-xs font-medium truncate max-w-[100px]">
                 {getDisplayName(user)}
               </span>
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
             </div>
           ))}
         </div>
@@ -116,11 +122,12 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
                       />
                     ) : (
                       <div
-                        className={`w-8 h-8 rounded-full ${
-                          user.id === currentUserId
-                            ? "bg-blue-600"
-                            : "bg-blue-500"
-                        } flex items-center justify-center text-white text-xs`}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
+                        style={{
+                          backgroundColor:
+                            user.color ||
+                            (user.id === currentUserId ? "#3B82F6" : "#4B5563"),
+                        }}
                       >
                         {user.id === currentUserId
                           ? "Y"
@@ -156,11 +163,14 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
                         />
                       ) : (
                         <div
-                          className={`w-5 h-5 rounded-full ${
-                            user.id === currentUserId
-                              ? "bg-blue-600"
-                              : "bg-blue-500"
-                          } flex items-center justify-center text-white text-xs`}
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs"
+                          style={{
+                            backgroundColor:
+                              user.color ||
+                              (user.id === currentUserId
+                                ? "#3B82F6"
+                                : "#4B5563"),
+                          }}
                         >
                           {user.id === currentUserId
                             ? "Y"

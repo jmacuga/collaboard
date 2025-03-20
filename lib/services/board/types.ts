@@ -1,6 +1,6 @@
-import { IBoard } from "@/providers/db/models/Board";
+import { Board } from "@prisma/client";
 
 export interface IBoardService {
-  create(data: { name: string; teamId: string }): Promise<IBoard>;
+  create(data: { name: string; teamId: string }): Promise<Board>;
   delete(boardId: string): Promise<boolean>;
 }

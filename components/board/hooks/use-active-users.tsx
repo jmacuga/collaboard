@@ -11,6 +11,7 @@ import {
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { User } from "@/types/User";
 import { BoardContext } from "../context/board-context";
+import { UserStatusPayload } from "@/types/userStatusPayload";
 
 export type ActiveUser = User & {
   editingObjects?: string[];
@@ -62,7 +63,7 @@ export const useActiveUsers = () => {
   useEffect(() => {
     if (!session?.user || !isOnline) return;
 
-    const currentUser = {
+    const currentUser: UserStatusPayload = {
       user: {
         id: session.user.id as string,
         name: session.user.name || null,
@@ -149,7 +150,7 @@ export const useActiveUsers = () => {
 
   useEffect(() => {
     if (!session?.user) return;
-    const currentUser = {
+    const currentUser: UserStatusPayload = {
       user: {
         id: session.user.id as string,
         name: session.user.name || null,

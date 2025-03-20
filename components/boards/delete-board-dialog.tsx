@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 interface DeleteBoardDialogProps {
   boardId: string;
@@ -26,32 +26,51 @@ export function DeleteBoardDialog({
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const [checkingUsers, setCheckingUsers] = useState(false);
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const serverDocUrl = await fetch(`/api/boards/${boardId}/url`).then(
-        (res) => res.json()
+      const docUrl = await fetch(`/api/boards/${boardId}/url`).then((res) =>
+        res.json()
       );
-      const response = await fetch(`/api/boards/${boardId}/delete`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (response.ok) {
-        try {
-          console.log("Deleting board doc", serverDocUrl);
-          const syncService = new ClientSyncService(serverDocUrl.docUrl);
-          syncService.deleteDoc();
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to delete board doc");
+
+      try {
+        const syncService = new ClientSyncService(docUrl);
+        setCheckingUsers(true);
+        const activeUsers = await syncService.getActiveUsers();
+        setCheckingUsers(false);
+
+        if (activeUsers.length > 0) {
+          toast.error("Board is currently being edited by another user");
+          setIsDeleting(false);
+          return;
         }
-        console.log("Board deleted successfully");
-        toast.success("Board deleted successfully");
-        router.push(`/teams/${teamId}/boards/`);
-        setOpen(false);
-      } else {
-        toast.error("Failed to delete board");
+
+        const response = await fetch(`/api/boards/${boardId}/delete`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          try {
+            console.log("Deleting board doc", docUrl);
+            syncService.deleteDoc();
+          } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete board doc");
+          }
+          console.log("Board deleted successfully");
+          toast.success("Board deleted successfully");
+          router.push(`/teams/${teamId}/boards/`);
+          setOpen(false);
+        } else {
+          toast.error("Failed to delete board");
+        }
+      } catch (error) {
+        console.error("Error checking active users:", error);
+        toast.error("Failed to check if board is being edited");
+        setIsDeleting(false);
       }
     } catch (error) {
       toast.error("Something went wrong");
@@ -82,6 +101,9 @@ export function DeleteBoardDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
+          {checkingUsers && (
+            <p>Checking if board is being edited by another user...</p>
+          )}
           <Button
             variant="outline"
             onClick={() => setOpen(false)}

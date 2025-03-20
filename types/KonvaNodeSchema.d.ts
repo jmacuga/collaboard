@@ -1,6 +1,6 @@
 interface KonvaNodeSchema {
   attrs: any;
-  className: string;
+  className: RawString | string;
   children?: KonvaNodeSchema[];
 }
 

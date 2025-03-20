@@ -4,7 +4,7 @@ import { useContext, useState, useCallback } from "react";
 import { BoardContext } from "@/components/board/context/board-context";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
-import { AnyDocumentId } from "@automerge/automerge-repo";
+import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
 import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
@@ -72,7 +72,7 @@ function useDrawing() {
     );
     const newLine = new Konva.Line(lineAttributes);
     const lineObject = newLine.toObject() as KonvaNodeSchema;
-
+    lineObject.className = new RawString(lineObject.className);
     changeLocalDoc((doc: LayerSchema) => {
       doc[currentLineId] = lineObject;
     });

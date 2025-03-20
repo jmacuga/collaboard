@@ -1,6 +1,6 @@
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { AnyDocumentId } from "@automerge/automerge-repo";
+import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { useClientSync } from "../context/client-doc-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useContext, useState, useRef } from "react";
@@ -37,7 +37,7 @@ const useText = () => {
     }
     changeDoc((doc: LayerSchema) => {
       doc[textId] = {
-        className: "Text",
+        className: new RawString("Text"),
         attrs: {
           id: textId,
           x: textPosition.x,

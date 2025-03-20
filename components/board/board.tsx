@@ -33,6 +33,7 @@ import { useText } from "./hooks/use-text";
 import { ActiveUsersList } from "./components/active-users-list";
 import { useActiveUsers } from "./hooks/use-active-users";
 import useToggleOnline from "./hooks/use-toggle-online";
+import { ObjectEditIndicator } from "./components/object-edit-indicator";
 
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
@@ -51,6 +52,8 @@ export default function Board({}: {}) {
     setSelectedShapeIds,
     isOnline,
   } = useContext(BoardContext);
+
+  const { activeUsers, objectEditors } = useActiveUsers();
 
   const isDrawing = useRef(false);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
@@ -78,7 +81,6 @@ export default function Board({}: {}) {
     setCurrentTextId,
   } = useText();
   const { toggleOnlineMode } = useToggleOnline();
-  const { activeUsers } = useActiveUsers();
 
   useEffect(() => {
     console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
@@ -328,6 +330,19 @@ export default function Board({}: {}) {
                   }
                 )}
               {localLine && <Line key={currentLineId} {...localLine} />}
+
+              {isOnline &&
+                localDoc &&
+                objectEditors &&
+                Object.entries(objectEditors).map(([objectId, editors]) => (
+                  <ObjectEditIndicator
+                    key={`edit-indicator-${objectId}`}
+                    objectId={objectId}
+                    editors={editors}
+                    shape={localDoc[objectId]}
+                  />
+                ))}
+
               <Transformer ref={transformerRef} />
             </Layer>
           </Stage>

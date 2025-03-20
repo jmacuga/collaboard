@@ -12,15 +12,35 @@ import { AnyDocumentId } from "@automerge/automerge-repo";
 import { User } from "@/types/User";
 import { BoardContext } from "../context/board-context";
 
+export type ActiveUser = User & {
+  editingObjects?: string[];
+  color?: string;
+};
+
+const getRandomColor = () => {
+  const colors = [
+    "#F44336", // Red
+    "#3F51B5", // Indigo
+    "#4CAF50", // Green
+    "#FFC107", // Amber
+    "#9C27B0", // Purple
+    "#00BCD4", // Cyan
+    "#FF9800", // Orange
+    "#795548", // Brown
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
 export const useActiveUsers = () => {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const handle = useHandle<LayerSchema>(docUrl);
-  const [activeUsers, setActiveUsers] = useState<User[]>([]);
-  const { isOnline } = useContext(BoardContext);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const { isOnline, selectedShapeIds } = useContext(BoardContext);
   const { data: session } = useSession();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [userColor] = useState(getRandomColor());
 
   const [localUserId, setLocalUserId] = useState(session?.user.id ?? uuidv4());
 
@@ -38,6 +58,28 @@ export const useActiveUsers = () => {
     offlineTimeout: 2000,
     getTime: () => Date.now(),
   });
+
+  useEffect(() => {
+    if (!session?.user || !isOnline) return;
+
+    const currentUser = {
+      user: {
+        id: session.user.id as string,
+        name: session.user.name || null,
+        email: session.user.email || null,
+        image: session.user.image || null,
+      },
+      timestamp: Date.now(),
+      editingObjects: selectedShapeIds,
+      color: userColor,
+    };
+
+    try {
+      setLocalAwareness(currentUser);
+    } catch (error) {
+      console.error("Error setting local awareness", error);
+    }
+  }, [session, isOnline, selectedShapeIds, userColor]);
 
   useEffect(() => {
     if (intervalRef.current) {
@@ -60,7 +102,7 @@ export const useActiveUsers = () => {
   useEffect(() => {
     if (!session?.user) return;
 
-    const users: User[] = [];
+    const users: ActiveUser[] = [];
 
     if (peerStates) {
       const peerUsers = Object.entries(peerStates)
@@ -76,6 +118,8 @@ export const useActiveUsers = () => {
           email: data.user.email || null,
           image: data.user.image || null,
           lastSeen: data.timestamp || Date.now(),
+          editingObjects: data.editingObjects || [],
+          color: data.color || getRandomColor(),
         }));
 
       users.push(...peerUsers);
@@ -88,11 +132,20 @@ export const useActiveUsers = () => {
         email: session.user.email || null,
         image: session.user.image || null,
         lastSeen: Date.now(),
+        editingObjects: selectedShapeIds,
+        color: userColor,
       });
     }
 
     setActiveUsers(users);
-  }, [peerStates, heartbeats, session, updateTrigger]);
+  }, [
+    peerStates,
+    heartbeats,
+    session,
+    updateTrigger,
+    selectedShapeIds,
+    userColor,
+  ]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -104,7 +157,8 @@ export const useActiveUsers = () => {
         image: session.user.image || null,
       },
       timestamp: Date.now(),
-      cursor: { x: 0, y: 0 },
+      editingObjects: selectedShapeIds,
+      color: userColor,
     };
 
     if (isOnline) {
@@ -116,6 +170,7 @@ export const useActiveUsers = () => {
       }
     }
     if (!isOnline) {
+      console.log("Setting local user id to empty string");
       setLocalUserId("");
     }
   }, [session, isOnline]);
@@ -130,5 +185,26 @@ export const useActiveUsers = () => {
     };
   }, []);
 
-  return { activeUsers };
+  const getObjectEditors = () => {
+    const objectEditors: Record<string, ActiveUser[]> = {};
+
+    activeUsers.forEach((user) => {
+      if (user.editingObjects && user.editingObjects.length > 0) {
+        user.editingObjects.forEach((objectId) => {
+          if (!objectEditors[objectId]) {
+            objectEditors[objectId] = [];
+          }
+          if (user.id !== session?.user?.id) {
+            objectEditors[objectId].push(user);
+          }
+        });
+      }
+    });
+
+    return objectEditors;
+  };
+
+  const objectEditors = getObjectEditors();
+
+  return { activeUsers, objectEditors };
 };

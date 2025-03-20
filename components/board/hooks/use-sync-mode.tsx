@@ -8,7 +8,7 @@ import { AnyDocumentId, DocHandle } from "@automerge/automerge-repo";
 import { useHandle } from "@automerge/automerge-repo-react-hooks";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 
-const useToggleOnline = () => {
+const useSyncMode = () => {
   const clientSyncService = useClientSync();
   const { isOnline, setIsOnline } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
@@ -20,30 +20,30 @@ const useToggleOnline = () => {
   useEffect(() => {
     if (networkStatus === "OFFLINE") {
       setIsOnline(false);
-      const setOfflineMode = async () => {
+      const setLocalMode = async () => {
         try {
           await clientSyncService.setOnline(false);
         } catch (error: unknown) {
-          console.error("Failed to set offline mode:", error);
+          console.error("Failed to set local mode:", error);
         }
       };
-      setOfflineMode();
+      setLocalMode();
     }
   }, [networkStatus, clientSyncService]);
 
-  const toggleOnlineMode = async () => {
+  const toggleSyncMode = async () => {
     try {
       if (!isOnline && networkStatus !== "ONLINE") {
-        console.warn("Cannot switch to online mode when network is offline");
+        console.warn("Cannot switch to real-time mode when network is offline");
         return;
       }
       await clientSyncService.setOnline(!isOnline);
       setIsOnline(!isOnline);
     } catch (error) {
-      console.error("Failed to toggle online mode:", error);
+      console.error("Failed to toggle real-time/local mode:", error);
     }
   };
-  return { toggleOnlineMode };
+  return { toggleSyncMode };
 };
 
-export default useToggleOnline;
+export default useSyncMode;

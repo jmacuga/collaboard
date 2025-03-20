@@ -25,14 +25,13 @@ import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
 import { useShape } from "@/components/board/hooks/use-shape";
 import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
-import { OnlineToggle } from "./components/online-toggle";
+import { SyncStatusControl } from "./components/sync-status-control";
 import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
-import { NetworkStatusBadge } from "./components/network-status-badge";
 import { useText } from "./hooks/use-text";
 import { ActiveUsersList } from "./components/active-users-list";
 import { useActiveUsers } from "./hooks/use-active-users";
-import useToggleOnline from "./hooks/use-toggle-online";
+import useSyncMode from "./hooks/use-sync-mode";
 import { ObjectEditIndicator } from "./components/object-edit-indicator";
 
 export default function Board({}: {}) {
@@ -80,10 +79,12 @@ export default function Board({}: {}) {
     setTextPosition,
     setCurrentTextId,
   } = useText();
-  const { toggleOnlineMode } = useToggleOnline();
+  const { toggleSyncMode } = useSyncMode();
 
   useEffect(() => {
-    console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
+    console.log(
+      `The board is now in ${isOnline ? "real-time" : "local"} mode.`
+    );
   }, [isOnline]);
 
   useEffect(() => {
@@ -380,8 +381,7 @@ export default function Board({}: {}) {
           />
         </div>
       )}
-      <OnlineToggle />
-      <NetworkStatusBadge />
+      <SyncStatusControl />
       {showResetButton && <ResetPositionButton onClick={resetPosition} />}
       <ShapeColorPalette />
     </div>

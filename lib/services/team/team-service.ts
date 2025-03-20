@@ -85,7 +85,6 @@ export class TeamService {
         teamId,
       },
     });
-    console.log("teamMember", teamMember);
     return teamMember !== null;
   }
 
@@ -105,7 +104,6 @@ export class TeamService {
         role: true,
       },
     });
-    console.log("teamMember", teamMember);
     if (!teamMember) {
       return null;
     }

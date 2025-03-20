@@ -4,16 +4,12 @@ import { useContext, useState, useCallback } from "react";
 import { BoardContext } from "@/components/board/context/board-context";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
-import { AnyDocumentId } from "@automerge/automerge-repo";
+import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
 import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
-interface Point {
-  x: number;
-  y: number;
-}
 
 const createLine = (
   id: string,
@@ -30,13 +26,9 @@ const createLine = (
   lineJoin: "round",
 });
 
-const getPointerPosition = (e: KonvaEvent): Point | null => {
-  const stage = e.target.getStage();
-  return stage?.getPointerPosition() ?? null;
-};
-
 function useDrawing() {
-  const { currentLineId, brushColor, brushSize } = useContext(BoardContext);
+  const { currentLineId, brushColor, brushSize, getPointerPosition } =
+    useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
@@ -72,7 +64,7 @@ function useDrawing() {
     );
     const newLine = new Konva.Line(lineAttributes);
     const lineObject = newLine.toObject() as KonvaNodeSchema;
-
+    lineObject.className = new RawString(lineObject.className);
     changeLocalDoc((doc: LayerSchema) => {
       doc[currentLineId] = lineObject;
     });

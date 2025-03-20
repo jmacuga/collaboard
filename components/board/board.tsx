@@ -25,16 +25,21 @@ import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useErasing } from "@/components/board/hooks/use-erasing";
 import { useShape } from "@/components/board/hooks/use-shape";
 import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
-import { OnlineToggle } from "./components/online-toggle";
+import { SyncStatusControl } from "./components/sync-status-control";
 import { ResetPositionButton } from "./components/reset-position-button";
 import { ShapeColorPalette } from "./components/shape-color-palette";
-import { NetworkStatusBadge } from "./components/network-status-badge";
 import { useText } from "./hooks/use-text";
+import { ActiveUsersList } from "./components/active-users-list";
+import { useActiveUsers } from "./hooks/use-active-users";
+import useSyncMode from "./hooks/use-sync-mode";
+import { ObjectEditIndicator } from "./components/object-edit-indicator";
+
 export default function Board({}: {}) {
   const clientSyncService = useClientSync();
-  const [localDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
-  );
+  const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
+  const [localDoc] = useDocument<LayerSchema>(docUrl);
+  const handle = useHandle<LayerSchema>(docUrl);
+
   const {
     brushColor,
     brushSize,
@@ -46,6 +51,8 @@ export default function Board({}: {}) {
     setSelectedShapeIds,
     isOnline,
   } = useContext(BoardContext);
+
+  const { activeUsers, objectEditors } = useActiveUsers();
 
   const isDrawing = useRef(false);
   const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
@@ -68,17 +75,16 @@ export default function Board({}: {}) {
     handleTextChange,
     handleTextKeyDown,
     textareaRef: textRef,
-    currentTextId,
     setEditingText,
     setTextPosition,
     setCurrentTextId,
   } = useText();
+  const { toggleSyncMode } = useSyncMode();
 
-  const handle = useHandle<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
-  );
   useEffect(() => {
-    console.log(`The board is now ${isOnline ? "online" : "offline"}.`);
+    console.log(
+      `The board is now in ${isOnline ? "real-time" : "local"} mode.`
+    );
   }, [isOnline]);
 
   useEffect(() => {
@@ -204,6 +210,9 @@ export default function Board({}: {}) {
         <div className="z-10 flex-shrink ">
           <SideToolbar />
         </div>
+        {isOnline && activeUsers && activeUsers.length > 0 && (
+          <ActiveUsersList users={activeUsers} />
+        )}
         <div
           className={`
           ${mode === "erasing" ? "cursor-crosshair" : ""}
@@ -322,6 +331,19 @@ export default function Board({}: {}) {
                   }
                 )}
               {localLine && <Line key={currentLineId} {...localLine} />}
+
+              {isOnline &&
+                localDoc &&
+                objectEditors &&
+                Object.entries(objectEditors).map(([objectId, editors]) => (
+                  <ObjectEditIndicator
+                    key={`edit-indicator-${objectId}`}
+                    objectId={objectId}
+                    editors={editors}
+                    shape={localDoc[objectId]}
+                  />
+                ))}
+
               <Transformer ref={transformerRef} />
             </Layer>
           </Stage>
@@ -359,9 +381,10 @@ export default function Board({}: {}) {
           />
         </div>
       )}
-      <OnlineToggle />
-      <NetworkStatusBadge />
-      {showResetButton && <ResetPositionButton onClick={resetPosition} />}
+      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
+        {showResetButton && <ResetPositionButton onClick={resetPosition} />}
+        <SyncStatusControl />
+      </div>
       <ShapeColorPalette />
     </div>
   );

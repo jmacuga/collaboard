@@ -146,7 +146,10 @@ export class ClientSyncService implements IClientSyncService {
 
     console.log("Connecting to server");
 
-    if (this.networkAdapter.socket?.readyState !== WebSocket.OPEN) {
+    if (
+      this.networkAdapter.socket?.readyState !== WebSocket.OPEN &&
+      this.networkAdapter.socket?.readyState !== WebSocket.CONNECTING
+    ) {
       this.networkAdapter = new BrowserWebSocketClientAdapter(
         this.websocketURL,
         this.DISABLE_RETRY_INTERVAL
@@ -173,6 +176,7 @@ export class ClientSyncService implements IClientSyncService {
 
     try {
       this.networkAdapter.disconnect();
+      this.networkAdapter.emit("close");
     } catch (error) {
       console.error("Error disconnecting from server", error);
     }

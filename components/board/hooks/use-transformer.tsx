@@ -27,11 +27,11 @@ export const useTransformer = (localDoc: LayerSchema | undefined) => {
         const shape = doc[shapeId];
         const attrs = node.attrs;
 
-        shape.attrs.x = attrs.x;
-        shape.attrs.y = attrs.y;
-        shape.attrs.scaleX = attrs.scaleX;
-        shape.attrs.scaleY = attrs.scaleY;
-        shape.attrs.rotation = attrs.rotation;
+        shape.attrs.x = attrs.x ?? 0;
+        shape.attrs.y = attrs.y ?? 0;
+        shape.attrs.scaleX = attrs.scaleX ?? 1;
+        shape.attrs.scaleY = attrs.scaleY ?? 1;
+        shape.attrs.rotation = attrs.rotation ?? 0;
       });
     },
     [changeLocalDoc]

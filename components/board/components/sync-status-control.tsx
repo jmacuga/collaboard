@@ -88,96 +88,94 @@ export const SyncStatusControl = () => {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="fixed bottom-6 right-6 z-40">
-        <div className="bg-white/95 shadow-lg rounded-lg px-4 py-2.5 flex items-center gap-4 border border-gray-200 backdrop-blur-sm transition-all hover:shadow-md">
-          {/* Network Status with Tooltip */}
+      <div className="bg-white/95 shadow-lg rounded-lg px-4 py-2.5 flex items-center gap-4 border border-gray-200 backdrop-blur-sm transition-all hover:shadow-md">
+        {/* Network Status with Tooltip */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="flex items-center cursor-help p-0.5 w-5 h-5 justify-center"
+              aria-label={`Network status: ${getNetworkStatusText()}`}
+            >
+              {getNetworkStatusIcon()}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="start"
+            className="max-w-xs p-2.5 text-xs bg-gray-800 text-white border-gray-700"
+          >
+            <div className="font-semibold mb-1.5 flex items-center gap-1.5">
+              {networkStatus === "ONLINE" ? (
+                <Wifi className="h-3.5 w-3.5 text-green-400" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-red-400" />
+              )}
+              {getNetworkStatusText()}
+            </div>
+            <p className="text-gray-200 leading-relaxed">
+              {getTooltipMessage()}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Separator */}
+        <div className="h-5 w-px bg-gray-200" aria-hidden="true"></div>
+
+        {/* Mode Switch with Labels */}
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "text-xs font-medium transition-colors whitespace-nowrap",
+              !isOnline ? "text-gray-900" : "text-gray-400"
+            )}
+          >
+            Local
+          </span>
+
+          {/* Shadcn Switch */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div
-                className="flex items-center cursor-help p-0.5 w-5 h-5 justify-center"
-                aria-label={`Network status: ${getNetworkStatusText()}`}
-              >
-                {getNetworkStatusIcon()}
+              <div>
+                <Switch
+                  checked={isOnline}
+                  onCheckedChange={isDisabled ? undefined : toggleSyncMode}
+                  disabled={isDisabled}
+                  className={cn(
+                    "transition-opacity",
+                    isDisabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer",
+                    isOnline &&
+                      "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-600"
+                  )}
+                  aria-label={
+                    isOnline
+                      ? "Switch to Local Mode"
+                      : "Switch to Real-time Mode"
+                  }
+                />
               </div>
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              align="start"
-              className="max-w-xs p-2.5 text-xs bg-gray-800 text-white border-gray-700"
+              className="p-2 text-xs bg-gray-800 text-white border-gray-700"
             >
-              <div className="font-semibold mb-1.5 flex items-center gap-1.5">
-                {networkStatus === "ONLINE" ? (
-                  <Wifi className="h-3.5 w-3.5 text-green-400" />
-                ) : (
-                  <WifiOff className="h-3.5 w-3.5 text-red-400" />
-                )}
-                {getNetworkStatusText()}
-              </div>
-              <p className="text-gray-200 leading-relaxed">
-                {getTooltipMessage()}
-              </p>
+              {isDisabled
+                ? "Cannot switch to real-time mode when network is offline"
+                : isOnline
+                ? "Switch to Local Mode"
+                : "Switch to Real-time Mode"}
             </TooltipContent>
           </Tooltip>
 
-          {/* Separator */}
-          <div className="h-5 w-px bg-gray-200" aria-hidden="true"></div>
-
-          {/* Mode Switch with Labels */}
-          <div className="flex items-center gap-3">
-            <span
-              className={cn(
-                "text-xs font-medium transition-colors whitespace-nowrap",
-                !isOnline ? "text-gray-900" : "text-gray-400"
-              )}
-            >
-              Local
-            </span>
-
-            {/* Shadcn Switch */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Switch
-                    checked={isOnline}
-                    onCheckedChange={isDisabled ? undefined : toggleSyncMode}
-                    disabled={isDisabled}
-                    className={cn(
-                      "transition-opacity",
-                      isDisabled
-                        ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer",
-                      isOnline &&
-                        "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-600"
-                    )}
-                    aria-label={
-                      isOnline
-                        ? "Switch to Local Mode"
-                        : "Switch to Real-time Mode"
-                    }
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="p-2 text-xs bg-gray-800 text-white border-gray-700"
-              >
-                {isDisabled
-                  ? "Cannot switch to real-time mode when network is offline"
-                  : isOnline
-                  ? "Switch to Local Mode"
-                  : "Switch to Real-time Mode"}
-              </TooltipContent>
-            </Tooltip>
-
-            <span
-              className={cn(
-                "text-xs font-medium transition-colors whitespace-nowrap",
-                isOnline ? "text-gray-900" : "text-gray-400"
-              )}
-            >
-              Real-time
-            </span>
-          </div>
+          <span
+            className={cn(
+              "text-xs font-medium transition-colors whitespace-nowrap",
+              isOnline ? "text-gray-900" : "text-gray-400"
+            )}
+          >
+            Real-time
+          </span>
         </div>
       </div>
     </TooltipProvider>

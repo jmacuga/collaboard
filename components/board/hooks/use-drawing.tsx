@@ -10,10 +10,6 @@ import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 
 type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
-interface Point {
-  x: number;
-  y: number;
-}
 
 const createLine = (
   id: string,
@@ -30,13 +26,9 @@ const createLine = (
   lineJoin: "round",
 });
 
-const getPointerPosition = (e: KonvaEvent): Point | null => {
-  const stage = e.target.getStage();
-  return stage?.getPointerPosition() ?? null;
-};
-
 function useDrawing() {
-  const { currentLineId, brushColor, brushSize } = useContext(BoardContext);
+  const { currentLineId, brushColor, brushSize, getPointerPosition } =
+    useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId

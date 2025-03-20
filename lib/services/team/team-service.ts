@@ -57,7 +57,6 @@ export class RoleNotFoundError extends TeamServiceError {
   }
 }
 
-// Define extended types for our service responses
 export interface TeamMemberWithRole extends PrismaTeamMember {
   role: {
     name: string;

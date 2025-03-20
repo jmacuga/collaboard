@@ -18,7 +18,6 @@ export const ObjectEditIndicator = ({
 
   const { className, attrs } = shape;
 
-  // Handle className that can be either a string or an object with val property
   const getClassName = () => {
     if (typeof className === "string") {
       return className;
@@ -38,7 +37,6 @@ export const ObjectEditIndicator = ({
     radius = 0,
     points;
 
-  // Get transform attributes
   const scaleX = attrs.scaleX || 1;
   const scaleY = attrs.scaleY || 1;
   const rotation = attrs.rotation || 0;
@@ -65,30 +63,26 @@ export const ObjectEditIndicator = ({
       x = attrs.x;
       y = attrs.y;
       width = attrs.width * scaleX;
-      height = 30 * scaleY; // Approximate text height
+      height = 30 * scaleY;
       break;
 
     case "Line":
     case "Arrow":
       points = attrs.points || [];
       if (points.length >= 4) {
-        // Apply transformations to each point
         const transformedPoints = [];
         for (let i = 0; i < points.length; i += 2) {
           const px = points[i] * scaleX;
           const py = points[i + 1] * scaleY;
 
-          // Apply rotation if present
           if (rotation !== 0) {
             const radians = (rotation * Math.PI) / 180;
             const cos = Math.cos(radians);
             const sin = Math.sin(radians);
 
-            // Point position relative to the offset (rotation center)
             const rx = px - offsetX;
             const ry = py - offsetY;
 
-            // Rotated point
             const rotatedX = rx * cos - ry * sin + offsetX;
             const rotatedY = rx * sin + ry * cos + offsetY;
 
@@ -98,7 +92,6 @@ export const ObjectEditIndicator = ({
           }
         }
 
-        // Calculate bounding box from transformed points
         const xPoints = transformedPoints.filter(
           (_: number, i: number) => i % 2 === 0
         );
@@ -139,23 +132,18 @@ export const ObjectEditIndicator = ({
 
   const padding = 4;
 
-  // If the object is rotated, we need to apply the same rotation to the indicator
   const shouldRotate =
     rotation !== 0 && (shapeType === "Rect" || shapeType === "Text");
 
-  // Smart positioning for the label
-  // Check if we're close to right edge of viewport and adjust position accordingly
   const BADGE_WIDTH = Math.min(150, editorNames.length * 7 + 20);
   const VIEWPORT_WIDTH =
     typeof window !== "undefined" ? window.innerWidth : 1000;
   const VIEWPORT_HEIGHT =
     typeof window !== "undefined" ? window.innerHeight : 800;
 
-  // Calculate if the label would go outside the viewport
   const isNearRightEdge = x + width + BADGE_WIDTH + 10 > VIEWPORT_WIDTH;
   const isNearBottomEdge = y + 30 > VIEWPORT_HEIGHT;
 
-  // Adjust label position based on viewport boundaries
   const labelX = isNearRightEdge ? x - BADGE_WIDTH - 5 : x + width + 5;
   const labelY = isNearBottomEdge ? y - 30 : y;
 

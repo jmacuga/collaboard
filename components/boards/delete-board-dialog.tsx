@@ -10,14 +10,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
   teamId: string;
 }
+
 export function DeleteBoardDialog({
   boardId,
   boardName,
@@ -100,24 +102,50 @@ export function DeleteBoardDialog({
             cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex flex-col items-center sm:flex-row sm:justify-between sm:space-x-2">
           {checkingUsers && (
-            <p>Checking if board is being edited by another user...</p>
+            <div className="flex items-center justify-center w-full py-2 mb-3 sm:mb-0 sm:justify-start">
+              <Loader2
+                className="h-4 w-4 mr-2 animate-spin text-primary"
+                aria-hidden="true"
+              />
+              <span className="text-sm text-muted-foreground">
+                Checking active users...
+              </span>
+            </div>
           )}
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isDeleting}
+          <div
+            className={`flex justify-end space-x-2 ${
+              checkingUsers ? "w-full sm:w-auto" : "w-full"
+            }`}
           >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : "Delete Board"}
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isDeleting || checkingUsers}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting || checkingUsers}
+              className="flex-1 sm:flex-none"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2
+                    className="h-4 w-4 mr-2 animate-spin"
+                    aria-hidden="true"
+                  />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                "Delete Board"
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,5 +1,4 @@
 "use server";
-import { IBoardService } from "./types";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { createAutomergeServer } from "@/lib/automerge-server";
@@ -22,7 +21,7 @@ export class BoardNotFoundError extends BoardServiceError {
   }
 }
 
-export class BoardService implements IBoardService {
+export class BoardService {
   constructor() {}
 
   async create(data: { name: string; teamId: string }): Promise<Board | null> {
@@ -86,16 +85,28 @@ export class BoardService implements IBoardService {
     return board?.teamId || null;
   }
 
-  static async getBoardById(boardId: string): Promise<Board | null> {
+  static async getBoardById(
+    boardId: string,
+    includeArchived: boolean = false
+  ): Promise<Board | null> {
     const board = await prisma.board.findUnique({
-      where: { id: boardId },
+      where: {
+        id: boardId,
+        ...(includeArchived ? {} : { archived: false }),
+      },
     });
     return board || null;
   }
 
-  static async getBoardDocUrl(boardId: string): Promise<string | null> {
+  static async getBoardDocUrl(
+    boardId: string,
+    includeArchived: boolean = false
+  ): Promise<string | null> {
     const board = await prisma.board.findUnique({
-      where: { id: boardId },
+      where: {
+        id: boardId,
+        ...(includeArchived ? {} : { archived: false }),
+      },
     });
     return board?.docUrl || null;
   }

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,14 +23,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 type FormData = {
   name: string;
 };
 
+interface ValidationError {
+  path: string;
+  message: string;
+}
+
 export function CreateBoardDialog({ teamId }: { teamId: string }) {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const form = useForm<FormData>({
     resolver: zodResolver(schemaBoard),
@@ -43,6 +47,7 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
 
   const onSubmit = async (data: FormData) => {
     try {
+      setIsSubmitting(true);
       const response = await fetch("/api/boards/create", {
         method: "POST",
         headers: {
@@ -52,43 +57,59 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
         credentials: "include",
       });
 
-      const board = await response.json();
-      console.log("Board:", board);
+      const result = await response.json();
+
       if (response.ok) {
+        toast.success("Board created successfully");
+        setOpen(false);
+        form.reset();
         router.push(`/teams/${teamId}/boards/`);
-      } else {
-        throw new Error(board.message || "Failed to create board");
+        return;
       }
 
-      toast.success("Board created successfully");
-      setOpen(false);
-      form.reset();
+      if (!response.ok && result.errors) {
+        const apiErrors = result.errors as ValidationError[];
+        apiErrors.forEach((error) => {
+          if (error.path === "name") {
+            form.setError("name", {
+              type: "server",
+              message: error.message,
+            });
+          }
+        });
+
+        throw new Error(result.message || "Failed to create board");
+      } else {
+        throw new Error(result.message || "Failed to create board");
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Something went wrong"
       );
       console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          className="bg-burnt-sienna hover:bg-burnt-sienna-darker ms-10"
-          aria-label="Create new board"
-        >
-          <Plus className="mr-2 h-4 w-4" />
+        <Button className="flex gap-1 items-center">
+          <Plus className="h-4 w-4" />
           Create Board
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Board</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Create a New Board
+          </DialogTitle>
           <DialogDescription>
-            Create a new board to start collaborating with your team.
+            Create a new board for your team to collaborate on
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -104,13 +125,17 @@ export function CreateBoardDialog({ teamId }: { teamId: string }) {
                 </FormItem>
               )}
             />
+
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-burnt-sienna hover:bg-burnt-sienna-darker"
-                disabled={form.formState.isSubmitting}
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
               >
-                {form.formState.isSubmitting ? "Creating..." : "Create Board"}
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Board"}
               </Button>
             </DialogFooter>
           </form>

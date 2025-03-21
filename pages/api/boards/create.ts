@@ -1,12 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createBoardSchemaWithTeamCheck } from "@/lib/schemas/board.schema";
+import {
+  createBoardSchemaWithTeamCheck,
+  BoardNameNotUniqueError,
+} from "@/lib/schemas/board.schema";
 import { BoardService } from "@/lib/services/board";
 import { ZodError } from "zod";
 import { withTeamRoleApi } from "@/lib/middleware";
 
+type ErrorResponse = {
+  message: string;
+  errors?: Array<{
+    path: string;
+    message: string;
+  }>;
+};
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { data, teamId } = req.body;
+
     if (!teamId) {
       return res.status(400).json({ message: "Team ID is required" });
     }
@@ -14,9 +26,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const boardSchema = createBoardSchemaWithTeamCheck(teamId);
     const validatedData = await boardSchema.parseAsync(data);
 
-    const boardService = new BoardService();
-
-    const board = await boardService.create({
+    const board = await BoardService.create({
       name: validatedData.name,
       teamId,
     });
@@ -32,11 +42,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({
         message: "Validation error",
         errors,
-      });
+      } as ErrorResponse);
+    }
+
+    if (error instanceof BoardNameNotUniqueError) {
+      return res.status(409).json({
+        message: error.message,
+        errors: [{ path: "name", message: error.message }],
+      } as ErrorResponse);
     }
 
     console.error("Board creation error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ message: "Internal server error" } as ErrorResponse);
   }
 }
 

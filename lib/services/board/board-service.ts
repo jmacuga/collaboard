@@ -24,7 +24,10 @@ export class BoardNotFoundError extends BoardServiceError {
 export class BoardService {
   constructor() {}
 
-  async create(data: { name: string; teamId: string }): Promise<Board | null> {
+  static async create(data: {
+    name: string;
+    teamId: string;
+  }): Promise<Board | null> {
     try {
       await dbConnect();
       const serverRepo = await createAutomergeServer(null, "server");

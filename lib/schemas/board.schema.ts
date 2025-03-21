@@ -17,19 +17,29 @@ export const schemaBoard = z.object({
     .max(50, { message: "Name must be at most 50 characters long" }),
 });
 
-// Define the type for the schema's output
-type BoardSchema = z.infer<typeof schemaBoard>;
+export type BoardSchema = z.infer<typeof schemaBoard>;
+
+/**
+ * Custom error for board name uniqueness validation
+ */
+export class BoardNameNotUniqueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BoardNameNotUniqueError";
+  }
+}
 
 /**
  * Helper function to validate a board name is unique within a team
  * @param name The board name to check
  * @param teamId The team ID to check within
- * @returns A promise that resolves to true if the name is unique, or throws an Error
+ * @returns A promise that resolves to true if the name is unique
+ * @throws BoardNameNotUniqueError when the name is not unique
  */
 export async function validateBoardNameUniqueness(
   name: string,
   teamId: string
-): Promise<boolean> {
+): Promise<true> {
   const existingBoard = await prisma.board.findFirst({
     where: {
       teamId,
@@ -39,7 +49,9 @@ export async function validateBoardNameUniqueness(
   });
 
   if (existingBoard) {
-    throw new Error("A board with this name already exists in this team");
+    throw new BoardNameNotUniqueError(
+      "A board with this name already exists in this team"
+    );
   }
 
   return true;
@@ -56,6 +68,7 @@ export function createBoardSchemaWithTeamCheck(teamId: string) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Team ID is required to check name uniqueness",
+        path: ["name"],
       });
       return;
     }
@@ -63,11 +76,25 @@ export function createBoardSchemaWithTeamCheck(teamId: string) {
     try {
       await validateBoardNameUniqueness(data.name, teamId);
     } catch (error) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Error checking name uniqueness",
-        path: ["name"],
-      });
+      if (error instanceof BoardNameNotUniqueError) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: error.message,
+          path: ["name"],
+        });
+      } else {
+        console.error("Error checking board name uniqueness:", error);
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Unable to verify if this board name is available. Please try again.",
+          path: ["name"],
+        });
+      }
     }
   });
 }
+
+export type BoardSchemaWithTeamCheck = z.infer<
+  ReturnType<typeof createBoardSchemaWithTeamCheck>
+>;

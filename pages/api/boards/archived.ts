@@ -1,8 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
 import prisma from "@/db/prisma";
-import { withApiAuth } from "@/lib/middleware/with-api-auth";
 import { TeamService } from "@/lib/services/team/team-service";
+import { withApi } from "@/lib/middleware";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
 
 interface BoardInfo {
   id: string;
@@ -15,7 +16,7 @@ interface BoardInfo {
  * It takes a list of local board URLs and returns a list of boards to cleanup
  */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession({ req });
+  const session = await await getServerSession(req, res, authOptions);
 
   const localBoardUrls = req.body?.localBoardUrls || [];
 
@@ -48,7 +49,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return res.status(200).json({ boards: boardsToCleanup });
 }
 
-export default withApiAuth(handler, {
-  methods: ["GET", "POST"],
+export default withApi(handler, {
+  methods: ["POST"],
   requireAuth: true,
 });

@@ -59,7 +59,6 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
       <AuthProvider>
         <NetworkStatusProvider>
           <AppLayout>
-            <IndexedDBGarbageCollector />
             <TeamLayout>
               <Component {...pageProps} />
               <ToastProvider />
@@ -72,7 +71,6 @@ function MyApp({ Component, pageProps, router }: AppPropsWithSession) {
   return (
     <AuthProvider>
       <NetworkStatusProvider>
-        <IndexedDBGarbageCollector />
         <Component {...pageProps} />
         <ToastProvider />
       </NetworkStatusProvider>

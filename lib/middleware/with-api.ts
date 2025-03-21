@@ -14,7 +14,7 @@ import { withBoardServiceErrorHandling } from "./with-board-service-error-handli
  * @param options - Configuration options for the handler
  * @returns A wrapped handler function with middleware applied
  */
-export function withCollaboardApi<T = any>(
+export function withApi<T = any>(
   handler: (
     req: NextApiRequest,
     res: NextApiResponse<ApiResponse<T>>,

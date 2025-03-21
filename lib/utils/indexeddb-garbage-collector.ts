@@ -3,7 +3,11 @@ import { AnyDocumentId, Repo, PeerId } from "@automerge/automerge-repo";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { v4 as uuidv4 } from "uuid";
 
-const ONE_DAY_MS = 60 * 1000 * 5; // 24 hours in milliseconds
+const ONE_DAY_MS = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
+
+type BoardDocUrl = {
+  docUrl: string;
+};
 
 /**
  * Checks if it's time to run the garbage collection process by comparing the current date
@@ -22,9 +26,8 @@ export async function shouldRunGarbageCollection(): Promise<boolean> {
     const lastGarbageCollectionTime = new Date(
       lastGarbageCollectionDate.value
     ).getTime();
-    const currentTime = Date.now();
 
-    return currentTime - lastGarbageCollectionTime > ONE_DAY_MS;
+    return Date.now() - lastGarbageCollectionTime > ONE_DAY_MS;
   } catch (error) {
     console.error("Error checking if garbage collection should run:", error);
     return false;
@@ -53,6 +56,10 @@ export async function updateLastGarbageCollectionDate(): Promise<void> {
 export async function fetchBoardsToCleanup(
   localDocUrls: string[]
 ): Promise<string[]> {
+  if (!localDocUrls.length) {
+    return [];
+  }
+
   try {
     const response = await fetch("/api/boards/archived", {
       method: "POST",
@@ -64,11 +71,11 @@ export async function fetchBoardsToCleanup(
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch boards to clean up");
+      throw new Error(`Failed to fetch boards to clean up: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.boards.map((board: { docUrl: string }) => board.docUrl);
+    return data.boards.map((board: BoardDocUrl) => board.docUrl);
   } catch (error) {
     console.error("Error fetching boards to clean up:", error);
     return [];
@@ -83,21 +90,20 @@ export async function deleteArchivedBoards(): Promise<void> {
     const shouldDelete = await shouldRunGarbageCollection();
 
     if (!shouldDelete) {
-      console.log("Skipping deletion, last deletion was too recent");
       return;
     }
 
-    console.log("Running IndexedDB deletion process...");
-
-    // Get list of all locally stored board URLs
     const localDocUrls = await db.docUrls.toArray();
     const localUrls = localDocUrls.map((doc) => doc.docUrl);
 
-    // Get list of boards to clean up (archived or inaccessible)
+    if (!localUrls.length) {
+      await updateLastGarbageCollectionDate();
+      return;
+    }
+
     const boardUrlsToCleanup = await fetchBoardsToCleanup(localUrls);
 
-    if (boardUrlsToCleanup.length === 0) {
-      console.log("No boards to clean up");
+    if (!boardUrlsToCleanup.length) {
       await updateLastGarbageCollectionDate();
       return;
     }
@@ -113,15 +119,12 @@ export async function deleteArchivedBoards(): Promise<void> {
     );
 
     for (const board of boardsToDelete) {
-      console.log(`Deleting board from IndexedDB: ${board.docUrl}`);
       repo.delete(board.docUrl as AnyDocumentId);
       await db.docUrls.delete(board.docUrl);
     }
 
-    console.log(`Deleted ${boardsToDelete.length} boards from IndexedDB`);
-
     await updateLastGarbageCollectionDate();
   } catch (error) {
-    console.error("Error deleting boards:", error);
+    console.error("Error deleting archived boards:", error);
   }
 }

@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { getBoardById } from "@/db/data";
+import { BoardService } from "@/lib/services/board/board-service";
 import { BoardProvider } from "@/components/board/board-provider";
 import { withTeamRolePage } from "@/lib/middleware";
 
@@ -14,7 +14,7 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
 
 const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
   const boardId = params?.id as string;
-  const board = await getBoardById(boardId);
+  const board = await BoardService.getBoardById(boardId);
 
   return {
     props: {

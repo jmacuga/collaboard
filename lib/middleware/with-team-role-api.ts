@@ -6,6 +6,7 @@ import {
   TeamRoleCheckOptions,
 } from "./with-team-role-check";
 import { composeMiddleware, MiddlewareFunction } from "./compose";
+import { withBoardServiceErrorHandling } from "./with-board-service-error-handling";
 
 /**
  * Options for the team member API middleware
@@ -51,6 +52,7 @@ export function withTeamRoleApi<T = any>(
   return composeMiddleware<T>(
     withApiAuthOptions,
     withTeamRoleCheckOptions,
-    withTeamServiceErrorHandling
+    withTeamServiceErrorHandling,
+    withBoardServiceErrorHandling
   )(handler);
 }

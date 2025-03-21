@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { TeamService } from "@/lib/services/team/team-service";
-import { withTeamApi, ApiResponse } from "@/lib/middleware";
+import { withCollaboardApi, ApiResponse } from "@/lib/middleware";
 
 /**
  * API endpoint for accepting a team invitation
@@ -31,7 +31,7 @@ async function handler(
   });
 }
 
-export default withTeamApi(handler, {
+export default withCollaboardApi(handler, {
   methods: ["POST"],
   requireAuth: true,
 });

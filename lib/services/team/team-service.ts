@@ -6,6 +6,7 @@ import {
   TeamInvitation as PrismaTeamInvitation,
   TeamMember as PrismaTeamMember,
   TeamInvitationStatus,
+  Board,
 } from "@prisma/client";
 
 export class TeamServiceError extends Error {
@@ -57,6 +58,13 @@ export class RoleNotFoundError extends TeamServiceError {
   }
 }
 
+export class TeamHasBoardsError extends TeamServiceError {
+  constructor(teamId: string) {
+    super(`Team with ID ${teamId} has boards`);
+    this.name = "TeamHasBoardsError";
+  }
+}
+
 export interface TeamMemberWithRole extends PrismaTeamMember {
   role: {
     name: string;
@@ -71,6 +79,14 @@ export interface TeamInvitationWithTeam extends PrismaTeamInvitation {
 }
 
 export class TeamService {
+  static async getTeamBoards(teamId: string): Promise<Board[]> {
+    return await prisma.board.findMany({
+      where: {
+        teamId,
+        archived: false,
+      },
+    });
+  }
   /**
    * Check if a user is a member of a team
    */
@@ -377,5 +393,22 @@ export class TeamService {
       include: { team: true },
     });
     return board?.team || null;
+  }
+
+  static async deleteTeam(teamId: string): Promise<boolean> {
+    const team = await this.getTeamById(teamId);
+    if (!team) {
+      throw new TeamNotFoundError(teamId);
+    }
+    const boards = await prisma.board.findMany({
+      where: { teamId },
+    });
+    if (boards.length > 0) {
+      throw new TeamHasBoardsError(teamId);
+    }
+    const deletedTeam = await prisma.team.delete({
+      where: { id: teamId },
+    });
+    return !!deletedTeam;
   }
 }

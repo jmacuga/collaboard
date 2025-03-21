@@ -411,4 +411,18 @@ export class TeamService {
     });
     return !!deletedTeam;
   }
+
+  static async getArchivedBaordsForTeams(teamIds: string[]): Promise<Board[]> {
+    return await prisma.board.findMany({
+      where: { teamId: { in: teamIds }, archived: true },
+    });
+  }
+
+  static async getUserTeams(userId: string): Promise<PrismaTeam[]> {
+    const memberTeams = await prisma.teamMember.findMany({
+      where: { userId },
+      select: { team: true },
+    });
+    return memberTeams.map((member) => member.team);
+  }
 }

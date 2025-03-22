@@ -12,10 +12,6 @@ const useSyncMode = () => {
   const clientSyncService = useClientSync();
   const { isOnline, setIsOnline } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
-  const { data: session } = useSession();
-  const handle = useHandle<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
-  );
 
   useEffect(() => {
     if (networkStatus === "OFFLINE") {

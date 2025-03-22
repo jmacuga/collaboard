@@ -6,6 +6,7 @@ import {
   DocHandle,
   PeerId,
   NetworkAdapterInterface,
+  DocHandleEphemeralMessagePayload,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -13,14 +14,14 @@ import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { db } from "@/lib/indexed-db";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-
+import { UserStatusPayload } from "@/types/userStatusPayload";
 /**
  * Service for synchronizing local documents with the server
  * Manages online/offline state and document synchronization
  */
 export class ClientSyncService implements IClientSyncService {
   private readonly docUrl: string;
-  private repo: Repo | null;
+  private repo: Repo;
   private readonly websocketURL: string;
   private networkAdapter: BrowserWebSocketClientAdapter;
   private readonly peerId: PeerId;
@@ -33,7 +34,6 @@ export class ClientSyncService implements IClientSyncService {
    */
   constructor({ docUrl }: { docUrl: string }) {
     this.docUrl = docUrl;
-    this.repo = null;
     this.websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
     this.networkAdapter = new BrowserWebSocketClientAdapter(
       this.websocketURL,
@@ -41,34 +41,31 @@ export class ClientSyncService implements IClientSyncService {
     );
     this.peerId = uuidv4() as PeerId;
     this.connected = false;
+    this.repo = new Repo({
+      network: [],
+      storage: new IndexedDBStorageAdapter(),
+      peerId: this.peerId,
+    });
   }
 
   /**
    * Initializes the local repository
    * Creates or loads an existing document
    */
-  public async initializeRepo(): Promise<void> {
-    if (this.repo) {
-      return;
-    }
-
-    this.repo = new Repo({
-      network: [],
-      storage: new IndexedDBStorageAdapter(),
-      peerId: this.peerId,
-    });
-
+  public async initializeRepo(): Promise<DocHandle<LayerSchema> | null> {
     try {
       const docExists = await this.docExistsInIndexedDB();
 
       if (docExists) {
         this.disconnect();
-        await this.findLocalDoc();
+        const handle = await this.findLocalDoc();
+        return handle;
       } else {
         console.log("Creating local doc");
         await this.connect();
-        await this.findLocalDoc();
+        const handle = await this.findLocalDoc();
         await this.addUrlToIndexedDB();
+        return handle;
       }
     } catch (error) {
       console.error("Could not find or create local doc. Reason:", error);
@@ -81,10 +78,6 @@ export class ClientSyncService implements IClientSyncService {
    * @returns The document handle
    */
   private async findLocalDoc(): Promise<DocHandle<LayerSchema>> {
-    if (!this.repo) {
-      throw new Error("Repository not initialized");
-    }
-
     const docHandle = this.repo.find<LayerSchema>(this.docUrl as AnyDocumentId);
     await docHandle.whenReady();
     return docHandle;
@@ -138,10 +131,6 @@ export class ClientSyncService implements IClientSyncService {
     if (this.connected) {
       console.log("Already connected to server");
       return;
-    }
-
-    if (!this.repo) {
-      throw new Error("Local repo is not initialized");
     }
 
     console.log("Connecting to server");
@@ -306,6 +295,47 @@ export class ClientSyncService implements IClientSyncService {
     }
   }
 
+  public async getActiveUsers(): Promise<string[]> {
+    try {
+      await this.connect();
+
+      const handle = this.repo.find<LayerSchema>(this.docUrl as AnyDocumentId);
+      await handle.whenReady();
+
+      const activeUsers: Set<string> = new Set();
+
+      return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          cleanupAndResolve();
+        }, 5000);
+
+        const handleEphemeralMessage = (
+          event: DocHandleEphemeralMessagePayload<UserStatusPayload>
+        ) => {
+          try {
+            const [userId, state] = event.message as [string, unknown];
+            if (userId) {
+              activeUsers.add(userId);
+            }
+          } catch (error) {
+            console.error("Error processing user status message:", error);
+          }
+        };
+
+        const cleanupAndResolve = () => {
+          clearTimeout(timeoutId);
+          handle.off("ephemeral-message", handleEphemeralMessage);
+          resolve(Array.from(activeUsers));
+        };
+
+        handle.on("ephemeral-message", handleEphemeralMessage);
+      });
+    } catch (error) {
+      console.error("Error getting active users:", error);
+      return [];
+    }
+  }
+
   /**
    * Deletes a document
    */
@@ -319,7 +349,6 @@ export class ClientSyncService implements IClientSyncService {
     }
 
     this.repo.delete(this.docUrl as AnyDocumentId);
-
     this.removeUrlFromIndexedDB();
   }
 }

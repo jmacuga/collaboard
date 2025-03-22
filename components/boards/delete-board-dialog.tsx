@@ -10,14 +10,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
   teamId: string;
 }
+
 export function DeleteBoardDialog({
   boardId,
   boardName,
@@ -26,32 +28,51 @@ export function DeleteBoardDialog({
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const [checkingUsers, setCheckingUsers] = useState(false);
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const serverDocUrl = await fetch(`/api/boards/${boardId}/url`).then(
-        (res) => res.json()
+      const docUrl = await fetch(`/api/boards/${boardId}/url`).then((res) =>
+        res.json()
       );
-      const response = await fetch(`/api/boards/${boardId}/delete`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      if (response.ok) {
-        try {
-          console.log("Deleting board doc", serverDocUrl);
-          const syncService = new ClientSyncService(serverDocUrl.docUrl);
-          syncService.deleteDoc();
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to delete board doc");
+
+      try {
+        const syncService = new ClientSyncService(docUrl);
+        setCheckingUsers(true);
+        const activeUsers = await syncService.getActiveUsers();
+        setCheckingUsers(false);
+
+        if (activeUsers.length > 0) {
+          toast.error("Board is currently being edited by another user");
+          setIsDeleting(false);
+          return;
         }
-        console.log("Board deleted successfully");
-        toast.success("Board deleted successfully");
-        router.push(`/teams/${teamId}/boards/`);
-        setOpen(false);
-      } else {
-        toast.error("Failed to delete board");
+
+        const response = await fetch(`/api/boards/${boardId}/delete`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          try {
+            console.log("Deleting board doc", docUrl);
+            syncService.deleteDoc();
+          } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete board doc");
+          }
+          console.log("Board deleted successfully");
+          toast.success("Board deleted successfully");
+          router.push(`/teams/${teamId}/boards/`);
+          setOpen(false);
+        } else {
+          toast.error("Failed to delete board");
+        }
+      } catch (error) {
+        console.error("Error checking active users:", error);
+        toast.error("Failed to check if board is being edited");
+        setIsDeleting(false);
       }
     } catch (error) {
       toast.error("Something went wrong");
@@ -81,21 +102,50 @@ export function DeleteBoardDialog({
             cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isDeleting}
+        <DialogFooter className="flex flex-col items-center sm:flex-row sm:justify-between sm:space-x-2">
+          {checkingUsers && (
+            <div className="flex items-center justify-center w-full py-2 mb-3 sm:mb-0 sm:justify-start">
+              <Loader2
+                className="h-4 w-4 mr-2 animate-spin text-primary"
+                aria-hidden="true"
+              />
+              <span className="text-sm text-muted-foreground">
+                Checking active users...
+              </span>
+            </div>
+          )}
+          <div
+            className={`flex justify-end space-x-2 ${
+              checkingUsers ? "w-full sm:w-auto" : "w-full"
+            }`}
           >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? "Deleting..." : "Delete Board"}
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isDeleting || checkingUsers}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting || checkingUsers}
+              className="flex-1 sm:flex-none"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2
+                    className="h-4 w-4 mr-2 animate-spin"
+                    aria-hidden="true"
+                  />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                "Delete Board"
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

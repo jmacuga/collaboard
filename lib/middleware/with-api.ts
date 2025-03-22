@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ApiResponse, ApiHandlerOptions, withApiAuth } from "./with-api-auth";
 import { withTeamServiceErrorHandling } from "./with-team-service-error-handling";
 import { composeMiddleware, MiddlewareFunction } from "./compose";
+import { withBoardServiceErrorHandling } from "./with-board-service-error-handling";
 
 /**
  * Higher-order function that wraps team-related API handlers with common middleware functionality
@@ -13,7 +14,7 @@ import { composeMiddleware, MiddlewareFunction } from "./compose";
  * @param options - Configuration options for the handler
  * @returns A wrapped handler function with middleware applied
  */
-export function withTeamApi<T = any>(
+export function withApi<T = any>(
   handler: (
     req: NextApiRequest,
     res: NextApiResponse<ApiResponse<T>>,
@@ -26,6 +27,7 @@ export function withTeamApi<T = any>(
 
   return composeMiddleware<T>(
     withApiAuthOptions,
-    withTeamServiceErrorHandling
+    withTeamServiceErrorHandling,
+    withBoardServiceErrorHandling
   )(handler);
 }

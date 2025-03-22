@@ -113,7 +113,6 @@ model Board {
   comments       Comment[]       @relation("BoardComments")
   boardLogs      BoardLog[]      @relation("BoardLogs")
 
-  @@unique([teamId, name])
 }
 
 model MergeRequest {

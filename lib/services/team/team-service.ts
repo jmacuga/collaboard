@@ -505,4 +505,21 @@ export class TeamService {
     }
     return member as PrismaTeamMember;
   }
+
+  static async getTeamMembers(teamId: string): Promise<TeamMemberWithRole[]> {
+    try {
+      const members = await prisma.teamMember.findMany({
+        where: { teamId },
+        include: {
+          user: true,
+          role: true,
+        },
+      });
+
+      return members;
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
 }

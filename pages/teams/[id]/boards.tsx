@@ -1,10 +1,10 @@
 import { GetServerSideProps } from "next";
-import { getTeamBoards, getTeam } from "@/db/data";
 import { BoardCards } from "@/components/boards/board-cards";
 import { getSession } from "next-auth/react";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 import { TeamService } from "@/lib/services/team/team-service";
 import { withTeamRolePage } from "@/lib/middleware";
+import { getTeamBoards } from "@/db/data";
 interface BoardsPageProps {
   boards: string;
   team: string;
@@ -39,7 +39,7 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
   const teamId = context.params?.id as string;
   const userRole = await TeamService.getUserTeamRole(session!.user.id, teamId);
 
-  const team = await getTeam(teamId);
+  const team = await TeamService.getTeamById(teamId);
 
   if (!team) {
     return {

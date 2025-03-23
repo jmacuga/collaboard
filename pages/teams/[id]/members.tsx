@@ -1,5 +1,4 @@
 import { GetServerSideProps } from "next";
-import { getTeamMembers, getTeam } from "@/db/data";
 import { MembersList } from "@/components/teams/members-list";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
@@ -46,10 +45,9 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
   const session = await getSession(context);
 
   const teamId = context.params?.id as string;
-  const team = await getTeam(teamId);
+  const team = await TeamService.getTeamById(teamId);
   const userRole = await TeamService.getUserTeamRole(session!.user.id, teamId);
-
-  const members = await getTeamMembers(teamId);
+  const members = await TeamService.getTeamMembers(teamId);
 
   return {
     props: {

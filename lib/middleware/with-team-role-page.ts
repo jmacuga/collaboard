@@ -27,7 +27,7 @@ export type TeamRolePageOptions = {
 
   /**
    * Redirect URL if authentication fails
-   * Default: '/auth/login'
+   * Default: '/auth/sign-in'
    */
   authRedirect?: string;
 
@@ -49,7 +49,7 @@ const defaultOptions: Required<Omit<TeamRolePageOptions, "role">> & {
   },
   resourceType: "team",
   role: "Member",
-  authRedirect: "/auth/login",
+  authRedirect: "/auth/sign-in",
   forbiddenRedirect: "/teams",
 };
 

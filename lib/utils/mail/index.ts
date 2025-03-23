@@ -65,7 +65,7 @@ export async function sendInvitationEmail(
       
       If you already have an account, visit: ${siteUrl}/teams
       
-      If you need to create an account: ${siteUrl}/register?email=${encodeURIComponent(
+      If you need to create an account: ${siteUrl}/sign-up?email=${encodeURIComponent(
       to
     )}
       

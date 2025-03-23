@@ -1,9 +1,8 @@
 import type { NextAuthConfig } from "next-auth";
-import { NextResponse } from "next/server";
 
 export const authConfig = {
   pages: {
-    signIn: "/auth/login",
+    signIn: "/auth/sign-in",
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
@@ -18,7 +17,7 @@ export const authConfig = {
       }
 
       if (!isLoggedIn && !isPublicRoute) {
-        return Response.redirect(new URL("/auth/login", nextUrl));
+        return Response.redirect(new URL("/auth/sign-in", nextUrl));
       }
       return true;
     },

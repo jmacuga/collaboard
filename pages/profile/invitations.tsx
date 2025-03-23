@@ -1,8 +1,8 @@
 import { getInvitations } from "@/db/data";
-import { TeamInvitation } from "@prisma/client";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { InvitationsList } from "@/components/teams/invitations-list";
+
 export default function Invitations({ invitations }: { invitations: string }) {
   const parsedInvitations = JSON.parse(invitations);
   return (
@@ -11,6 +11,7 @@ export default function Invitations({ invitations }: { invitations: string }) {
     </div>
   );
 }
+
 export const getServerSideProps: GetServerSideProps = async ({
   req,
   params,
@@ -20,7 +21,7 @@ export const getServerSideProps: GetServerSideProps = async ({
   if (!session?.user || !session.user.email) {
     return {
       redirect: {
-        destination: "/auth/login",
+        destination: "/auth/sign-in",
         permanent: false,
       },
     };

@@ -43,10 +43,10 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/auth/login",
+    signIn: "/auth/sign-in",
     error: "/auth/error",
-    signOut: "/auth/logout",
-    newUser: "/auth/register",
+
+    newUser: "/auth/sign-up",
   },
   session: {
     strategy: "jwt",

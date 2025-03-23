@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 const publicPaths = [
-  "/auth/login",
-  "/auth/register",
+  "/auth/sign-in",
+  "/auth/sign-up",
   "/auth/error",
   "/auth/verify",
   "/api/auth",
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
 
   if (!token && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/auth/sign-in";
     return NextResponse.redirect(url);
   }
 

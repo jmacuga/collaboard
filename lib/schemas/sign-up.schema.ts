@@ -2,10 +2,10 @@
 import { z } from "zod";
 
 /**
- * Schema for validating login form data using Zod.
+ * Schema for validating sign-up form data using Zod.
  *
  */
-export const schemaRegister = z.object({
+export const schemaSignUp = z.object({
   /**
    * Validates the email field.
    * - Must be a string.

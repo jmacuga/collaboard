@@ -1,4 +1,4 @@
-import { useCallback, useContext, useRef } from "react";
+import { useCallback, useContext, useRef, useEffect } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { BoardMode } from "@/types/board";
 import { useDrawing } from "./use-drawing";
@@ -9,6 +9,7 @@ import { useBoardPanning } from "./use-board-panning";
 import { useText } from "./use-text";
 import { v4 as uuidv4 } from "uuid";
 import { BoardContext } from "../context/board-context";
+import { useDeleting } from "./use-deleting";
 
 export const useBoardInteractions = () => {
   const isDrawing = useRef(false);
@@ -21,6 +22,7 @@ export const useBoardInteractions = () => {
   const { handleBoardPanStart, handleBoardPanMove, handleBoardPanEnd } =
     useBoardPanning();
   const { addText, handleTextBlur } = useText();
+  const { handleDelete } = useDeleting();
 
   const handleMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
@@ -49,6 +51,18 @@ export const useBoardInteractions = () => {
       handleBoardPanStart,
       addText,
     ]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (mode !== "selecting") return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        handleDelete();
+      }
+    },
+    [mode, handleDelete]
   );
 
   const handleMouseMove = useCallback(
@@ -107,5 +121,6 @@ export const useBoardInteractions = () => {
     handleShapeMouseDown,
     handleDragStart,
     handleDragEnd,
+    handleKeyDown,
   };
 };

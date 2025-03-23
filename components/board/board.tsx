@@ -58,20 +58,13 @@ export default function Board({}: BoardProps) {
     handleShapeMouseDown,
     handleDragStart,
     handleDragEnd,
+    handleKeyDown,
   } = useBoardInteractions();
 
   useEffect(() => {
-    console.log(
-      `The board is now in ${isOnline ? "real-time" : "local"} mode.`
-    );
-  }, [isOnline]);
-
-  useEffect(() => {
-    if (!handle) return;
-    handle.on("change", (change) => {
-      console.log(change);
-    });
-  }, [handle]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const handleTextDblClick = (e: KonvaEventObject<MouseEvent>) => {
     if (mode !== "selecting") return;

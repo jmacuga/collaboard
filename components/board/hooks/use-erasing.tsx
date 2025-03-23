@@ -26,7 +26,7 @@ export const useErasing = () => {
   );
 
   const handleEraseStart = useCallback(
-    (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
+    (e: KonvaEventObject<MouseEvent>) => {
       isErasing.current = true;
       const target = e.target;
       if (target instanceof Konva.Line) {
@@ -37,7 +37,7 @@ export const useErasing = () => {
   );
 
   const handleEraseMove = useCallback(
-    (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
+    (e: KonvaEventObject<MouseEvent>) => {
       if (!isErasing.current) return;
 
       const stage = e.target.getStage();

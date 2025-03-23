@@ -8,8 +8,7 @@ import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
 import { useClientSync } from "../context/client-doc-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-
-type KonvaEvent = Konva.KonvaEventObject<MouseEvent | TouchEvent>;
+import { KonvaEventObject } from "konva/lib/Node";
 
 const createLine = (
   id: string,
@@ -27,13 +26,18 @@ const createLine = (
 });
 
 function useDrawing() {
-  const { currentLineId, brushColor, brushSize, getPointerPosition } =
-    useContext(BoardContext);
+  const {
+    currentLineId,
+    brushColor,
+    brushSize,
+    getPointerPosition,
+    localPoints,
+    setLocalPoints,
+  } = useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const [localPoints, setLocalPoints] = useState<number[]>([]);
 
   const addLineToDoc = useCallback(
     (points: number[]) => {
@@ -46,13 +50,13 @@ function useDrawing() {
     [changeLocalDoc, currentLineId]
   );
 
-  const drawLine = (e: KonvaEvent) => {
+  const drawLine = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
     setLocalPoints((prev) => [...prev, point.x, point.y]);
   };
 
-  const startLine = (e: KonvaEvent) => {
+  const startLine = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
     if (!point) return;
 
@@ -77,7 +81,7 @@ function useDrawing() {
     setLocalPoints([]);
   };
 
-  return [startLine, drawLine, endLine, localPoints, createLine] as const;
+  return { startLine, drawLine, endLine, localPoints, createLine };
 }
 
 export { useDrawing };

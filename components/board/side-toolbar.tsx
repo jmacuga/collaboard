@@ -15,19 +15,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useContext } from "react";
-import {
-  BoardContext,
-  ModeType,
-} from "@/components/board/context/board-context";
+import { BoardContext } from "@/components/board/context/board-context";
 import { DrawingToolbar } from "@/components/board/drawing-toolbar";
 import { ShapesToolbar } from "@/components/board/shapes-toolbar";
-import { ToolbarContainer } from "@/components/board/components/toolbar-container";
-import { cn } from "@/lib/utils";
 import { TextToolbar } from "@/components/board/text-toolbar";
+import { BoardMode } from "@/types/board";
+
+type ToolbarItem = {
+  icon: React.ReactNode;
+  label: string;
+  mode: BoardMode;
+  href?: string;
+};
 
 function SideToolbar() {
   const { mode, setMode } = useContext(BoardContext);
-  const toolbarItems = [
+  const toolbarItems: ToolbarItem[] = [
     {
       icon: <Home size={20} />,
       label: "Back to teams",
@@ -66,7 +69,7 @@ function SideToolbar() {
     },
   ];
 
-  const handleItemClick = (mode: ModeType) => {
+  const handleItemClick = (mode: BoardMode) => {
     if (mode) {
       setMode(mode);
     }
@@ -94,7 +97,7 @@ function SideToolbar() {
                       role="button"
                       tabIndex={0}
                       aria-label={item.label}
-                      onClick={() => handleItemClick(item.mode as ModeType)}
+                      onClick={() => handleItemClick(item.mode as BoardMode)}
                       aria-pressed={mode === item.mode}
                     >
                       {item.href ? (

@@ -1,40 +1,28 @@
 "use client";
-import SideToolbar from "@/components/board/side-toolbar";
-import { useEffect, useContext, useState, useRef, useCallback } from "react";
-import {
-  Stage,
-  Layer,
-  Line,
-  Rect,
-  Transformer,
-  Circle,
-  Arrow,
-  Text,
-} from "react-konva";
+import { useEffect, useContext, useState } from "react";
+import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
-import { v4 as uuidv4 } from "uuid";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import Konva from "konva";
-import { LineConfig } from "konva/lib/shapes/Line";
 import { useClientSync } from "@/components/board/context/client-doc-context";
 import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { useDragging } from "@/components/board/hooks/use-dragging";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
-import { useErasing } from "@/components/board/hooks/use-erasing";
-import { useShape } from "@/components/board/hooks/use-shape";
-import { useBoardPanning } from "@/components/board/hooks/use-board-panning";
-import { SyncStatusControl } from "./components/sync-status-control";
-import { ResetPositionButton } from "./components/reset-position-button";
-import { ShapeColorPalette } from "./components/shape-color-palette";
-import { useText } from "./hooks/use-text";
-import { ActiveUsersList } from "./components/active-users-list";
-import { useActiveUsers } from "./hooks/use-active-users";
-import useSyncMode from "./hooks/use-sync-mode";
-import { ObjectEditIndicator } from "./components/object-edit-indicator";
+import { useText } from "@/components/board/hooks/use-text";
+import { useActiveUsers } from "@/components/board/hooks/use-active-users";
+import { useBoardInteractions } from "@/components/board/hooks/use-board-interactions";
+import { ShapeRenderer } from "@/components/board/components/shape-renderer";
+import { ObjectEditIndicator } from "@/components/board/components/object-edit-indicator";
+import { BoardProps, BoardMode } from "@/types/board";
+import SideToolbar from "@/components/board/side-toolbar";
+import { ActiveUsersList } from "@/components/board/components/active-users-list";
+import { SyncStatusControl } from "@/components/board/components/sync-status-control";
+import { ResetPositionButton } from "@/components/board/components/reset-position-button";
+import { ShapeColorPalette } from "@/components/board/components/shape-color-palette";
+import { KonvaEventObject } from "konva/lib/Node";
+import { Text } from "konva/lib/shapes/Text";
 
-export default function Board({}: {}) {
+export default function Board({}: BoardProps) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);
@@ -50,36 +38,30 @@ export default function Board({}: {}) {
     setMode,
     setSelectedShapeIds,
     isOnline,
-  } = useContext(BoardContext);
-
-  const { activeUsers, objectEditors } = useActiveUsers();
-
-  const isDrawing = useRef(false);
-  const [startLine, drawLine, endLine, localPoints, createLine] = useDrawing();
-  const { handleDragStart, handleDragEnd } = useDragging();
-  const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
-  const { handleEraseStart, handleEraseMove, handleEraseEnd } = useErasing();
-  const { addShape } = useShape();
-  const {
     stagePosition,
-    handleBoardPanStart,
-    handleBoardPanMove,
-    handleBoardPanEnd,
-    resetPosition,
-  } = useBoardPanning();
-  const {
-    addText,
+    resetStagePosition,
     editingText,
     textPosition,
-    handleTextBlur,
-    handleTextChange,
-    handleTextKeyDown,
-    textareaRef: textRef,
     setEditingText,
     setTextPosition,
     setCurrentTextId,
-  } = useText();
-  const { toggleSyncMode } = useSyncMode();
+    textareaRef,
+  } = useContext(BoardContext);
+
+  const { activeUsers, objectEditors } = useActiveUsers();
+  const { localPoints } = useDrawing();
+  const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
+  const { handleTextChange, handleTextKeyDown } = useText();
+
+  const {
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleStageClick,
+    handleShapeClick,
+    handleDragStart,
+    handleDragEnd,
+  } = useBoardInteractions();
 
   useEffect(() => {
     console.log(
@@ -94,98 +76,11 @@ export default function Board({}: {}) {
     });
   }, [handle]);
 
-  const handleMouseDown = (
-    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
-  ) => {
-    if (mode === "drawing") {
-      isDrawing.current = true;
-      startLine(e);
-    } else if (mode === "erasing") {
-      handleEraseStart(e);
-    } else if (mode === "shapes") {
-      addShape(e as Konva.KonvaEventObject<MouseEvent>);
-      setMode("selecting");
-    } else if (mode === "panning") {
-      handleBoardPanStart(e);
-    } else if (mode === "text") {
-      addText(e as Konva.KonvaEventObject<MouseEvent>);
-    }
-  };
-
-  const [localLine, setLocalLine] = useState<LineConfig | null>(null);
-
-  const handleMouseMove = (
-    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>
-  ) => {
-    if (mode === "drawing") {
-      if (!isDrawing.current) return;
-      drawLine(e);
-      const pos = e.target.getStage()?.getPointerPosition();
-      if (!pos) return;
-      setLocalLine(
-        createLine(currentLineId, localPoints, brushColor, brushSize)
-      );
-    } else if (mode === "erasing") {
-      handleEraseMove(e);
-    } else if (mode === "panning") {
-      handleBoardPanMove(e);
-    }
-  };
-
-  const handleMouseUp = useCallback(
-    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-      if (mode === "drawing") {
-        isDrawing.current = false;
-        endLine();
-        setCurrentLineId(uuidv4());
-        setLocalLine(null);
-      } else if (mode === "erasing") {
-        handleEraseEnd();
-      } else if (mode === "panning") {
-        handleBoardPanEnd(e);
-      }
-    },
-    [endLine, setCurrentLineId, handleEraseEnd, handleBoardPanEnd, mode]
-  );
-
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedShapeIds([]);
-
-      if (editingText !== null) {
-        handleTextBlur();
-      }
-
-      const container = document.querySelector(
-        ".konvajs-content"
-      ) as HTMLElement;
-      if (container) {
-        if (mode === "panning") {
-          container.style.cursor = "grab";
-        } else if (mode === "erasing") {
-          container.style.cursor = "crosshair";
-        } else if (mode === "text") {
-          container.style.cursor = "text";
-        } else {
-          container.style.cursor = "default";
-        }
-      }
-    }
-  };
-
-  const handleShapeClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const handleTextDblClick = (e: KonvaEventObject<MouseEvent>) => {
     if (mode !== "selecting") return;
 
     e.cancelBubble = true;
-    const shapeId = e.target.attrs.id;
-    setSelectedShapeIds([shapeId]);
-  };
-
-  const handleTextDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (mode !== "selecting") return;
-
-    e.cancelBubble = true;
-    const textNode = e.target as Konva.Text;
+    const textNode = e.target as Text;
     const textId = textNode.id();
 
     if (
@@ -206,8 +101,8 @@ export default function Board({}: {}) {
     setEditingText(textNode.text());
 
     setTimeout(() => {
-      if (textRef.current) {
-        textRef.current.focus();
+      if (textareaRef.current) {
+        textareaRef.current.focus();
       }
     }, 10);
   };
@@ -216,8 +111,8 @@ export default function Board({}: {}) {
 
   return (
     <div className="relative w-full h-full">
-      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden ">
-        <div className="z-10 flex-shrink ">
+      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
+        <div className="z-10 flex-shrink">
           <SideToolbar />
         </div>
         {isOnline && activeUsers && activeUsers.length > 0 && (
@@ -225,25 +120,24 @@ export default function Board({}: {}) {
         )}
         <div
           className={`
-          ${mode === "erasing" ? "cursor-crosshair" : ""}
-          ${mode === "panning" ? "cursor-grab" : ""}
-          ${mode === "text" ? "cursor-text" : ""}
-          ${
-            mode === "selecting" || mode === "drawing" || mode === "shapes"
-              ? "cursor-default"
-              : ""
-          }
-        `}
+            ${mode === "erasing" ? "cursor-crosshair" : ""}
+            ${mode === "panning" ? "cursor-grab" : ""}
+            ${
+              mode === "selecting" ||
+              mode === "drawing" ||
+              mode === "shapes" ||
+              mode === "text"
+                ? "cursor-default"
+                : ""
+            }
+          `}
         >
           <Stage
             width={window.innerWidth}
             height={window.innerHeight}
             onMouseDown={handleMouseDown}
-            onTouchStart={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onTouchMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onTouchEnd={handleMouseUp}
             onClick={handleStageClick}
             x={stagePosition.x}
             y={stagePosition.y}
@@ -262,97 +156,31 @@ export default function Board({}: {}) {
                 ))}
               {localDoc &&
                 (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
-                  ([id, shape]) => {
-                    if (shape.className == "Line") {
-                      return (
-                        <Line
-                          key={id}
-                          {...shape.attrs}
-                          draggable={mode === "selecting"}
-                          onClick={handleShapeClick}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          strokeScaleEnabled={false}
-                          ref={(node) => {
-                            shape.attrs.ref = node;
-                          }}
-                        />
-                      );
-                    }
-                    if (shape.className == "Rect") {
-                      return (
-                        <Rect
-                          key={id}
-                          {...shape.attrs}
-                          draggable={mode === "selecting"}
-                          onClick={handleShapeClick}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          strokeScaleEnabled={false}
-                          ref={(node) => {
-                            shape.attrs.ref = node;
-                          }}
-                        />
-                      );
-                    }
-                    if (shape.className == "Circle") {
-                      return (
-                        <Circle
-                          key={id}
-                          draggable={mode === "selecting"}
-                          onClick={handleShapeClick}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          strokeScaleEnabled={false}
-                          {...shape.attrs}
-                          ref={(node) => {
-                            shape.attrs.ref = node;
-                          }}
-                        />
-                      );
-                    }
-                    if (shape.className == "Arrow") {
-                      return (
-                        <Arrow
-                          key={id}
-                          draggable={mode === "selecting"}
-                          onClick={handleShapeClick}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          strokeScaleEnabled={false}
-                          {...shape.attrs}
-                          ref={(node) => {
-                            shape.attrs.ref = node;
-                          }}
-                        />
-                      );
-                    }
-                    if (shape.className == "Text") {
-                      return (
-                        <Text
-                          key={id}
-                          draggable={mode === "selecting"}
-                          onClick={handleShapeClick}
-                          onDblClick={handleTextDblClick}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          onTransformEnd={handleTransformEnd}
-                          {...shape.attrs}
-                          ref={(node) => {
-                            shape.attrs.ref = node;
-                          }}
-                        />
-                      );
-                    }
-                    return null;
-                  }
+                  ([id, shape]) => (
+                    <ShapeRenderer
+                      key={id}
+                      id={id}
+                      shape={shape}
+                      mode={mode as BoardMode}
+                      onShapeClick={handleShapeClick}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      onTextDblClick={handleTextDblClick}
+                    />
+                  )
                 )}
-              {localLine && <Line key={currentLineId} {...localLine} />}
-
+              {localPoints && localPoints.length > 0 && (
+                <Line
+                  key={currentLineId}
+                  points={localPoints}
+                  stroke={brushColor}
+                  strokeWidth={brushSize}
+                  lineCap="round"
+                  lineJoin="round"
+                  tension={0.5}
+                />
+              )}
               <Transformer ref={transformerRef} />
             </Layer>
           </Stage>
@@ -369,7 +197,7 @@ export default function Board({}: {}) {
           }}
         >
           <textarea
-            ref={textRef}
+            ref={textareaRef}
             value={editingText}
             onChange={handleTextChange}
             onKeyDown={handleTextKeyDown}
@@ -391,7 +219,9 @@ export default function Board({}: {}) {
         </div>
       )}
       <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
-        {showResetButton && <ResetPositionButton onClick={resetPosition} />}
+        {showResetButton && (
+          <ResetPositionButton onClick={resetStagePosition} />
+        )}
         <SyncStatusControl />
       </div>
       <ShapeColorPalette />

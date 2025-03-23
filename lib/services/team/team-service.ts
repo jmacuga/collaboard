@@ -5,8 +5,8 @@ import {
   Team as PrismaTeam,
   TeamInvitation as PrismaTeamInvitation,
   TeamMember as PrismaTeamMember,
-  TeamInvitationStatus,
   Board,
+  User,
 } from "@prisma/client";
 
 export class TeamServiceError extends Error {
@@ -78,6 +78,17 @@ export interface TeamInvitationWithTeam extends PrismaTeamInvitation {
   };
 }
 
+export interface TeamMemberWithRelations {
+  id: string;
+  teamId: string;
+  userId: string;
+  roleId: string;
+  user: User;
+  role: {
+    id: string;
+    name: string;
+  };
+}
 export class TeamService {
   static async getTeamBoards(teamId: string): Promise<Board[]> {
     return await prisma.board.findMany({
@@ -424,5 +435,74 @@ export class TeamService {
       select: { team: true },
     });
     return memberTeams.map((member) => member.team);
+  }
+
+  /**
+   * Delete a member from a team
+   * @throws {TeamServiceError} If the member is the last admin of the team
+   */
+  static async deleteMember(
+    teamId: string,
+    memberId: string
+  ): Promise<boolean> {
+    try {
+      const member = await prisma.teamMember.findUnique({
+        where: { id: memberId },
+        include: { role: true },
+      });
+
+      if (!member) {
+        throw new TeamServiceError(`Team member with ID ${memberId} not found`);
+      }
+      const membersCount = await prisma.teamMember.count({
+        where: { teamId },
+      });
+      if (membersCount <= 1) {
+        throw new TeamServiceError("Cannot delete the last member of the team");
+      }
+      if (member.role.name === "Admin") {
+        const adminCount = await prisma.teamMember.count({
+          where: {
+            teamId,
+            role: {
+              name: "Admin",
+            },
+          },
+        });
+
+        if (adminCount <= 1) {
+          throw new TeamServiceError(
+            "Cannot delete the last admin of the team"
+          );
+        }
+      }
+
+      await prisma.teamMember.delete({
+        where: { id: memberId },
+      });
+
+      return true;
+    } catch (error) {
+      if (error instanceof TeamServiceError) {
+        throw error;
+      }
+
+      throw new TeamServiceError(
+        `Failed to delete team member: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  static async getMember(memberId: string): Promise<PrismaTeamMember> {
+    const member = await prisma.teamMember.findUnique({
+      where: { id: memberId },
+      include: { role: true, user: true },
+    });
+    if (!member) {
+      throw new TeamServiceError(`Team member with ID ${memberId} not found`);
+    }
+    return member as PrismaTeamMember;
   }
 }

@@ -15,24 +15,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { User } from "@prisma/client";
-
-interface TeamMemberWithRelations {
-  id: string;
-  teamId: string;
-  userId: string;
-  roleId: string;
-  user: User;
-  role: {
-    id: string;
-    name: string;
-  };
-}
+import DeleteMemberDialog from "./delete-member-dialog";
+import { TeamMemberWithRelations } from "@/lib/services/team/team-service";
 
 export function MembersList({
   members,
+  userRole,
+  teamId,
+  userId,
 }: {
   members: TeamMemberWithRelations[];
+  userRole: string;
+  teamId: string;
+  userId: string;
 }) {
   const getInitials = (name: string) => {
     return name
@@ -53,6 +48,8 @@ export function MembersList({
     }
   };
 
+  const isAdmin = userRole === "Admin";
+
   return (
     <div className="w-full max-w-full">
       <Card className="w-full max-w-full">
@@ -70,6 +67,7 @@ export function MembersList({
                   <TableHead className="w-2/5">User</TableHead>
                   <TableHead className="w-2/5">Email</TableHead>
                   <TableHead className="w-1/5">Role</TableHead>
+                  {isAdmin && <TableHead className="w-1/5">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -100,6 +98,11 @@ export function MembersList({
                       >
                         {member.role.name}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {isAdmin && member.userId !== userId && (
+                        <DeleteMemberDialog member={member} teamId={teamId} />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

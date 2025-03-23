@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { TeamService } from "@/lib/services/team/team-service";
-import { withCollaboardApi } from "@/lib/middleware";
+import { withApi } from "@/lib/middleware";
 import { ApiResponse } from "@/lib/middleware/with-api-auth";
 
 /**
@@ -32,7 +32,7 @@ async function handler(
   });
 }
 
-export default withCollaboardApi(handler, {
+export default withApi(handler, {
   methods: ["POST"],
   requireAuth: true,
 });

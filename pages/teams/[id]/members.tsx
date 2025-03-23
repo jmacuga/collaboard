@@ -10,16 +10,19 @@ interface MembersPageProps {
   members: string;
   team: string;
   userRole: string;
+  userId: string;
 }
 
 export default function MembersPage({
   members,
   team,
   userRole,
+  userId,
 }: MembersPageProps) {
   const parsedTeam = JSON.parse(team);
   const parsedMembers = JSON.parse(members);
   const parsedUserRole = JSON.parse(userRole);
+  const parsedUserId = JSON.parse(userId);
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-8">
@@ -27,7 +30,14 @@ export default function MembersPage({
         <InviteMembersDialog />
       </div>
 
-      {parsedMembers && <MembersList members={parsedMembers} />}
+      {parsedMembers && (
+        <MembersList
+          members={parsedMembers}
+          userRole={parsedUserRole}
+          teamId={parsedTeam.id}
+          userId={parsedUserId}
+        />
+      )}
     </div>
   );
 }
@@ -46,6 +56,7 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
       members: JSON.stringify(members),
       team: JSON.stringify(team),
       userRole: JSON.stringify(userRole),
+      userId: JSON.stringify(session!.user.id),
     },
   };
 };

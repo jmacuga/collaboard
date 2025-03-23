@@ -62,16 +62,11 @@ export function InvitationsList({
           action === "accept" ? "accepted" : "rejected"
         } successfully`
       );
-
-      router.push("/profile/invitations");
     } catch (error) {
       console.error(`Error ${action}ing invitation:`, error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : `Failed to ${action} invitation`
-      );
+      toast.error(`Failed to ${action} invitation`);
     } finally {
+      router.push("/profile/invitations");
       setProcessingInvitations((prev) => ({ ...prev, [invitationId]: false }));
     }
   };

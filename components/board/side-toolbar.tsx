@@ -29,7 +29,7 @@ type ToolbarItem = {
 };
 
 function SideToolbar() {
-  const { mode, setMode } = useContext(BoardContext);
+  const { mode, setBoardMode } = useContext(BoardContext);
   const toolbarItems: ToolbarItem[] = [
     {
       icon: <Home size={20} />,
@@ -71,7 +71,7 @@ function SideToolbar() {
 
   const handleItemClick = (mode: BoardMode) => {
     if (mode) {
-      setMode(mode);
+      setBoardMode(mode);
     }
   };
 

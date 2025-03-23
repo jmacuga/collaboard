@@ -33,7 +33,7 @@ interface BoardContextType {
   currentLineId: string;
   setCurrentLineId: (id: string) => void;
   mode: BoardMode;
-  setMode: (mode: BoardMode) => void;
+  setBoardMode: (mode: BoardMode) => void;
   selectedShapeIds: string[];
   setSelectedShapeIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isShapeSelected: (id: string) => boolean;
@@ -62,6 +62,7 @@ interface BoardContextType {
   currentTextId: string | null;
   setCurrentTextId: (id: string | null) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
+  isPanning: React.MutableRefObject<boolean>;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -87,6 +88,40 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [textPosition, setTextPosition] = useState<Point | null>(null);
   const [currentTextId, setCurrentTextId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isPanning = useRef<boolean>(false);
+
+  const getCursorForMode = (mode: BoardMode): string => {
+    switch (mode) {
+      case "panning":
+        if (isPanning.current) {
+          return "grabbing";
+        }
+        return "grab";
+      case "erasing":
+        return "crosshair";
+      case "text":
+        return "text";
+      case "selecting":
+      case "drawing":
+      case "shapes":
+        return "default";
+      default:
+        return "default";
+    }
+  };
+
+  const setBoardMode = useCallback((mode: BoardMode) => {
+    setMode(mode);
+    const container = document.querySelector(".konvajs-content") as HTMLElement;
+    if (container) {
+      container.style.cursor = getCursorForMode(mode);
+    }
+    if (mode !== "text") {
+      setEditingText(null);
+      setTextPosition(null);
+      setCurrentTextId(null);
+    }
+  }, []);
 
   const resetStagePosition = useCallback(() => {
     setStagePosition({ x: 0, y: 0 });
@@ -118,7 +153,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       currentLineId,
       setCurrentLineId,
       mode,
-      setMode,
+      setBoardMode,
       selectedShapeIds,
       setSelectedShapeIds,
       isShapeSelected,
@@ -147,6 +182,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       currentTextId,
       setCurrentTextId,
       textareaRef,
+      isPanning,
     }),
     [
       stageRef,
@@ -170,6 +206,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       editingText,
       textPosition,
       currentTextId,
+      setBoardMode,
     ]
   );
 

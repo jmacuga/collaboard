@@ -12,7 +12,7 @@ import { BoardContext } from "../context/board-context";
 
 export const useBoardInteractions = () => {
   const isDrawing = useRef(false);
-  const { mode, setMode, setSelectedShapeIds, setCurrentLineId } =
+  const { mode, setBoardMode, setSelectedShapeIds, setCurrentLineId } =
     useContext(BoardContext);
   const { startLine, drawLine, endLine } = useDrawing();
   const { handleDragStart, handleDragEnd } = useDragging();
@@ -31,7 +31,7 @@ export const useBoardInteractions = () => {
         handleEraseStart(e);
       } else if (mode === "shapes") {
         addShape(e);
-        setMode("selecting");
+        setBoardMode("selecting");
       } else if (mode === "panning") {
         handleBoardPanStart(e);
       } else if (mode === "text") {
@@ -45,7 +45,7 @@ export const useBoardInteractions = () => {
       startLine,
       handleEraseStart,
       addShape,
-      setMode,
+      setBoardMode,
       handleBoardPanStart,
       addText,
     ]
@@ -84,15 +84,9 @@ export const useBoardInteractions = () => {
     (e: KonvaEventObject<MouseEvent>) => {
       if (e.target === e.target.getStage()) {
         setSelectedShapeIds([]);
-        const container = document.querySelector(
-          ".konvajs-content"
-        ) as HTMLElement;
-        if (container) {
-          container.style.cursor = getCursorForMode(mode);
-        }
       }
     },
-    [mode, setSelectedShapeIds]
+    [setSelectedShapeIds]
   );
 
   const handleShapeClick = useCallback(
@@ -114,21 +108,4 @@ export const useBoardInteractions = () => {
     handleDragStart,
     handleDragEnd,
   };
-};
-
-const getCursorForMode = (mode: BoardMode): string => {
-  switch (mode) {
-    case "panning":
-      return "grab";
-    case "erasing":
-      return "crosshair";
-    case "text":
-      return "text";
-    case "selecting":
-    case "drawing":
-    case "shapes":
-      return "default";
-    default:
-      return "default";
-  }
 };

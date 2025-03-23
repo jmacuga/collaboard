@@ -33,10 +33,7 @@ export default function Board({}: BoardProps) {
     brushSize,
     textColor,
     currentLineId,
-    setCurrentLineId,
     mode,
-    setMode,
-    setSelectedShapeIds,
     isOnline,
     stagePosition,
     resetStagePosition,
@@ -118,20 +115,7 @@ export default function Board({}: BoardProps) {
         {isOnline && activeUsers && activeUsers.length > 0 && (
           <ActiveUsersList users={activeUsers} />
         )}
-        <div
-          className={`
-            ${mode === "erasing" ? "cursor-crosshair" : ""}
-            ${mode === "panning" ? "cursor-grab" : ""}
-            ${
-              mode === "selecting" ||
-              mode === "drawing" ||
-              mode === "shapes" ||
-              mode === "text"
-                ? "cursor-default"
-                : ""
-            }
-          `}
-        >
+        <div>
           <Stage
             width={window.innerWidth}
             height={window.innerHeight}

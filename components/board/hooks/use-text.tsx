@@ -15,7 +15,7 @@ const useText = () => {
   );
   const {
     mode,
-    setMode,
+    setBoardMode,
     textColor,
     getPointerPosition,
     editingText,
@@ -31,7 +31,11 @@ const useText = () => {
     changeDoc((doc: LayerSchema) => {
       if (doc[textId]) {
         const path = [textId, "attrs", "text"];
-        Automerge.updateText(doc, path, text);
+        if (text === "") {
+          delete doc[textId];
+        } else {
+          Automerge.updateText(doc, path, text);
+        }
         return doc;
       }
     });
@@ -76,7 +80,6 @@ const useText = () => {
         textareaRef.current.focus();
       }
     }, 10);
-    setMode("selecting");
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -97,6 +100,7 @@ const useText = () => {
     setEditingText(null);
     setTextPosition(null);
     setCurrentTextId(null);
+    setBoardMode("selecting");
   };
 
   const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

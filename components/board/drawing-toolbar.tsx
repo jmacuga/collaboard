@@ -8,8 +8,14 @@ import { ColorPalette } from "./components/color-palette";
 const DrawingToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
   const [sizeChangeAnimation, setSizeChangeAnimation] = useState(false);
-  const { mode, setMode, setBrushColor, brushSize, setBrushSize, brushColor } =
-    useContext(BoardContext);
+  const {
+    mode,
+    setBoardMode,
+    setBrushColor,
+    brushSize,
+    setBrushSize,
+    brushColor,
+  } = useContext(BoardContext);
 
   useEffect(() => {
     setSizeChangeAnimation(true);
@@ -41,13 +47,13 @@ const DrawingToolbar = () => {
     {
       label: "Brush",
       icon: <Brush />,
-      onClick: () => setMode("drawing"),
+      onClick: () => setBoardMode("drawing"),
       isActive: mode === "drawing",
     },
     {
       label: "Eraser",
       icon: <Eraser />,
-      onClick: () => setMode("erasing"),
+      onClick: () => setBoardMode("erasing"),
       isActive: mode === "erasing",
     },
     ...brushSizes.map((size) => ({

@@ -103,8 +103,13 @@ export const ObjectEditIndicator = ({
         const minY = Math.min(...yPoints);
         const maxY = Math.max(...yPoints);
 
-        x = attrs.x + minX;
-        y = attrs.y + minY;
+        if (attrs.x == undefined || attrs.y == undefined) {
+          x = minX;
+          y = minY;
+        } else {
+          x = attrs.x + minX;
+          y = attrs.y + minY;
+        }
         width = maxX - minX;
         height = maxY - minY;
       } else {

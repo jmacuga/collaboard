@@ -186,12 +186,22 @@ export default function Board({}: {}) {
 
     e.cancelBubble = true;
     const textNode = e.target as Konva.Text;
+    const textId = textNode.id();
+
+    if (
+      objectEditors &&
+      objectEditors[textId] &&
+      objectEditors[textId].length > 0
+    ) {
+      return;
+    }
+
     const textPosition = {
       x: textNode.x(),
       y: textNode.y(),
     };
 
-    setCurrentTextId(textNode.id());
+    setCurrentTextId(textId);
     setTextPosition(textPosition);
     setEditingText(textNode.text());
 
@@ -239,6 +249,17 @@ export default function Board({}: {}) {
             y={stagePosition.y}
           >
             <Layer>
+              {isOnline &&
+                localDoc &&
+                objectEditors &&
+                Object.entries(objectEditors).map(([objectId, editors]) => (
+                  <ObjectEditIndicator
+                    key={`edit-indicator-${objectId}`}
+                    objectId={objectId}
+                    editors={editors}
+                    shape={localDoc[objectId]}
+                  />
+                ))}
               {localDoc &&
                 (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
                   ([id, shape]) => {
@@ -331,18 +352,6 @@ export default function Board({}: {}) {
                   }
                 )}
               {localLine && <Line key={currentLineId} {...localLine} />}
-
-              {isOnline &&
-                localDoc &&
-                objectEditors &&
-                Object.entries(objectEditors).map(([objectId, editors]) => (
-                  <ObjectEditIndicator
-                    key={`edit-indicator-${objectId}`}
-                    objectId={objectId}
-                    editors={editors}
-                    shape={localDoc[objectId]}
-                  />
-                ))}
 
               <Transformer ref={transformerRef} />
             </Layer>

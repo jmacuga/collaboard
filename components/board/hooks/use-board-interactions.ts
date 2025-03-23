@@ -57,7 +57,7 @@ export const useBoardInteractions = () => {
     (e: KeyboardEvent) => {
       if (mode !== "selecting") return;
 
-      if (e.key === "Delete" || e.key === "Backspace") {
+      if (e.key === "Delete") {
         e.preventDefault();
         handleDelete();
       }

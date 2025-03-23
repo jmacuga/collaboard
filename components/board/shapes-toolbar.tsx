@@ -12,15 +12,21 @@ import { ColorPalette } from "./components/color-palette";
 
 const ShapesToolbar = () => {
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-  const { mode, setMode, setShapeColor, shapeType, setShapeType, shapeColor } =
-    useContext(BoardContext);
+  const {
+    mode,
+    setBoardMode,
+    setShapeColor,
+    shapeType,
+    setShapeType,
+    shapeColor,
+  } = useContext(BoardContext);
 
   const tools = [
     {
       label: "Rectangle",
       icon: <Square className="fill-none" />,
       onClick: () => {
-        setMode("shapes");
+        setBoardMode("shapes");
         setShapeType("rectangle");
       },
       isActive: mode === "shapes" && shapeType === "rectangle",
@@ -29,7 +35,7 @@ const ShapesToolbar = () => {
       label: "Circle",
       icon: <CircleIcon className="fill-none" />,
       onClick: () => {
-        setMode("shapes");
+        setBoardMode("shapes");
         setShapeType("circle");
       },
       isActive: mode === "shapes" && shapeType === "circle",
@@ -38,7 +44,7 @@ const ShapesToolbar = () => {
       label: "Arrow",
       icon: <ArrowRight />,
       onClick: () => {
-        setMode("shapes");
+        setBoardMode("shapes");
         setShapeType("arrow");
       },
       isActive: mode === "shapes" && shapeType === "arrow",

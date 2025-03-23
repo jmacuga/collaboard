@@ -13,18 +13,29 @@ const useText = () => {
   const [localDoc, changeDoc] = useDocument<LayerSchema>(
     clientSyncService.getDocUrl() as AnyDocumentId
   );
-  const { mode, setMode, textColor, setTextColor, getPointerPosition } =
-    useContext(BoardContext);
-  const [editingText, setEditingText] = useState<string | null>(null);
-  const [textPosition, setTextPosition] = useState<Point | null>(null);
-  const [currentTextId, setCurrentTextId] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const {
+    mode,
+    setBoardMode,
+    textColor,
+    getPointerPosition,
+    editingText,
+    setEditingText,
+    textPosition,
+    setTextPosition,
+    currentTextId,
+    setCurrentTextId,
+    textareaRef,
+  } = useContext(BoardContext);
 
   const updateTextInDoc = (textId: string, text: string) => {
     changeDoc((doc: LayerSchema) => {
       if (doc[textId]) {
         const path = [textId, "attrs", "text"];
-        Automerge.updateText(doc, path, text);
+        if (text === "") {
+          delete doc[textId];
+        } else {
+          Automerge.updateText(doc, path, text);
+        }
         return doc;
       }
     });
@@ -64,7 +75,6 @@ const useText = () => {
     setCurrentTextId(textId);
     setTextPosition(point);
     setEditingText("");
-    console.log("textareaRef", textareaRef.current);
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -85,16 +95,12 @@ const useText = () => {
           addTextToDoc(currentTextId, editingText);
         }
       }
-      setMode("selecting");
     }
 
     setEditingText(null);
     setTextPosition(null);
     setCurrentTextId(null);
-
-    if (mode !== "text") {
-      setMode("selecting");
-    }
+    setBoardMode("selecting");
   };
 
   const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -113,9 +119,6 @@ const useText = () => {
     handleTextKeyDown,
     textareaRef,
     currentTextId,
-    setEditingText,
-    setTextPosition,
-    setCurrentTextId,
   };
 };
 

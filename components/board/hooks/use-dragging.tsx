@@ -23,7 +23,7 @@ export const useDragging = () => {
     y: 0,
   });
 
-  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
+  const handleDragStart = (e: KonvaEventObject<MouseEvent>) => {
     const shapeId = e.target.attrs.id;
     setDraggingState({
       draggedShapeId: shapeId,
@@ -32,7 +32,7 @@ export const useDragging = () => {
     });
   };
 
-  const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
+  const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
     const shapeId = e.target.attrs.id;
     const newPos = { x: e.target.x(), y: e.target.y() };
     changeDoc((doc: LayerSchema) => {

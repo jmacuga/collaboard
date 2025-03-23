@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext } from "react";
 import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
@@ -26,7 +26,6 @@ export default function Board({}: BoardProps) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);
-  const handle = useHandle<LayerSchema>(docUrl);
 
   const {
     brushColor,

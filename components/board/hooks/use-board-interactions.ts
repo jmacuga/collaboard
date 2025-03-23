@@ -1,6 +1,5 @@
-import { useCallback, useContext, useRef, useEffect } from "react";
+import { useCallback, useContext, useRef } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
-import { BoardMode } from "@/types/board";
 import { useDrawing } from "./use-drawing";
 import { useDragging } from "./use-dragging";
 import { useErasing } from "./use-erasing";

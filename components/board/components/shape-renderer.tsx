@@ -6,7 +6,7 @@ export const ShapeRenderer = ({
   id,
   shape,
   mode,
-  onShapeClick,
+  onMouseDown,
   onDragStart,
   onDragEnd,
   onTransformEnd,
@@ -15,7 +15,7 @@ export const ShapeRenderer = ({
 }: ShapeRendererProps) => {
   const commonProps = {
     draggable: mode === "selecting",
-    onClick: onShapeClick,
+    onMouseDown: onMouseDown as (e: KonvaEventObject<MouseEvent>) => void,
     onDragStart: onDragStart as (e: KonvaEventObject<MouseEvent>) => void,
     onDragEnd: onDragEnd as (e: KonvaEventObject<MouseEvent>) => void,
     onTransformEnd: onTransformEnd as (e: KonvaEventObject<MouseEvent>) => void,

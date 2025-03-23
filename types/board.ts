@@ -14,7 +14,7 @@ export interface BoardShapeProps {
   id: string;
   shape: KonvaNodeSchema;
   mode: BoardMode;
-  onShapeClick: (e: KonvaEventObject<MouseEvent>) => void;
+  onMouseDown: (e: KonvaEventObject<MouseEvent>) => void;
   onDragStart: (e: KonvaEventObject<MouseEvent>) => void;
   onDragEnd: (e: KonvaEventObject<MouseEvent>) => void;
   onTransformEnd: (e: KonvaEventObject<MouseEvent>) => void;

@@ -89,7 +89,7 @@ export const useBoardInteractions = () => {
     [setSelectedShapeIds]
   );
 
-  const handleShapeClick = useCallback(
+  const handleShapeMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
       if (mode !== "selecting") return;
       e.cancelBubble = true;
@@ -104,7 +104,7 @@ export const useBoardInteractions = () => {
     handleMouseMove,
     handleMouseUp,
     handleStageClick,
-    handleShapeClick,
+    handleShapeMouseDown,
     handleDragStart,
     handleDragEnd,
   };

@@ -55,7 +55,7 @@ export default function Board({}: BoardProps) {
     handleMouseMove,
     handleMouseUp,
     handleStageClick,
-    handleShapeClick,
+    handleShapeMouseDown,
     handleDragStart,
     handleDragEnd,
   } = useBoardInteractions();
@@ -146,7 +146,7 @@ export default function Board({}: BoardProps) {
                       id={id}
                       shape={shape}
                       mode={mode as BoardMode}
-                      onShapeClick={handleShapeClick}
+                      onMouseDown={handleShapeMouseDown}
                       onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onTransformEnd={handleTransformEnd}

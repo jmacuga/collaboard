@@ -9,11 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.2.8",
-    "@automerge/automerge-repo": "^1.1.12",
+    "@automerge/automerge": "2.2.8",
+    "@automerge/automerge-repo": "1.1.12",
     "@automerge/automerge-repo-network-websocket": "^1.2.1",
-    "@automerge/automerge-repo-react-hooks": "^1.1.12",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.12",
+    "@automerge/automerge-repo-react-hooks": "1.1.12",
+    "@automerge/automerge-repo-storage-indexeddb": "1.1.12",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^3.10.0",
     "@kessl/next-flash": "^1.0.3",
@@ -49,6 +49,7 @@
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.0",
     "or": "^0.2.0",
+    "prisma": "^6.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",

@@ -1,5 +1,5 @@
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { DocHandle } from "@automerge/automerge-repo";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { DocHandle, Repo } from "@automerge/automerge-repo";
 
 export interface ClientSyncStatus {
   isOnline: boolean;
@@ -9,19 +9,19 @@ export interface ClientSyncStatus {
 }
 
 export interface IClientSyncService {
+  initializeRepo(): Promise<DocHandle<LayerSchema> | null>;
   getDocUrl(): string;
-  //   getSyncStatus(): ClientSyncStatus;
-  //   onStatusChange(callback: (status: ClientSyncStatus) => void): void;
-  //   getIsLocalSynced(): boolean;
-  //   getMergeResult(): KonvaNodeSchema & Record<string, any>;
-  //   applyLocalChanges(changes: Uint8Array[]): void;
-  //   discardLocalChanges(): void;
-  updateServerData(docUrl: string): void;
-  connect(): void;
-  disconnect(): void;
-  canConnect(): boolean;
-  deleteDoc(): void;
-  initializeRepo(): Promise<void>;
   createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null>;
   setOnline(online: boolean): void;
+  canConnect(): boolean;
+  getRepo(): Repo | null;
+  connect(): void;
+  disconnect(): void;
+  getDocUrl(): string;
+  updateServerData(docUrl: string): void;
+  createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null>;
+  syncLocalRepo(): Promise<void>;
+  setOnline(online: boolean): void;
+  getActiveUsers(): Promise<string[]>;
+  deleteDoc(): void;
 }

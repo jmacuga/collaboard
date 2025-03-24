@@ -30,6 +30,6 @@ export async function createAutomergeServer(
     peerId: `storage-server-${hostname}`,
   };
 
-  const repo = new Repo(config);
+  const repo = new Repo(config as any);
   return repo;
 }

@@ -22,7 +22,7 @@ import { ShapeColorPalette } from "@/components/board/components/shape-color-pal
 import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 
-export default function Board({}: BoardProps) {
+export default function Board() {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);

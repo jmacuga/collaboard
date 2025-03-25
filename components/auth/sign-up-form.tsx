@@ -1,17 +1,12 @@
-import {
-  AtSymbolIcon,
-  KeyIcon,
-  ExclamationCircleIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+import { AtSymbolIcon, KeyIcon, UserIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "../ui/button";
-import { register } from "@/lib/auth/actions";
+import { signUp } from "@/lib/auth/actions";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 
-export function RegisterForm() {
+export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -21,7 +16,7 @@ export function RegisterForm() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const { error } = await register(formData);
+      const { error } = await signUp(formData);
 
       if (error) {
         toast.error(error);
@@ -30,7 +25,7 @@ export function RegisterForm() {
       }
 
       toast.success("Account created successfully! Please log in.");
-      await router.push("/auth/login");
+      await router.push("/auth/sign-in");
     } catch (error) {
       toast.error("An error occurred while creating your account");
       setIsLoading(false);

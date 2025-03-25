@@ -15,24 +15,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { User } from "@prisma/client";
-
-interface TeamMemberWithRelations {
-  id: string;
-  teamId: string;
-  userId: string;
-  roleId: string;
-  user: User;
-  role: {
-    id: string;
-    name: string;
-  };
-}
+import DeleteMemberDialog from "./delete-member-dialog";
+import ChangeRoleDialog from "./change-role-dialog";
+import { TeamMemberWithRelations } from "@/lib/services/team/team-service";
 
 export function MembersList({
   members,
+  userRole,
+  teamId,
+  userId,
 }: {
   members: TeamMemberWithRelations[];
+  userRole: string;
+  teamId: string;
+  userId: string;
 }) {
   const getInitials = (name: string) => {
     return name
@@ -53,6 +49,13 @@ export function MembersList({
     }
   };
 
+  const isAdmin = userRole === "Admin";
+  const adminsCount = members.filter(
+    (member) => member.role.name === "Admin"
+  ).length;
+
+  const isOnlyAdmin = adminsCount === 1;
+
   return (
     <div className="w-full max-w-full">
       <Card className="w-full max-w-full">
@@ -64,12 +67,13 @@ export function MembersList({
         </CardHeader>
         <CardContent className="w-full max-w-full">
           <div className="w-full max-w-full overflow-auto">
-            <Table className="w-full table-fixed">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-2/5">User</TableHead>
                   <TableHead className="w-2/5">Email</TableHead>
                   <TableHead className="w-1/5">Role</TableHead>
+                  {isAdmin && <TableHead className="w-1/5">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -100,6 +104,22 @@ export function MembersList({
                       >
                         {member.role.name}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {isAdmin && member.userId !== userId && (
+                          <DeleteMemberDialog member={member} teamId={teamId} />
+                        )}
+                        {isAdmin &&
+                          (member.role.name !== "Admin" || !isOnlyAdmin) && (
+                            <ChangeRoleDialog
+                              member={member}
+                              teamId={teamId}
+                              currentUserRole={userRole}
+                              adminsCount={adminsCount}
+                            />
+                          )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

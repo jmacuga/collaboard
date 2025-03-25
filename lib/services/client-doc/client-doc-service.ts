@@ -165,6 +165,7 @@ export class ClientSyncService implements IClientSyncService {
 
     try {
       this.networkAdapter.disconnect();
+      // @ts-ignore
       this.networkAdapter.emit("close");
     } catch (error) {
       console.error("Error disconnecting from server", error);

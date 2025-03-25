@@ -1,4 +1,3 @@
-import { SyncService } from "@/lib/services/client-doc/client-doc-service";
 import Head from "next/head";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";

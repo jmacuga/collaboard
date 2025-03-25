@@ -1,30 +1,6 @@
-import { signIn } from "next-auth/react";
-
-export async function authenticate(formData: FormData) {
+export async function signUp(formData: FormData) {
   try {
-    const result = await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirect: false,
-      callbackUrl: "/teams",
-    });
-
-    if (result?.error) {
-      return {
-        error: result.error || "Invalid email or password",
-        isLoading: false,
-      };
-    }
-
-    return { error: "", isLoading: false };
-  } catch (error) {
-    return { error: "An error occurred. Please try again.", isLoading: false };
-  }
-}
-
-export async function register(formData: FormData) {
-  try {
-    const response = await fetch("/api/auth/register", {
+    const response = await fetch("/api/auth/sign-up", {
       method: "POST",
       body: JSON.stringify({
         email: formData.get("email"),

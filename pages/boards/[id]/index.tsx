@@ -15,7 +15,11 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
 const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
   const boardId = params?.id as string;
   const board = await BoardService.getBoardById(boardId);
-
+  if (!board) {
+    return {
+      notFound: true,
+    };
+  }
   return {
     props: {
       boardId,

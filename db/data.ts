@@ -51,37 +51,6 @@ export async function getTeamBoards(teamId: string): Promise<Board[] | null> {
   }
 }
 
-export async function getTeam(id: string): Promise<Team | null> {
-  try {
-    const team = await prisma.team.findUnique({
-      where: { id },
-    });
-    return team;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
-export async function getTeamMembers(
-  teamId: string
-): Promise<TeamMember[] | null> {
-  try {
-    const members = await prisma.teamMember.findMany({
-      where: { teamId },
-      include: {
-        user: true,
-        role: true,
-      },
-    });
-
-    return members;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
 export async function getInvitations(
   email: string
 ): Promise<TeamInvitation[] | null> {

@@ -1,8 +1,6 @@
 import {
   Inbox,
   Users,
-  User,
-  UserPlus,
   Files,
   GitPullRequest,
   LogOut,
@@ -23,10 +21,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import SignOutModal from "@/components/auth/sign-out-modal";
-import { NetworkStatusIndicator } from "@/components/ui/network-status-indicator";
 import { useRouter } from "next/router";
 
 const data = {
@@ -59,8 +55,7 @@ const data = {
           icon: Files,
         },
         {
-          title: "Logout",
-          url: "/api/auth/signout",
+          title: "Sign Out",
           icon: LogOut,
         },
       ],
@@ -115,7 +110,7 @@ export function AppSidebar() {
                     <SidebarMenu>
                       {item.items.map((subItem) => (
                         <SidebarMenuItem key={subItem.title}>
-                          {subItem.title === "Logout" ? (
+                          {subItem.title === "Sign Out" ? (
                             <SignOutModal>
                               <SidebarMenuButton asChild>
                                 <button className="flex w-full items-center">

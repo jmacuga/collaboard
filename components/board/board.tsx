@@ -19,6 +19,7 @@ import { ActiveUsersList } from "@/components/board/components/active-users-list
 import { SyncStatusControl } from "@/components/board/components/sync-status-control";
 import { ResetPositionButton } from "@/components/board/components/reset-position-button";
 import { ShapeColorPalette } from "@/components/board/components/shape-color-palette";
+import { LocalChangesAlert } from "@/components/board/components/local-changes-alert";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 
@@ -100,6 +101,7 @@ export default function Board() {
 
   return (
     <div className="relative w-full h-full">
+      <LocalChangesAlert />
       <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
         <div className="z-10 flex-shrink">
           <SideToolbar />

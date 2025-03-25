@@ -15,6 +15,8 @@ import { db } from "@/lib/indexed-db";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
+
+import { getChanges, getHeads } from "@automerge/automerge";
 /**
  * Service for synchronizing local documents with the server
  * Manages online/offline state and document synchronization
@@ -109,14 +111,77 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Checks if the client can connect to the server
-   * @returns Whether the client can connect
+   * Checks if two arrays contain exactly the same elements, regardless of order
+   * @param array1 - First array to compare
+   * @param array2 - Second array to compare
+   * @returns boolean indicating if arrays contain the same elements
    */
-  public canConnect(): boolean {
-    // Can connect if localDoc is not ahead of serverDoc
-    // This is a placeholder - actual implementation would need to check
-    // if there are local changes that conflict with server changes
-    return true;
+  private areArraysEqual(array1: string[], array2: string[]): boolean {
+    if (!array1.length || !array2.length || array1.length !== array2.length) {
+      return false;
+    }
+    const set = new Set(array1);
+    return (
+      array2.every((element) => set.has(element)) &&
+      array1.every((element) => set.has(element))
+    );
+  }
+
+  /**
+   * Creates a server repository instance
+   * @returns Repo instance configured for server connection
+   */
+  private createServerRepo(): Repo {
+    return new Repo({
+      network: [
+        new BrowserWebSocketClientAdapter(
+          this.websocketURL
+        ) as any as NetworkAdapterInterface,
+      ],
+    });
+  }
+
+  /**
+   * Gets document heads from a document handle
+   * @param docHandle - Document handle to get heads from
+   * @returns Promise resolving to array of document heads
+   */
+  private async getDocumentHeads(
+    docHandle: DocHandle<LayerSchema>
+  ): Promise<string[]> {
+    const doc = await docHandle.doc();
+    return getHeads(doc);
+  }
+
+  /**
+   * Checks if the client can connect to the server by comparing local and server document states
+   * @returns Promise resolving to boolean indicating if connection is possible
+   * @throws Error if document handles cannot be initialized
+   */
+  public async canConnect(): Promise<boolean> {
+    try {
+      this.disconnect();
+
+      const localDocHandle = this.repo.find<LayerSchema>(
+        this.docUrl as AnyDocumentId
+      );
+      await localDocHandle.whenReady();
+      const serverRepo = this.createServerRepo();
+      const serverDocHandle = serverRepo.find<LayerSchema>(
+        this.docUrl as AnyDocumentId
+      );
+      await serverDocHandle.whenReady();
+      const [localHeads, serverHeads] = await Promise.all([
+        this.getDocumentHeads(localDocHandle),
+        this.getDocumentHeads(serverDocHandle),
+      ]);
+      console.log("localHeads", localHeads);
+      console.log("serverHeads", serverHeads);
+      return this.areArraysEqual(localHeads, serverHeads);
+    } catch (error) {
+      console.error("Failed to check connection status:", error);
+      return false;
+    }
   }
 
   public getRepo(): Repo | null {
@@ -284,13 +349,12 @@ export class ClientSyncService implements IClientSyncService {
    * Sets the online state
    * @param online Whether the client is online
    */
-  public setOnline(online: boolean): void {
+  public async setOnline(online: boolean): Promise<void> {
     if (!this.repo) {
       throw new Error("Local repo is not initialized");
     }
-
     if (online) {
-      this.connect();
+      await this.connect();
     } else {
       this.disconnect();
     }

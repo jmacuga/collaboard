@@ -2,15 +2,10 @@ import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 import { useClientSync } from "@/components/board/context/client-doc-context";
-import { useSession } from "next-auth/react";
-import { useLocalAwareness } from "@automerge/automerge-repo-react-hooks";
-import { AnyDocumentId, DocHandle } from "@automerge/automerge-repo";
-import { useHandle } from "@automerge/automerge-repo-react-hooks";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
 
 const useSyncMode = () => {
   const clientSyncService = useClientSync();
-  const { isOnline, setIsOnline } = useContext(BoardContext);
+  const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
 
   useEffect(() => {
@@ -33,8 +28,18 @@ const useSyncMode = () => {
         console.warn("Cannot switch to real-time mode when network is offline");
         return;
       }
-      await clientSyncService.setOnline(!isOnline);
-      setIsOnline(!isOnline);
+      if (!isOnline) {
+        if (await clientSyncService.canConnect()) {
+          await clientSyncService.setOnline(true);
+          setIsOnline(true);
+        } else {
+          setSynced(false);
+          console.log("Detected local changes - staying offline");
+        }
+      } else {
+        await clientSyncService.setOnline(false);
+        setIsOnline(false);
+      }
     } catch (error) {
       console.error("Failed to toggle real-time/local mode:", error);
     }

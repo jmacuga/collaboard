@@ -2,9 +2,9 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { parse } from "url";
 import next from "next";
-import { createAutomergeServer } from "@/lib/automerge-server";
+import { getOrCreateRepo } from "@/lib/automerge-server";
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = process.env.HOSTNAME || "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({
   dev,
@@ -29,8 +29,6 @@ app.prepare().then(() => {
     noServer: true,
   });
 
-  createAutomergeServer(wss, hostname);
-
   server.on("upgrade", (request, socket, head) => {
     if (!request.url) return socket.destroy();
 
@@ -41,6 +39,12 @@ app.prepare().then(() => {
     }
 
     if (pathname === "/api/socket") {
+      const { searchParams } = new URL(
+        request.url || "",
+        `http://${hostname}:${port}`
+      );
+      const docId = searchParams.get("doc") || "default-doc";
+      getOrCreateRepo(wss, hostname, docId);
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit("connection", ws, request);
       });

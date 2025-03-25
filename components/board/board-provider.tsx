@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
-import { Repo } from "@automerge/automerge-repo";
 import Board from "@/components/board/board";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 import { ClientSyncContext } from "./context/client-doc-context";
@@ -10,6 +9,7 @@ import { NetworkStatusProvider } from "@/components/providers/network-status-pro
 
 interface BoardState {
   clientSyncService: ClientSyncService | null;
+  synced: boolean;
 }
 
 export function BoardProvider({
@@ -21,29 +21,34 @@ export function BoardProvider({
 }) {
   const [state, setState] = useState<BoardState>({
     clientSyncService: null,
+    synced: false,
   });
   const isInitialized = useRef(false);
 
   useEffect(() => {
     const initializeClientSyncService = async () => {
+      let synced = false;
       if (isInitialized.current || state.clientSyncService) {
         return;
       }
       isInitialized.current = true;
       const clientSyncService = new ClientSyncService({ docUrl });
       await clientSyncService.initializeRepo();
-      if (clientSyncService.canConnect()) {
-        console.log("connecting on entry");
+      if (await clientSyncService.canConnect()) {
+        console.log("connecting");
         await clientSyncService.connect();
+        synced = true;
+      } else {
+        console.log("Staying disconnected");
       }
       setState({
         clientSyncService,
+        synced,
       });
     };
     initializeClientSyncService();
 
     return () => {
-      console.log("disconnecting on exit");
       if (state.clientSyncService) {
         state.clientSyncService.disconnect();
       }
@@ -60,7 +65,7 @@ export function BoardProvider({
         <ClientSyncContext.Provider
           value={{ clientSyncService: state.clientSyncService }}
         >
-          <BoardContextProvider>
+          <BoardContextProvider syncedInitial={state.synced}>
             <Board />
           </BoardContextProvider>
         </ClientSyncContext.Provider>

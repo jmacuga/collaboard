@@ -1,7 +1,6 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { createAutomergeServer } from "@/lib/automerge-server";
 import { Board } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
@@ -30,7 +29,15 @@ export class BoardService {
   }): Promise<Board | null> {
     try {
       await dbConnect();
-      const serverRepo = await createAutomergeServer(null, "server");
+      const mongoAdapter = new MongoDBStorageAdapter(
+        process.env.MONGODB_URI || "",
+        {
+          dbName: process.env.MONGODB_DB_NAME,
+          collectionName: process.env.DOCS_COLLECTION_NAME,
+          keyStorageStrategy: "array",
+        }
+      );
+      const serverRepo = new Repo({ storage: mongoAdapter, network: [] });
       const handle = serverRepo.create<LayerSchema>();
       const docUrl = handle.url;
       const board = await prisma.board.create({

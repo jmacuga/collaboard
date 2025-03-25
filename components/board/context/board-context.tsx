@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   createContext,
   useState,
@@ -15,6 +13,7 @@ import { Vector2d } from "konva/lib/types";
 import { BoardMode } from "@/types/board";
 type Props = {
   children: React.ReactNode;
+  syncedInitial: boolean;
 };
 
 export type UserCursor = {
@@ -63,13 +62,18 @@ interface BoardContextType {
   setCurrentTextId: (id: string | null) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   isPanning: React.MutableRefObject<boolean>;
+  synced: boolean;
+  setSynced: (synced: boolean) => void;
 }
 
 export const BoardContext = createContext<BoardContextType>(
   {} as BoardContextType
 );
 
-export const BoardContextProvider: React.FC<Props> = ({ children }) => {
+export const BoardContextProvider: React.FC<Props> = ({
+  children,
+  syncedInitial,
+}) => {
   const [stageRef, setStageRef] =
     useState<React.RefObject<Konva.Stage | null> | null>(null);
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
@@ -81,7 +85,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [shapeColor, setShapeColor] = useState("rgb(0,0,0)");
   const [textColor, setTextColor] = useState("rgb(0,0,0)");
   const [textFontSize, setTextFontSize] = useState<number>(24);
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(syncedInitial);
   const [localPoints, setLocalPoints] = useState<number[]>([]);
   const [stagePosition, setStagePosition] = useState<Vector2d>({ x: 0, y: 0 });
   const [editingText, setEditingText] = useState<string | null>(null);
@@ -89,6 +93,7 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
   const [currentTextId, setCurrentTextId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isPanning = useRef<boolean>(false);
+  const [synced, setSynced] = useState<boolean>(syncedInitial);
 
   const getCursorForMode = (mode: BoardMode): string => {
     switch (mode) {
@@ -183,6 +188,8 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       setCurrentTextId,
       textareaRef,
       isPanning,
+      synced,
+      setSynced,
     }),
     [
       stageRef,
@@ -207,6 +214,8 @@ export const BoardContextProvider: React.FC<Props> = ({ children }) => {
       textPosition,
       currentTextId,
       setBoardMode,
+      synced,
+      setSynced,
     ]
   );
 

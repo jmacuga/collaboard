@@ -9,6 +9,8 @@ import {
   DocHandleEphemeralMessagePayload,
   Change,
   Doc,
+  DocumentId,
+  StorageAdapterInterface,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -17,7 +19,6 @@ import { db } from "@/lib/indexed-db";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
-
 import { getChanges, getHeads } from "@automerge/automerge";
 /**
  * Service for synchronizing local documents with the server
@@ -61,9 +62,16 @@ export class ClientSyncService implements IClientSyncService {
       const docExists = await this.docExistsInIndexedDB();
 
       if (docExists) {
-        this.disconnect();
-        const handle = await this.findLocalDoc();
-        return handle;
+        try {
+          this.disconnect();
+          const handle = await this.findLocalDoc();
+          return handle;
+        } catch (error) {
+          console.log("Could not find local doc. Creating new from server");
+          await this.connect();
+          const handle = await this.findLocalDoc();
+          return handle;
+        }
       } else {
         console.log("Creating local doc");
         await this.connect();
@@ -261,91 +269,6 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Creates a local document from a server document
-   * @returns The document handle
-   */
-  public async createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null> {
-    try {
-      if (!this.repo) {
-        await this.initializeRepo();
-      }
-
-      const serverRepo = new Repo({
-        network: [
-          new BrowserWebSocketClientAdapter(
-            this.websocketURL
-          ) as any as NetworkAdapterInterface,
-        ],
-      });
-
-      const serverDoc = serverRepo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-      await serverDoc.whenReady();
-
-      const localDoc = this.repo!.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-      await localDoc.whenReady();
-
-      await localDoc.merge(serverDoc);
-      console.log("Server doc copied to local doc");
-
-      await this.addUrlToIndexedDB();
-
-      return localDoc;
-    } catch (error) {
-      console.error("Error creating local doc from server doc:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Synchronizes the local repository with the server
-   */
-  public async syncLocalRepo(): Promise<void> {
-    try {
-      const serverRepo = new Repo({
-        network: [
-          new BrowserWebSocketClientAdapter(
-            this.websocketURL
-          ) as any as NetworkAdapterInterface,
-        ],
-      });
-
-      const serverDoc = serverRepo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-
-      if (!serverDoc) {
-        throw new Error("Server doc is not initialized");
-      }
-
-      await serverDoc.whenReady();
-
-      if (!this.repo) {
-        throw new Error("Local repo is not initialized");
-      }
-
-      const localDoc = this.repo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-
-      if (!localDoc) {
-        throw new Error("Local doc is not initialized");
-      }
-
-      await localDoc.whenReady();
-
-      await localDoc.merge(serverDoc);
-      console.log("Local doc merged with server doc");
-    } catch (error) {
-      console.error("Error syncing local repo:", error);
-      throw error;
-    }
-  }
-
-  /**
    * Sets the online state
    * @param online Whether the client is online
    */
@@ -424,5 +347,15 @@ export class ClientSyncService implements IClientSyncService {
     );
     await serverDoc.whenReady();
     return await serverDoc.doc();
+  }
+
+  public async revertLocalChanges(): Promise<void> {
+    if (!this.repo.storageSubsystem) {
+      throw new Error("Storage subsystem is not initialized");
+    }
+    console.log("reverting local changes");
+    const docId = this.docUrl.split(":")[1];
+    this.repo.storageSubsystem.removeDoc(docId as DocumentId);
+    this.removeUrlFromIndexedDB();
   }
 }

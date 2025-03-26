@@ -7,11 +7,9 @@ import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { Doc } from "@automerge/automerge";
 import { Layer, Stage } from "react-konva";
 import { ShapeRenderer } from "@/components/board/components/shape-renderer";
-import { useRouter } from "next/router";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Eye } from "lucide-react";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
+import { PreviewCard } from "@/components/preview/preview-card";
+import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 
 interface BoardPageProps {
   boardId: string;
@@ -19,15 +17,10 @@ interface BoardPageProps {
 }
 
 export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
-  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
   const { width, height } = useWindowDimensions();
   const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
-
-  const handleBackToEditor = () => {
-    router.push(`/boards/${boardId}`);
-  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -52,57 +45,32 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <Card className="border-none shadow-none">
-        <CardHeader className="border-b bg-muted/50 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToEditor}
-                className="gap-2 transition-all hover:bg-primary hover:text-primary-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Editor
-              </Button>
-              <div className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-primary" />
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    Board Preview
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This is a preview of the merged board state.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative">
-            <Stage
-              width={width}
-              height={height}
-              x={0}
-              y={0}
-              className="bg-white/50 backdrop-blur-sm"
-            >
-              <Layer>
-                {previewDoc &&
-                  (
-                    Object.entries(previewDoc) as [string, KonvaNodeSchema][]
-                  ).map(([id, shape]) => (
+    <ClientSyncContext.Provider
+      value={{ clientSyncService: clientSyncServiceRef.current }}
+    >
+      <PreviewCard boardId={boardId} />
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="relative">
+          <Stage
+            width={width}
+            height={height}
+            x={0}
+            y={0}
+            className="bg-white/50 backdrop-blur-sm"
+          >
+            <Layer>
+              {previewDoc &&
+                (Object.entries(previewDoc) as [string, KonvaNodeSchema][]).map(
+                  ([id, shape]) => (
                     <ShapeRenderer key={id} id={id} shape={shape} />
-                  ))}
-              </Layer>
-            </Stage>
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/5 to-transparent" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                  )
+                )}
+            </Layer>
+          </Stage>
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/5 to-transparent" />
+        </div>
+      </div>
+    </ClientSyncContext.Provider>
   );
 }
 

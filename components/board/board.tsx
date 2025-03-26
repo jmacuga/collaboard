@@ -22,11 +22,13 @@ import { ShapeColorPalette } from "@/components/board/components/shape-color-pal
 import { LocalChangesAlert } from "@/components/board/components/local-changes-alert";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
+import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 
 export default function Board() {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);
+  const { width, height } = useWindowDimensions();
 
   const {
     brushColor,
@@ -111,8 +113,8 @@ export default function Board() {
         )}
         <div>
           <Stage
-            width={window.innerWidth}
-            height={window.innerHeight}
+            width={width}
+            height={height}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}

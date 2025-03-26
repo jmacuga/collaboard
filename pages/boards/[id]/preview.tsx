@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Eye } from "lucide-react";
+import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 
 interface BoardPageProps {
   boardId: string;
@@ -21,6 +22,7 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
+  const { width, height } = useWindowDimensions();
   const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
 
   const handleBackToEditor = () => {
@@ -43,7 +45,7 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
     };
 
     fetchLocalChanges();
-  }, []);
+  }, [docUrl]);
 
   if (!isMounted) {
     return null;
@@ -81,8 +83,8 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
         <CardContent className="p-0">
           <div className="relative">
             <Stage
-              width={window.innerWidth}
-              height={window.innerHeight}
+              width={width}
+              height={height}
               x={0}
               y={0}
               className="bg-white/50 backdrop-blur-sm"

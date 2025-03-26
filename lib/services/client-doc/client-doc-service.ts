@@ -10,7 +10,6 @@ import {
   Change,
   Doc,
   DocumentId,
-  StorageAdapterInterface,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -350,12 +349,8 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   public async revertLocalChanges(): Promise<void> {
-    if (!this.repo.storageSubsystem) {
-      throw new Error("Storage subsystem is not initialized");
-    }
-    console.log("reverting local changes");
     const docId = this.docUrl.split(":")[1];
-    this.repo.storageSubsystem.removeDoc(docId as DocumentId);
+    this.repo.storageSubsystem!.removeDoc(docId as DocumentId);
     this.removeUrlFromIndexedDB();
   }
 }

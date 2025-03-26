@@ -19,7 +19,7 @@ import { ActiveUsersList } from "@/components/board/components/active-users-list
 import { SyncStatusControl } from "@/components/board/components/sync-status-control";
 import { ResetPositionButton } from "@/components/board/components/reset-position-button";
 import { ShapeColorPalette } from "@/components/board/components/shape-color-palette";
-import { LocalChangesAlert } from "@/components/board/components/local-changes-alert";
+import { LocalChangesHeader } from "@/components/board/components/local-changes-header";
 import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
@@ -111,13 +111,13 @@ export default function Board({
 
   return (
     <div className="relative w-full h-full">
-      <LocalChangesAlert />
       <div className="flex flex-col h-screen">
         <BoardHeader
           boardName={board.name}
           teamName={team.name}
           teamId={team.id}
         />
+        <LocalChangesHeader />
         <div className="flex flex-1 md:overflow-hidden">
           <div className="z-10 flex-shrink">
             <SideToolbar teamId={team.id} />

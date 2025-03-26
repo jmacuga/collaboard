@@ -7,6 +7,9 @@ import {
   PeerId,
   NetworkAdapterInterface,
   DocHandleEphemeralMessagePayload,
+  Change,
+  Doc,
+  DocumentId,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -15,6 +18,7 @@ import { db } from "@/lib/indexed-db";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
+import { getChanges, getHeads } from "@automerge/automerge";
 /**
  * Service for synchronizing local documents with the server
  * Manages online/offline state and document synchronization
@@ -57,9 +61,16 @@ export class ClientSyncService implements IClientSyncService {
       const docExists = await this.docExistsInIndexedDB();
 
       if (docExists) {
-        this.disconnect();
-        const handle = await this.findLocalDoc();
-        return handle;
+        try {
+          this.disconnect();
+          const handle = await this.findLocalDoc();
+          return handle;
+        } catch (error) {
+          console.log("Could not find local doc. Creating new from server");
+          await this.connect();
+          const handle = await this.findLocalDoc();
+          return handle;
+        }
       } else {
         console.log("Creating local doc");
         await this.connect();
@@ -109,14 +120,75 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Checks if the client can connect to the server
-   * @returns Whether the client can connect
+   * Checks if two arrays contain exactly the same elements, regardless of order
+   * @param array1 - First array to compare
+   * @param array2 - Second array to compare
+   * @returns boolean indicating if arrays contain the same elements
    */
-  public canConnect(): boolean {
-    // Can connect if localDoc is not ahead of serverDoc
-    // This is a placeholder - actual implementation would need to check
-    // if there are local changes that conflict with server changes
-    return true;
+  private areArraysEqual(array1: string[], array2: string[]): boolean {
+    if (!array1.length || !array2.length || array1.length !== array2.length) {
+      return false;
+    }
+    const set = new Set(array1);
+    return (
+      array2.every((element) => set.has(element)) &&
+      array1.every((element) => set.has(element))
+    );
+  }
+
+  /**
+   * Creates a server repository instance
+   * @returns Repo instance configured for server connection
+   */
+  private createServerRepo(): Repo {
+    return new Repo({
+      network: [
+        new BrowserWebSocketClientAdapter(
+          this.websocketURL
+        ) as any as NetworkAdapterInterface,
+      ],
+    });
+  }
+
+  /**
+   * Gets document heads from a document handle
+   * @param docHandle - Document handle to get heads from
+   * @returns Promise resolving to array of document heads
+   */
+  private async getDocumentHeads(
+    docHandle: DocHandle<LayerSchema>
+  ): Promise<string[]> {
+    const doc = await docHandle.doc();
+    return getHeads(doc);
+  }
+
+  /**
+   * Checks if the client can connect to the server by comparing local and server document states
+   * @returns Promise resolving to boolean indicating if connection is possible
+   * @throws Error if document handles cannot be initialized
+   */
+  public async canConnect(): Promise<boolean> {
+    try {
+      this.disconnect();
+
+      const localDocHandle = this.repo.find<LayerSchema>(
+        this.docUrl as AnyDocumentId
+      );
+      await localDocHandle.whenReady();
+      const serverRepo = this.createServerRepo();
+      const serverDocHandle = serverRepo.find<LayerSchema>(
+        this.docUrl as AnyDocumentId
+      );
+      await serverDocHandle.whenReady();
+      const [localHeads, serverHeads] = await Promise.all([
+        this.getDocumentHeads(localDocHandle),
+        this.getDocumentHeads(serverDocHandle),
+      ]);
+      return this.areArraysEqual(localHeads, serverHeads);
+    } catch (error) {
+      console.error("Failed to check connection status:", error);
+      return false;
+    }
   }
 
   public getRepo(): Repo | null {
@@ -196,101 +268,12 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Creates a local document from a server document
-   * @returns The document handle
-   */
-  public async createLocalDocFromServerDoc(): Promise<DocHandle<LayerSchema> | null> {
-    try {
-      if (!this.repo) {
-        await this.initializeRepo();
-      }
-
-      const serverRepo = new Repo({
-        network: [
-          new BrowserWebSocketClientAdapter(
-            this.websocketURL
-          ) as any as NetworkAdapterInterface,
-        ],
-      });
-
-      const serverDoc = serverRepo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-      await serverDoc.whenReady();
-
-      const localDoc = this.repo!.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-      await localDoc.whenReady();
-
-      await localDoc.merge(serverDoc);
-      console.log("Server doc copied to local doc");
-
-      await this.addUrlToIndexedDB();
-
-      return localDoc;
-    } catch (error) {
-      console.error("Error creating local doc from server doc:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Synchronizes the local repository with the server
-   */
-  public async syncLocalRepo(): Promise<void> {
-    try {
-      const serverRepo = new Repo({
-        network: [
-          new BrowserWebSocketClientAdapter(
-            this.websocketURL
-          ) as any as NetworkAdapterInterface,
-        ],
-      });
-
-      const serverDoc = serverRepo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-
-      if (!serverDoc) {
-        throw new Error("Server doc is not initialized");
-      }
-
-      await serverDoc.whenReady();
-
-      if (!this.repo) {
-        throw new Error("Local repo is not initialized");
-      }
-
-      const localDoc = this.repo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
-      );
-
-      if (!localDoc) {
-        throw new Error("Local doc is not initialized");
-      }
-
-      await localDoc.whenReady();
-
-      await localDoc.merge(serverDoc);
-      console.log("Local doc merged with server doc");
-    } catch (error) {
-      console.error("Error syncing local repo:", error);
-      throw error;
-    }
-  }
-
-  /**
    * Sets the online state
    * @param online Whether the client is online
    */
-  public setOnline(online: boolean): void {
-    if (!this.repo) {
-      throw new Error("Local repo is not initialized");
-    }
-
+  public async setOnline(online: boolean): Promise<void> {
     if (online) {
-      this.connect();
+      await this.connect();
     } else {
       this.disconnect();
     }
@@ -341,15 +324,33 @@ export class ClientSyncService implements IClientSyncService {
    * Deletes a document
    */
   public deleteDoc(): void {
-    if (!this.repo) {
-      this.repo = new Repo({
-        network: [],
-        storage: new IndexedDBStorageAdapter(),
-        peerId: this.peerId,
-      });
-    }
-
     this.repo.delete(this.docUrl as AnyDocumentId);
+    this.removeUrlFromIndexedDB();
+  }
+
+  public async getLocalChanges(): Promise<Change[]> {
+    const localDocHandle = this.repo.find<LayerSchema>(
+      this.docUrl as AnyDocumentId
+    );
+    await localDocHandle.whenReady();
+    const localDoc = await localDocHandle.doc();
+    const serverDoc = await this.getServerDoc();
+    const changes = getChanges(serverDoc, localDoc);
+    return changes;
+  }
+
+  public async getServerDoc(): Promise<Doc<LayerSchema>> {
+    const serverRepo = this.createServerRepo();
+    const serverDoc = serverRepo.find<LayerSchema>(
+      this.docUrl as AnyDocumentId
+    );
+    await serverDoc.whenReady();
+    return await serverDoc.doc();
+  }
+
+  public async revertLocalChanges(): Promise<void> {
+    const docId = this.docUrl.split(":")[1];
+    this.repo.storageSubsystem!.removeDoc(docId as DocumentId);
     this.removeUrlFromIndexedDB();
   }
 }

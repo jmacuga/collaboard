@@ -65,7 +65,6 @@ const useText = () => {
 
   const addText = (e: KonvaEventObject<MouseEvent>) => {
     const point = getPointerPosition(e);
-    console.log("point", point);
     if (!point) {
       console.error("Could not get pointer position");
       return;

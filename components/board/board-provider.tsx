@@ -15,9 +15,11 @@ interface BoardState {
 export function BoardProvider({
   boardId,
   docUrl,
+  teamId,
 }: {
   boardId: string;
   docUrl: string;
+  teamId: string;
 }) {
   const [state, setState] = useState<BoardState>({
     clientSyncService: null,
@@ -66,7 +68,7 @@ export function BoardProvider({
           value={{ clientSyncService: state.clientSyncService }}
         >
           <BoardContextProvider syncedInitial={state.synced}>
-            <Board />
+            <Board teamId={teamId} />
           </BoardContextProvider>
         </ClientSyncContext.Provider>
       </RepoContext.Provider>

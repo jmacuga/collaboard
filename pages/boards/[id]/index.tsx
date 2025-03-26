@@ -6,10 +6,11 @@ import { withTeamRolePage } from "@/lib/middleware";
 interface BoardPageProps {
   boardId: string;
   docUrl: string;
+  teamId: string;
 }
 
-export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
-  return <BoardProvider boardId={boardId} docUrl={docUrl} />;
+export default function BoardPage({ boardId, docUrl, teamId }: BoardPageProps) {
+  return <BoardProvider boardId={boardId} docUrl={docUrl} teamId={teamId} />;
 }
 
 const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
@@ -24,6 +25,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
     props: {
       boardId,
       docUrl: board?.docUrl?.toString() || "",
+      teamId: board.teamId,
     },
   };
 };

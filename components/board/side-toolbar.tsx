@@ -28,14 +28,14 @@ type ToolbarItem = {
   href?: string;
 };
 
-function SideToolbar() {
+function SideToolbar({ teamId }: { teamId: string }) {
   const { mode, setBoardMode } = useContext(BoardContext);
   const toolbarItems: ToolbarItem[] = [
     {
       icon: <Home size={20} />,
       label: "Back to teams",
       mode: "teams",
-      href: "/teams",
+      href: `/teams/${teamId}/boards`,
     },
     {
       icon: <Brush size={20} />,

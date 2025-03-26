@@ -24,7 +24,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 
-export default function Board() {
+export default function Board({ teamId }: { teamId: string }) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);
@@ -106,7 +106,7 @@ export default function Board() {
       <LocalChangesAlert />
       <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
         <div className="z-10 flex-shrink">
-          <SideToolbar />
+          <SideToolbar teamId={teamId} />
         </div>
         {isOnline && activeUsers && activeUsers.length > 0 && (
           <ActiveUsersList users={activeUsers} />

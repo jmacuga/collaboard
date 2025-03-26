@@ -1,7 +1,7 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Board } from "@prisma/client";
+import { Board, MergeRequest } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
 import { AnyDocumentId, Repo } from "@automerge/automerge-repo";
@@ -119,5 +119,15 @@ export class BoardService {
       },
     });
     return board?.docUrl || null;
+  }
+
+  static async getMergeRequests(boardId: string): Promise<MergeRequest[]> {
+    const mergeRequests = await prisma.mergeRequest.findMany({
+      where: { boardId },
+      include: {
+        requester: true,
+      },
+    });
+    return mergeRequests;
   }
 }

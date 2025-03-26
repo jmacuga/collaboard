@@ -1,9 +1,8 @@
 "use client";
-import { LayoutDashboard, Users, Settings } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { LayoutDashboard, Users, Settings, GitPullRequest } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { ConnectionStates } from "mongoose";
 
 interface TeamNavProps {
   teamId: string;

@@ -4,20 +4,24 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClientSync } from "../context/client-doc-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
+import { useRouter } from "next/router";
 
 export const LocalChangesAlert = () => {
   const clientSyncService = useClientSync();
   const { networkStatus } = useNetworkStatusContext();
   const { synced, isOnline, setIsOnline, setSynced } = useContext(BoardContext);
+  const router = useRouter();
   const handleSyncChanges = async () => {
     if (networkStatus !== "ONLINE") {
       console.log("Cannot sync changes when offline");
       return;
     }
-    console.log("Syncing changes");
-    await clientSyncService.connect();
-    setIsOnline(true);
-    setSynced(true);
+    const boardId = router.query.id as string;
+    router.push(`/boards/${boardId}/preview`);
+    // console.log("Syncing changes");
+    // await clientSyncService.connect();
+    // setIsOnline(true);
+    // setSynced(true);
   };
 
   if (synced || networkStatus === "OFFLINE" || isOnline) {
@@ -37,6 +41,7 @@ export const LocalChangesAlert = () => {
           <div className="ml-3">
             <p className="text-sm text-yellow-700">
               You have local changes that need to be synced with the server.
+              Please create a Merge Request to sync your changes.
             </p>
             <div className="mt-2">
               <Button
@@ -45,7 +50,7 @@ export const LocalChangesAlert = () => {
                 onClick={handleSyncChanges}
                 className="bg-white hover:bg-yellow-50"
               >
-                Sync Changes
+                Go to Preview
               </Button>
             </div>
           </div>

@@ -7,6 +7,8 @@ import {
   PeerId,
   NetworkAdapterInterface,
   DocHandleEphemeralMessagePayload,
+  Change,
+  Doc,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -175,8 +177,6 @@ export class ClientSyncService implements IClientSyncService {
         this.getDocumentHeads(localDocHandle),
         this.getDocumentHeads(serverDocHandle),
       ]);
-      console.log("localHeads", localHeads);
-      console.log("serverHeads", serverHeads);
       return this.areArraysEqual(localHeads, serverHeads);
     } catch (error) {
       console.error("Failed to check connection status:", error);
@@ -350,9 +350,6 @@ export class ClientSyncService implements IClientSyncService {
    * @param online Whether the client is online
    */
   public async setOnline(online: boolean): Promise<void> {
-    if (!this.repo) {
-      throw new Error("Local repo is not initialized");
-    }
     if (online) {
       await this.connect();
     } else {
@@ -405,15 +402,27 @@ export class ClientSyncService implements IClientSyncService {
    * Deletes a document
    */
   public deleteDoc(): void {
-    if (!this.repo) {
-      this.repo = new Repo({
-        network: [],
-        storage: new IndexedDBStorageAdapter(),
-        peerId: this.peerId,
-      });
-    }
-
     this.repo.delete(this.docUrl as AnyDocumentId);
     this.removeUrlFromIndexedDB();
+  }
+
+  public async getLocalChanges(): Promise<Change[]> {
+    const localDocHandle = this.repo.find<LayerSchema>(
+      this.docUrl as AnyDocumentId
+    );
+    await localDocHandle.whenReady();
+    const localDoc = await localDocHandle.doc();
+    const serverDoc = await this.getServerDoc();
+    const changes = getChanges(serverDoc, localDoc);
+    return changes;
+  }
+
+  public async getServerDoc(): Promise<Doc<LayerSchema>> {
+    const serverRepo = this.createServerRepo();
+    const serverDoc = serverRepo.find<LayerSchema>(
+      this.docUrl as AnyDocumentId
+    );
+    await serverDoc.whenReady();
+    return await serverDoc.doc();
   }
 }

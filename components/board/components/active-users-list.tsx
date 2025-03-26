@@ -37,7 +37,7 @@ export const ActiveUsersList = ({ users }: ActiveUsersListProps) => {
   };
 
   return (
-    <div className="absolute top-4 right-4 z-20 bg-white/90 rounded-lg shadow-md p-2 border border-gray-200">
+    <div className="absolute top-14 right-4 z-20 bg-white/90 rounded-lg shadow-md p-2 border border-gray-200">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-700 flex items-center">
           <span className="mr-1">👥</span>

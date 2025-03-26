@@ -6,6 +6,7 @@ import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service"
 import { ClientSyncContext } from "./context/client-doc-context";
 import { BoardContextProvider } from "./context/board-context";
 import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
+import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 
 interface BoardState {
   clientSyncService: ClientSyncService | null;
@@ -13,13 +14,11 @@ interface BoardState {
 }
 
 export function BoardProvider({
-  boardId,
-  docUrl,
-  teamId,
+  board,
+  team,
 }: {
-  boardId: string;
-  docUrl: string;
-  teamId: string;
+  board: PrismaBoard;
+  team: PrismaTeam;
 }) {
   const [state, setState] = useState<BoardState>({
     clientSyncService: null,
@@ -34,7 +33,9 @@ export function BoardProvider({
         return;
       }
       isInitialized.current = true;
-      const clientSyncService = new ClientSyncService({ docUrl });
+      const clientSyncService = new ClientSyncService({
+        docUrl: board.docUrl as string,
+      });
       await clientSyncService.initializeRepo();
       if (await clientSyncService.canConnect()) {
         console.log("connecting");
@@ -55,7 +56,7 @@ export function BoardProvider({
         state.clientSyncService.disconnect();
       }
     };
-  }, [docUrl]);
+  }, [board.docUrl]);
 
   if (!state.clientSyncService) {
     return <div>Loading board...</div>;
@@ -68,7 +69,7 @@ export function BoardProvider({
           value={{ clientSyncService: state.clientSyncService }}
         >
           <BoardContextProvider syncedInitial={state.synced}>
-            <Board teamId={teamId} />
+            <Board team={team} board={board} />
           </BoardContextProvider>
         </ClientSyncContext.Provider>
       </RepoContext.Provider>

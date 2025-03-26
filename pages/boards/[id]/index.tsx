@@ -2,15 +2,19 @@ import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
 import { BoardProvider } from "@/components/board/board-provider";
 import { withTeamRolePage } from "@/lib/middleware";
+import { Team } from "@prisma/client";
+import { Board } from "@prisma/client";
+import { TeamService } from "@/lib/services/team/team-service";
 
 interface BoardPageProps {
-  boardId: string;
-  docUrl: string;
-  teamId: string;
+  board: string;
+  team: string;
 }
 
-export default function BoardPage({ boardId, docUrl, teamId }: BoardPageProps) {
-  return <BoardProvider boardId={boardId} docUrl={docUrl} teamId={teamId} />;
+export default function BoardPage({ board, team }: BoardPageProps) {
+  const parsedBoard = JSON.parse(board);
+  const parsedTeam = JSON.parse(team);
+  return <BoardProvider board={parsedBoard} team={parsedTeam} />;
 }
 
 const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
@@ -21,11 +25,16 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
       notFound: true,
     };
   }
+  const team = await TeamService.getTeamById(board.teamId);
+  if (!team) {
+    return {
+      notFound: true,
+    };
+  }
   return {
     props: {
-      boardId,
-      docUrl: board?.docUrl?.toString() || "",
-      teamId: board.teamId,
+      board: JSON.stringify(board),
+      team: JSON.stringify(team),
     },
   };
 };

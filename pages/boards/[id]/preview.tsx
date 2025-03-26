@@ -8,15 +8,19 @@ import { Doc } from "@automerge/automerge";
 import { Layer, Stage } from "react-konva";
 import { ShapeRenderer } from "@/components/board/components/shape-renderer";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
-import { PreviewCard } from "@/components/preview/preview-card";
+import { PreviewHeader } from "@/components/preview/preview-header";
 import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { TeamService } from "@/lib/services/team/team-service";
+import { BoardHeader } from "@/components/board/components/board-header";
 
 interface BoardPageProps {
-  boardId: string;
-  docUrl: string;
+  board: string;
+  team: string;
 }
 
-export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
+export default function BoardPage({ board, team }: BoardPageProps) {
+  const parsedBoard = JSON.parse(board);
+  const parsedTeam = JSON.parse(team);
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
   const { width, height } = useWindowDimensions();
@@ -25,7 +29,9 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
   useEffect(() => {
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
-      clientSyncServiceRef.current = new ClientSyncService({ docUrl });
+      clientSyncServiceRef.current = new ClientSyncService({
+        docUrl: parsedBoard.docUrl,
+      });
     }
     const fetchLocalChanges = async () => {
       if (!clientSyncServiceRef.current) return;
@@ -38,7 +44,7 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
     };
 
     fetchLocalChanges();
-  }, [docUrl]);
+  }, [parsedBoard.docUrl]);
 
   if (!isMounted) {
     return null;
@@ -48,7 +54,17 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
     <ClientSyncContext.Provider
       value={{ clientSyncService: clientSyncServiceRef.current }}
     >
-      <PreviewCard boardId={boardId} />
+      <BoardHeader
+        boardName={parsedBoard.name}
+        teamName={parsedTeam.name}
+        teamId={parsedTeam.id}
+      />
+      <PreviewHeader
+        boardId={parsedBoard.id}
+        teamId={parsedTeam.id}
+        boardName={parsedBoard.name}
+        teamName={parsedTeam.name}
+      />
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         <div className="relative">
           <Stage
@@ -77,17 +93,21 @@ export default function BoardPage({ boardId, docUrl }: BoardPageProps) {
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const boardId = params?.id as string;
   const board = await BoardService.getBoardById(boardId);
-
   if (!board || !board.docUrl) {
     return {
       notFound: true,
     };
   }
-
+  const team = await TeamService.getTeamById(board.teamId);
+  if (!team) {
+    return {
+      notFound: true,
+    };
+  }
   return {
     props: {
-      boardId,
-      docUrl: board.docUrl.toString(),
+      board: JSON.stringify(board),
+      team: JSON.stringify(team),
     },
   };
 };

@@ -33,7 +33,7 @@ function SideToolbar({ teamId }: { teamId: string }) {
   const toolbarItems: ToolbarItem[] = [
     {
       icon: <Home size={20} />,
-      label: "Back to teams",
+      label: "Back to boards",
       mode: "teams",
       href: `/teams/${teamId}/boards`,
     },
@@ -79,7 +79,7 @@ function SideToolbar({ teamId }: { teamId: string }) {
     <>
       <TooltipProvider>
         <div
-          className="fixed top-4 left-4 h-auto bg-gray-800 text-white shadow-lg rounded-3xl p-3 z-10"
+          className="fixed top-14 left-4 h-auto bg-gray-800 text-white shadow-lg rounded-3xl p-3 z-10"
           role="toolbar"
           aria-label="Canvas tools"
         >

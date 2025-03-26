@@ -23,8 +23,16 @@ import { LocalChangesAlert } from "@/components/board/components/local-changes-a
 import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
+import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
+import { BoardHeader } from "./components/board-header";
 
-export default function Board({ teamId }: { teamId: string }) {
+export default function Board({
+  team,
+  board,
+}: {
+  team: PrismaTeam;
+  board: PrismaBoard;
+}) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docUrl);
@@ -104,66 +112,73 @@ export default function Board({ teamId }: { teamId: string }) {
   return (
     <div className="relative w-full h-full">
       <LocalChangesAlert />
-      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
-        <div className="z-10 flex-shrink">
-          <SideToolbar teamId={teamId} />
-        </div>
-        {isOnline && activeUsers && activeUsers.length > 0 && (
-          <ActiveUsersList users={activeUsers} />
-        )}
-        <div>
-          <Stage
-            width={width}
-            height={height}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onClick={handleStageClick}
-            x={stagePosition.x}
-            y={stagePosition.y}
-          >
-            <Layer>
-              {isOnline &&
-                localDoc &&
-                objectEditors &&
-                Object.entries(objectEditors).map(([objectId, editors]) => (
-                  <ObjectEditIndicator
-                    key={`edit-indicator-${objectId}`}
-                    objectId={objectId}
-                    editors={editors}
-                    shape={localDoc[objectId]}
-                  />
-                ))}
-              {localDoc &&
-                (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
-                  ([id, shape]) => (
-                    <ShapeRenderer
-                      key={id}
-                      id={id}
-                      shape={shape}
-                      mode={mode as BoardMode}
-                      onMouseDown={handleShapeMouseDown}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onTransformEnd={handleTransformEnd}
-                      onTextDblClick={handleTextDblClick}
+      <div className="flex flex-col h-screen">
+        <BoardHeader
+          boardName={board.name}
+          teamName={team.name}
+          teamId={team.id}
+        />
+        <div className="flex flex-1 md:overflow-hidden">
+          <div className="z-10 flex-shrink">
+            <SideToolbar teamId={team.id} />
+          </div>
+          {isOnline && activeUsers && activeUsers.length > 0 && (
+            <ActiveUsersList users={activeUsers} />
+          )}
+          <div>
+            <Stage
+              width={width}
+              height={height}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onClick={handleStageClick}
+              x={stagePosition.x}
+              y={stagePosition.y}
+            >
+              <Layer>
+                {isOnline &&
+                  localDoc &&
+                  objectEditors &&
+                  Object.entries(objectEditors).map(([objectId, editors]) => (
+                    <ObjectEditIndicator
+                      key={`edit-indicator-${objectId}`}
+                      objectId={objectId}
+                      editors={editors}
+                      shape={localDoc[objectId]}
                     />
-                  )
+                  ))}
+                {localDoc &&
+                  (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
+                    ([id, shape]) => (
+                      <ShapeRenderer
+                        key={id}
+                        id={id}
+                        shape={shape}
+                        mode={mode as BoardMode}
+                        onMouseDown={handleShapeMouseDown}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onTransformEnd={handleTransformEnd}
+                        onTextDblClick={handleTextDblClick}
+                      />
+                    )
+                  )}
+                {localPoints && localPoints.length > 0 && (
+                  <Line
+                    key={currentLineId}
+                    points={localPoints}
+                    stroke={brushColor}
+                    strokeWidth={brushSize}
+                    lineCap="round"
+                    lineJoin="round"
+                    tension={0.5}
+                  />
                 )}
-              {localPoints && localPoints.length > 0 && (
-                <Line
-                  key={currentLineId}
-                  points={localPoints}
-                  stroke={brushColor}
-                  strokeWidth={brushSize}
-                  lineCap="round"
-                  lineJoin="round"
-                  tension={0.5}
-                />
-              )}
-              <Transformer ref={transformerRef} />
-            </Layer>
-          </Stage>
+                <Transformer ref={transformerRef} />
+              </Layer>
+            </Stage>
+          </div>
         </div>
       </div>
       {editingText !== null && textPosition && (

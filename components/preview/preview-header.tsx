@@ -5,29 +5,26 @@ import { Button } from "../ui/button";
 import { useRouter } from "next/router";
 import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 import { useContext } from "react";
+import { CreateMergeRequestDialog } from "./create-merge-request-dialog";
+import { Change } from "@automerge/automerge";
 
 export const PreviewHeader = ({
   boardId,
   teamId,
   boardName,
   teamName,
+  localChanges,
 }: {
   boardId: string;
   teamId: string;
   boardName: string;
   teamName: string;
+  localChanges: Change[];
 }) => {
   const router = useRouter();
   const { clientSyncService } = useContext(ClientSyncContext);
 
   const handleBackToEditor = () => {
-    router.push(`/boards/${boardId}`);
-  };
-
-  const handleMergeChanges = async () => {
-    console.log("merge changes");
-    if (!clientSyncService) return;
-    await clientSyncService.connect();
     router.push(`/boards/${boardId}`);
   };
 
@@ -63,7 +60,10 @@ export const PreviewHeader = ({
         </div>
       </div>
       <div className="flex gap-2 justify-end">
-        <Button onClick={handleMergeChanges}>Merge</Button>
+        <CreateMergeRequestDialog
+          boardId={boardId}
+          localChanges={localChanges}
+        />
         <Button variant="outline" onClick={handleRejectChanges}>
           Reject
         </Button>

@@ -126,6 +126,11 @@ export class BoardService {
       where: { boardId },
       include: {
         requester: true,
+        reviewRequests: {
+          include: {
+            reviewer: true,
+          },
+        },
       },
     });
     return mergeRequests;

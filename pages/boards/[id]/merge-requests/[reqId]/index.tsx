@@ -12,23 +12,35 @@ import { PreviewHeader } from "@/components/preview/preview-header";
 import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
+import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
 
-interface BoardPreviewPageProps {
+interface MergeRequestPageProps {
   board: string;
   team: string;
+  mergeRequest: string;
+  changes: string;
 }
 
-export default function BoardPreviewPage({
+export default function MergeRequestPage({
   board,
   team,
-}: BoardPreviewPageProps) {
+  mergeRequest,
+  changes,
+}: MergeRequestPageProps) {
   const parsedBoard = JSON.parse(board);
+  const parsedMergeRequest = JSON.parse(mergeRequest);
+  const parsedChanges = JSON.parse(changes);
   const parsedTeam = JSON.parse(team);
+  const decodedChanges = parsedChanges.map(
+    (change: string) => new Uint8Array(Buffer.from(change, "base64"))
+  );
+
+  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [localChanges, setLocalChanges] = useState<Change[]>([]);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
   const { width, height } = useWindowDimensions();
-  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
-  const [localChanges, setLocalChanges] = useState<Change[]>([]);
+
   useEffect(() => {
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
@@ -36,18 +48,15 @@ export default function BoardPreviewPage({
         docUrl: parsedBoard.docUrl,
       });
     }
-    const fetchLocalChanges = async () => {
+    const getPreviewDoc = async () => {
       if (!clientSyncServiceRef.current) return;
-
-      const localChanges = await clientSyncServiceRef.current.getLocalChanges();
-      setLocalChanges(localChanges);
       const serverDoc = await clientSyncServiceRef.current.getServerDoc();
       const serverDocCopy = automerge.clone(serverDoc);
-      const doc2 = automerge.applyChanges(serverDocCopy, localChanges)[0];
+      const doc2 = automerge.applyChanges(serverDocCopy, decodedChanges)[0];
       setPreviewDoc(doc2);
     };
 
-    fetchLocalChanges();
+    getPreviewDoc();
   }, [parsedBoard.docUrl]);
 
   if (!isMounted) {
@@ -62,13 +71,6 @@ export default function BoardPreviewPage({
         boardName={parsedBoard.name}
         teamName={parsedTeam.name}
         teamId={parsedTeam.id}
-      />
-      <PreviewHeader
-        boardId={parsedBoard.id}
-        teamId={parsedTeam.id}
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
-        localChanges={localChanges}
       />
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         <div className="relative">
@@ -97,6 +99,17 @@ export default function BoardPreviewPage({
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const boardId = params?.id as string;
+  const reqId = params?.reqId as string;
+  const result = await MergeRequestService.getMergeRequestById(reqId);
+  if (!result) {
+    return {
+      notFound: true,
+    };
+  }
+  const { mergeRequest, changes } = result;
+  const changesString = changes.map((change: Uint8Array) =>
+    Buffer.from(change).toString("base64")
+  );
   const board = await BoardService.getBoardById(boardId);
   if (!board || !board.docUrl) {
     return {
@@ -113,6 +126,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
+      mergeRequest: JSON.stringify(mergeRequest),
+      changes: JSON.stringify(changesString),
     },
   };
 };

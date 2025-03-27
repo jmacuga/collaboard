@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 export interface IChange extends mongoose.Document {
   _id: string;
-  data: BinaryType;
+  data: Buffer[];
 }
 
 const ChangeSchema = new mongoose.Schema({
-  data: { type: Object, required: true },
+  data: { type: [Buffer], required: true },
 });
 
 export const Change =

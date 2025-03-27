@@ -3,6 +3,7 @@ import { withTeamRolePage } from "@/lib/middleware";
 import { AppLayout } from "@/components/layouts/app-layout";
 import { BoardService } from "@/lib/services/board/board-service";
 import { TeamService } from "@/lib/services/team/team-service";
+import MergeRequestsList from "@/components/merge-requests/merge-requests-list";
 
 interface MergeRequestsPageProps {
   board: string;
@@ -18,23 +19,18 @@ export default function MergeRequestsPage({
   const parsedBoard = JSON.parse(board);
   const parsedMergeRequests = JSON.parse(mergeRequests);
   const parsedTeam = JSON.parse(team);
+
   return (
     <AppLayout>
       <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">
-            {parsedTeam.name} - {parsedBoard.name} - Merge Requests{" "}
-          </h1>
-          <div>
-            {parsedMergeRequests.map((mergeRequest: any) => (
-              <div key={mergeRequest.id}>
-                <h2>{mergeRequest.createdAt}</h2>
-                <h2>{mergeRequest.updatedAt}</h2>
-                <h2>{mergeRequest.status}</h2>
-                <h2>{mergeRequest.requester.name}</h2>
-              </div>
-            ))}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">
+              {parsedTeam.name} - {parsedBoard.name} - Merge Requests
+            </h1>
           </div>
+
+          <MergeRequestsList mergeRequests={parsedMergeRequests} />
         </div>
       </div>
     </AppLayout>

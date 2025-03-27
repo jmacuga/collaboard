@@ -130,7 +130,7 @@ function SideToolbar({ teamId }: { teamId: string }) {
         </div>
       </TooltipProvider>
 
-      <div className="fixed top-4 left-24 ml-2 z-10">
+      <div className="fixed top-36 left-24 ml-2 z-10">
         {mode === "drawing" && <DrawingToolbar />}
         {mode === "shapes" && <ShapesToolbar />}
         {mode === "text" && <TextToolbar />}

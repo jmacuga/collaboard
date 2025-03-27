@@ -3,15 +3,14 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Change, Doc } from "@automerge/automerge";
-import { Layer, Stage } from "react-konva";
-import { ShapeRenderer } from "@/components/board/components/shape-renderer";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { PreviewHeader } from "@/components/preview/preview-header";
 import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
+import BoardReadonly from "@/components/preview/board-readonly";
 
 interface BoardPreviewPageProps {
   board: string;
@@ -70,27 +69,7 @@ export default function BoardPreviewPage({
         teamName={parsedTeam.name}
         localChanges={localChanges}
       />
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="relative">
-          <Stage
-            width={width}
-            height={height}
-            x={0}
-            y={0}
-            className="bg-white/50 backdrop-blur-sm"
-          >
-            <Layer>
-              {previewDoc &&
-                (Object.entries(previewDoc) as [string, KonvaNodeSchema][]).map(
-                  ([id, shape]) => (
-                    <ShapeRenderer key={id} id={id} shape={shape} />
-                  )
-                )}
-            </Layer>
-          </Stage>
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/5 to-transparent" />
-        </div>
-      </div>
+      {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
   );
 }

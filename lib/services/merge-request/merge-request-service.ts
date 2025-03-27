@@ -77,6 +77,9 @@ export class MergeRequestService {
   ): Promise<{ mergeRequest: MergeRequest; changes: Uint8Array[] } | null> {
     const mergeRequest = await prisma.mergeRequest.findUnique({
       where: { id: mergeReqId },
+      include: {
+        requester: true,
+      },
     });
     if (!mergeRequest) {
       return null;
@@ -87,11 +90,9 @@ export class MergeRequestService {
       return null;
     }
     if (changes && changes.data && changes.data.length > 0) {
-      console.log("changes.data", changes.data);
       const result = changes.data.map(
         (change: Buffer) => new Uint8Array(change)
       );
-      console.log("result", result);
       return { mergeRequest, changes: result };
     } else {
       return null;

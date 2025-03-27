@@ -111,11 +111,6 @@ function SideToolbar({ teamId }: { teamId: string }) {
                       ) : (
                         <div className="flex flex-col items-center">
                           <div className="text-xl">{item.icon}</div>
-                          {mode === item.mode && (
-                            <span className="text-xs mt-1 font-medium opacity-80 animate-in fade-in duration-150">
-                              {item.label}
-                            </span>
-                          )}
                         </div>
                       )}
                     </li>
@@ -130,7 +125,7 @@ function SideToolbar({ teamId }: { teamId: string }) {
         </div>
       </TooltipProvider>
 
-      <div className="fixed top-36 left-24 ml-2 z-10">
+      <div className="fixed top-36 left-20 ml-2 z-10">
         {mode === "drawing" && <DrawingToolbar />}
         {mode === "shapes" && <ShapesToolbar />}
         {mode === "text" && <TextToolbar />}

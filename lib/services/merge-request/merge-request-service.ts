@@ -1,10 +1,19 @@
 import prisma from "@/db/prisma";
 import dbConnect from "@/db/dbConnect";
 import { Change } from "@/db/models/Change";
-import { MergeRequest } from "@prisma/client";
-import { CodeSquare } from "lucide-react";
-
+import { MergeRequest, ReviewRequest } from "@prisma/client";
 export class MergeRequestService {
+  static async getMergeRequest(boardId: string, userId: string) {
+    const mergeRequest = await prisma.mergeRequest.findFirst({
+      where: {
+        boardId,
+        requesterId: userId,
+        status: "PENDING",
+      },
+    });
+    return mergeRequest;
+  }
+
   static async createMergeRequest(
     userId: string,
     boardId: string,
@@ -12,6 +21,11 @@ export class MergeRequestService {
   ) {
     let mergeRequest: MergeRequest | null = null;
     try {
+      const existingMergeRequest = await this.getMergeRequest(boardId, userId);
+      if (existingMergeRequest) {
+        throw new Error("Merge request already exists");
+      }
+
       await prisma.$transaction(async (prismaTx) => {
         await dbConnect();
         const change = await Change.create({
@@ -72,13 +86,19 @@ export class MergeRequestService {
     }
   }
 
-  static async getMergeRequestById(
-    mergeReqId: string
-  ): Promise<{ mergeRequest: MergeRequest; changes: Uint8Array[] } | null> {
+  static async getMergeRequestById(mergeReqId: string): Promise<{
+    mergeRequest: MergeRequest & { reviewRequests: ReviewRequest[] };
+    changes: Uint8Array[];
+  } | null> {
     const mergeRequest = await prisma.mergeRequest.findUnique({
       where: { id: mergeReqId },
       include: {
         requester: true,
+        reviewRequests: {
+          include: {
+            reviewer: true,
+          },
+        },
       },
     });
     if (!mergeRequest) {

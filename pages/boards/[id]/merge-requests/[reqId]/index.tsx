@@ -11,12 +11,14 @@ import { BoardHeader } from "@/components/board/components/board-header";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
 import { MergeRequestHeader } from "@/components/preview/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
+import { getSession } from "next-auth/react";
 
 interface MergeRequestPageProps {
   board: string;
   team: string;
   mergeRequest: string;
   changes: string;
+  isUserReviewer: boolean;
 }
 
 export default function MergeRequestPage({
@@ -24,6 +26,7 @@ export default function MergeRequestPage({
   team,
   mergeRequest,
   changes,
+  isUserReviewer,
 }: MergeRequestPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedMergeRequest = JSON.parse(mergeRequest);
@@ -69,11 +72,8 @@ export default function MergeRequestPage({
         teamId={parsedTeam.id}
       />
       <MergeRequestHeader
-        boardId={parsedBoard.id}
-        teamId={parsedTeam.id}
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
         mergeRequest={parsedMergeRequest}
+        isUserReviewer={isUserReviewer}
         onAccept={() => Promise.resolve()}
         onReject={() => Promise.resolve()}
       />
@@ -82,9 +82,21 @@ export default function MergeRequestPage({
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  params,
+}) => {
   const boardId = params?.id as string;
   const reqId = params?.reqId as string;
+  const session = await getSession({ req });
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin",
+        permanent: false,
+      },
+    };
+  }
   const result = await MergeRequestService.getMergeRequestById(reqId);
   if (!result) {
     return {
@@ -92,6 +104,9 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     };
   }
   const { mergeRequest, changes } = result;
+  const isUserReviewer = mergeRequest.reviewRequests.some(
+    (reviewRequest) => reviewRequest.reviewerId === session.user.id
+  );
   const changesString = changes.map((change: Uint8Array) =>
     Buffer.from(change).toString("base64")
   );
@@ -113,6 +128,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       team: JSON.stringify(team),
       mergeRequest: JSON.stringify(mergeRequest),
       changes: JSON.stringify(changesString),
+      isUserReviewer,
     },
   };
 };

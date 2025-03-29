@@ -11,15 +11,19 @@ import { ClientSyncContext } from "@/components/board/context/client-doc-context
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import BoardReadonly from "@/components/preview/board-readonly";
+import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
+import { getSession } from "next-auth/react";
 
 interface BoardPreviewPageProps {
   board: string;
   team: string;
+  mergeRequestId: string;
 }
 
 export default function BoardPreviewPage({
   board,
   team,
+  mergeRequestId,
 }: BoardPreviewPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
@@ -28,6 +32,7 @@ export default function BoardPreviewPage({
   const { width, height } = useWindowDimensions();
   const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
   const [localChanges, setLocalChanges] = useState<Change[]>([]);
+
   useEffect(() => {
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
@@ -64,18 +69,28 @@ export default function BoardPreviewPage({
       />
       <PreviewHeader
         boardId={parsedBoard.id}
-        teamId={parsedTeam.id}
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
         localChanges={localChanges}
+        mergeRequestId={mergeRequestId}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  params,
+}) => {
   const boardId = params?.id as string;
+  const session = await getSession({ req });
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/api/auth/signin",
+        permanent: false,
+      },
+    };
+  }
   const board = await BoardService.getBoardById(boardId);
   if (!board || !board.docUrl) {
     return {
@@ -88,10 +103,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       notFound: true,
     };
   }
+
+  const mergeRequest = await MergeRequestService.getMergeRequest(
+    boardId,
+    session.user.id
+  );
   return {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
+      mergeRequestId: mergeRequest?.id,
     },
   };
 };

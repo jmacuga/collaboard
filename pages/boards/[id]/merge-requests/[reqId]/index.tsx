@@ -12,7 +12,9 @@ import { MergeRequestService } from "@/lib/services/merge-request/merge-request-
 import { MergeRequestHeader } from "@/components/preview/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
-
+import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
+import toast from "react-hot-toast";
+import { useRouter } from "next/router";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -51,6 +53,7 @@ export default function MergeRequestPage({
       if (!clientSyncServiceRef.current) return;
       const serverDoc = await clientSyncServiceRef.current.getServerDoc();
       const serverDocCopy = automerge.clone(serverDoc);
+      console.log("decoded changes", decodedChanges);
       const doc2 = automerge.applyChanges(serverDocCopy, decodedChanges)[0];
       setPreviewDoc(doc2);
     };
@@ -74,18 +77,13 @@ export default function MergeRequestPage({
       <MergeRequestHeader
         mergeRequest={parsedMergeRequest}
         isUserReviewer={isUserReviewer}
-        onAccept={() => Promise.resolve()}
-        onReject={() => Promise.resolve()}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({
-  req,
-  params,
-}) => {
+const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
   const boardId = params?.id as string;
   const reqId = params?.reqId as string;
   const session = await getSession({ req });
@@ -132,3 +130,8 @@ export const getServerSideProps: GetServerSideProps = async ({
     },
   };
 };
+
+export const getServerSideProps = withTeamRolePage(getServerSidePropsFunc, {
+  resourceType: "board",
+  role: ["Admin", "Member"],
+});

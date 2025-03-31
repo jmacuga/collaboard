@@ -44,7 +44,7 @@ app.prepare().then(() => {
         `http://${hostname}:${port}`
       );
       const docId = searchParams.get("doc") || "default-doc";
-      getOrCreateRepo(wss, hostname, docId);
+      getOrCreateRepo(docId, hostname, wss);
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit("connection", ws, request);
       });

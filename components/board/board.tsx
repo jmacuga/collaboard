@@ -55,6 +55,14 @@ export default function Board({
     textareaRef,
   } = useContext(BoardContext);
 
+  useEffect(() => {
+    const getServerChanges = async () => {
+      const serverChanges = await clientSyncService.getServerChanges();
+      console.log("serverChanges", serverChanges);
+    };
+    getServerChanges();
+  }, [localDoc]);
+
   const { activeUsers, objectEditors } = useActiveUsers();
   const { localPoints } = useDrawing();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);

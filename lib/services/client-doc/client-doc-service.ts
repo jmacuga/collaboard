@@ -10,6 +10,7 @@ import {
   Change,
   Doc,
   DocumentId,
+  getAllChanges,
 } from "@automerge/automerge-repo";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -179,12 +180,25 @@ export class ClientSyncService implements IClientSyncService {
       const serverDocHandle = serverRepo.find<LayerSchema>(
         this.docUrl as AnyDocumentId
       );
-      await serverDocHandle.whenReady();
-      const [localHeads, serverHeads] = await Promise.all([
-        this.getDocumentHeads(localDocHandle),
-        this.getDocumentHeads(serverDocHandle),
-      ]);
-      return this.areArraysEqual(localHeads, serverHeads);
+      const serverDoc = await serverDocHandle.doc();
+      const localDoc = await localDocHandle.doc();
+
+      const serverChanges = await getAllChanges(serverDoc);
+      const localChanges = await getAllChanges(localDoc);
+
+      console.log("local changes", localChanges);
+      console.log("server changes", serverChanges);
+      if (localChanges.length > serverChanges.length) {
+        return false;
+      }
+
+      if (localChanges.length == serverChanges.length) {
+        const localHeads = await this.getDocumentHeads(localDocHandle);
+        const serverHeads = await this.getDocumentHeads(serverDocHandle);
+        return this.areArraysEqual(localHeads, serverHeads);
+      }
+
+      return true;
     } catch (error) {
       console.error("Failed to check connection status:", error);
       return false;
@@ -326,6 +340,19 @@ export class ClientSyncService implements IClientSyncService {
   public deleteDoc(): void {
     this.repo.delete(this.docUrl as AnyDocumentId);
     this.removeUrlFromIndexedDB();
+  }
+
+  public async getServerChanges(): Promise<Change[]> {
+    const localDocHandle = this.repo.find<LayerSchema>(
+      this.docUrl as AnyDocumentId
+    );
+    await localDocHandle.whenReady();
+    const localDoc = await localDocHandle.doc();
+    const serverDoc = await this.getServerDoc();
+    console.log("localDoc", localDoc);
+    console.log("serverDoc", serverDoc);
+    const changes = getChanges(localDoc, serverDoc);
+    return changes;
   }
 
   public async getLocalChanges(): Promise<Change[]> {

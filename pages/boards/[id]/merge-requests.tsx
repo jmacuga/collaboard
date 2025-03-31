@@ -29,7 +29,6 @@ export default function MergeRequestsPage({
               {parsedTeam.name} - {parsedBoard.name} - Merge Requests
             </h1>
           </div>
-
           <MergeRequestsList mergeRequests={parsedMergeRequests} />
         </div>
       </div>

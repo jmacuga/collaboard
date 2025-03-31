@@ -5,6 +5,9 @@ import { withTeamRolePage } from "@/lib/middleware";
 import { Team } from "@prisma/client";
 import { Board } from "@prisma/client";
 import { TeamService } from "@/lib/services/team/team-service";
+import { AnyDocumentId } from "@automerge/automerge-repo";
+import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
+import { Repo } from "@automerge/automerge-repo";
 
 interface BoardPageProps {
   board: string;
@@ -25,6 +28,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
       notFound: true,
     };
   }
+
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {

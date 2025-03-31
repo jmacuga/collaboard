@@ -1,10 +1,13 @@
 import { WebSocketServer } from "ws";
-import { Repo } from "@automerge/automerge-repo";
+import { AnyDocumentId, DocumentId, Repo } from "@automerge/automerge-repo";
 import { NodeWSServerAdapter } from "@automerge/automerge-repo-network-websocket";
 import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
 
-const reposByDocId = new Map<string, Repo>();
 let SERVER_WSS: WebSocketServer | null = null;
+
+declare global {
+  var __serverRepo: Repo | undefined;
+}
 
 export async function createServerRepo(hostname: string, docId: string) {
   const mongoAdapter = new MongoDBStorageAdapter(
@@ -27,23 +30,22 @@ export async function createServerRepo(hostname: string, docId: string) {
       return requestedDocId === docId;
     },
   };
-
+  console.log("Creating new repo");
   return new Repo(config as any);
 }
 
 export async function getOrCreateRepo(
-  wss: WebSocketServer,
   docId: string,
-  hostname: string
+  hostname: string,
+  wss: WebSocketServer
 ): Promise<Repo> {
   if (SERVER_WSS === null) {
     SERVER_WSS = wss;
   }
-
-  if (reposByDocId.has(docId)) {
-    return reposByDocId.get(docId)!;
+  if (global.__serverRepo) {
+    return global.__serverRepo;
   }
   const repo = await createServerRepo(hostname, docId);
-  reposByDocId.set(docId, repo);
+  global.__serverRepo = repo;
   return repo;
 }

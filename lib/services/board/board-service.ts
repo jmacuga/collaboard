@@ -132,6 +132,9 @@ export class BoardService {
           },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     return mergeRequests;
   }

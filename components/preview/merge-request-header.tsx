@@ -1,21 +1,18 @@
 import { ArrowLeft, Eye } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
-import { Change } from "@automerge/automerge";
 import { MergeRequest, User } from "@prisma/client";
+import RejectButton from "../merge-requests/reject-button";
+import AcceptButton from "../merge-requests/accept-button";
 
 interface MergeRequestHeaderProps {
   mergeRequest: MergeRequest & { requester: User };
   isUserReviewer: boolean;
-  onAccept: () => Promise<void>;
-  onReject: () => Promise<void>;
 }
 
 export const MergeRequestHeader = ({
   mergeRequest,
   isUserReviewer,
-  onAccept,
-  onReject,
 }: MergeRequestHeaderProps) => {
   const router = useRouter();
 
@@ -50,23 +47,16 @@ export const MergeRequestHeader = ({
           </div>
         </div>
       </div>
-      {isUserReviewer && (
+      {isUserReviewer && mergeRequest.status === "OPEN" && (
         <div className="flex gap-2 justify-end">
-          <Button
-            variant="outline"
-            onClick={onReject}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/80"
-            aria-label="Reject merge request"
-          >
-            Reject Changes
-          </Button>
-          <Button
-            onClick={onAccept}
-            className="bg-green-500 text-white hover:bg-green-600"
-            aria-label="Accept merge request"
-          >
-            Accept Changes
-          </Button>
+          <RejectButton
+            mergeRequestId={mergeRequest.id}
+            boardId={mergeRequest.boardId}
+          />
+          <AcceptButton
+            mergeRequestId={mergeRequest.id}
+            boardId={mergeRequest.boardId}
+          />
         </div>
       )}
     </div>

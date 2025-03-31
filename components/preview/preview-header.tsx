@@ -56,12 +56,14 @@ export const PreviewHeader = ({
         </div>
       </div>
       {mergeRequestId ? (
-        <div className="flex gap-2 justify-end">
-          <Link href={`/boards/${boardId}/merge-requests/${mergeRequestId}`}>
-            <Button variant="outline">Go to Merge Request</Button>
-          </Link>
-          <Button>Update Merge Request</Button>
-          <Button variant="destructive">Reject and Close Merge Request</Button>
+        <div>
+          <p className="p-2"> You have an open merge request. </p>
+          <div className="flex gap-2 justify-end">
+            <Button>Update Merge Request</Button>
+            <Button variant="destructive">
+              Reject and Close Merge Request
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="flex gap-2 justify-end">

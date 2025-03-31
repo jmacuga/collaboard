@@ -3,6 +3,7 @@ import { withTeamRoleApi } from "@/lib/middleware";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   let boardId;
   let changes;

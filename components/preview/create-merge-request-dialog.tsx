@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,22 +10,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Change } from "@automerge/automerge";
+import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+
 export function CreateMergeRequestDialog({
   boardId,
   localChanges,
+  docUrl,
 }: {
   boardId: string;
   localChanges: Change[];
+  docUrl: string;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
 
   useEffect(() => {
-    console.log(localChanges);
-  }, [localChanges]);
+    if (!clientSyncServiceRef.current) {
+      clientSyncServiceRef.current = new ClientSyncService({
+        docUrl: docUrl,
+      });
+    }
+  }, [boardId]);
+
   const onSubmit = async () => {
     try {
       const changes = localChanges.map((change) =>
@@ -44,6 +53,7 @@ export function CreateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request created successfully");
+        clientSyncServiceRef.current?.revertLocalChanges();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;
@@ -73,9 +83,12 @@ export function CreateMergeRequestDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            Create a New Merge Request
+            Create Merge Request
           </DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogDescription>
+            Your local changes will be added to merge request and will be
+            pending for Admin approval.
+          </DialogDescription>
         </DialogHeader>
 
         <DialogFooter>

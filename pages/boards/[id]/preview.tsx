@@ -10,20 +10,17 @@ import { ClientSyncContext } from "@/components/board/context/client-doc-context
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import BoardReadonly from "@/components/preview/board-readonly";
-import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 
 interface BoardPreviewPageProps {
   board: string;
   team: string;
-  mergeRequestId: string;
 }
 
 export default function BoardPreviewPage({
   board,
   team,
-  mergeRequestId,
 }: BoardPreviewPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
@@ -69,7 +66,7 @@ export default function BoardPreviewPage({
       <PreviewHeader
         boardId={parsedBoard.id}
         localChanges={localChanges}
-        mergeRequestId={mergeRequestId}
+        docUrl={parsedBoard.docUrl}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
@@ -99,16 +96,10 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       notFound: true,
     };
   }
-
-  const mergeRequest = await MergeRequestService.getRequesterMergeRequest(
-    boardId,
-    session.user.id
-  );
   return {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
-      mergeRequestId: mergeRequest ? mergeRequest.id : null,
     },
   };
 };

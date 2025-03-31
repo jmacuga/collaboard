@@ -1,5 +1,4 @@
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { Eye } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
@@ -10,12 +9,12 @@ import { Change } from "@automerge/automerge";
 
 export const PreviewHeader = ({
   boardId,
-  mergeRequestId,
   localChanges,
+  docUrl,
 }: {
   boardId: string;
-  mergeRequestId: string;
   localChanges: Change[];
+  docUrl: string;
 }) => {
   const router = useRouter();
   const { clientSyncService } = useContext(ClientSyncContext);
@@ -55,27 +54,16 @@ export const PreviewHeader = ({
           </div>
         </div>
       </div>
-      {mergeRequestId ? (
-        <div>
-          <p className="p-2"> You have an open merge request. </p>
-          <div className="flex gap-2 justify-end">
-            <Button>Update Merge Request</Button>
-            <Button variant="destructive">
-              Reject and Close Merge Request
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex gap-2 justify-end">
-          <CreateMergeRequestDialog
-            boardId={boardId}
-            localChanges={localChanges}
-          />
-          <Button variant="outline" onClick={handleRejectChanges}>
-            Reject
-          </Button>
-        </div>
-      )}
+      <div className="flex gap-2 justify-end">
+        <CreateMergeRequestDialog
+          boardId={boardId}
+          localChanges={localChanges}
+          docUrl={docUrl}
+        />
+        <Button variant="outline" onClick={handleRejectChanges}>
+          Revert Changes
+        </Button>
+      </div>
     </div>
   );
 };

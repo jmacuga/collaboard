@@ -84,14 +84,6 @@ export class MergeRequestService {
     this.validateInput({ requesterId, boardId, changes });
 
     try {
-      const existingMergeRequest = await this.getRequesterMergeRequest(
-        boardId,
-        requesterId
-      );
-      if (existingMergeRequest) {
-        throw new MergeRequestError("Merge request already exists");
-      }
-
       return await prisma.$transaction(async (prismaTx) => {
         const change = await this.createChange(changes);
         const mergeRequest = await this.createMergeRequestRecord(

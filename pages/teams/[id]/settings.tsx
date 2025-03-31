@@ -5,6 +5,8 @@ import { withTeamRolePage } from "@/lib/middleware";
 import { LeaveTeamDialog } from "@/components/teams/leave-team-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { TeamNav } from "@/components/teams/team-nav";
+import TeamBreadcrumb from "@/components/boards/breadcrumb";
 
 interface SettingsPageProps {
   team: string;
@@ -26,39 +28,15 @@ export default function SettingsPage({
     (member: any) => member.role.name === "Admin"
   ).length;
 
-  if (adminsCount === 1 && isAdmin) {
-    return (
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">{parsedTeam.name} - Settings</h1>
-        </div>
-        <div className="space-y-6">
-          <Card>
-            <CardContent>
-              <div className="space-y-4">
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium">Leave Team</h3>
-                    <p className="text-sm text-muted-foreground">
-                      You are the only admin of this team. You cannot leave the
-                      team.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">{parsedTeam.name} - Settings</h1>
+      <div className="mb-8">
+        <TeamBreadcrumb team={parsedTeam} />
+        <h1 className="text-3xl font-bold">{parsedTeam.name} - Settings </h1>
       </div>
-
+      <div className="flex justify-between items-center mb-8">
+        <TeamNav teamId={parsedTeam.id as string} />
+      </div>
       <div className="space-y-6">
         <Card>
           <CardContent>
@@ -68,13 +46,17 @@ export default function SettingsPage({
                 <div>
                   <h3 className="text-lg font-medium">Leave Team</h3>
                   <p className="text-sm text-muted-foreground">
-                    Remove yourself from this team
+                    {adminsCount === 1 && isAdmin
+                      ? "You are the only admin of this team. You cannot leave the team."
+                      : "Remove yourself from this team"}
                   </p>
                 </div>
-                <LeaveTeamDialog
-                  teamId={parsedTeam.id}
-                  teamName={parsedTeam.name}
-                />
+                {!(adminsCount === 1 && isAdmin) && (
+                  <LeaveTeamDialog
+                    teamId={parsedTeam.id}
+                    teamName={parsedTeam.name}
+                  />
+                )}
               </div>
             </div>
           </CardContent>

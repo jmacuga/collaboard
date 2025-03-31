@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layouts/app-layout";
 import { BoardService } from "@/lib/services/board/board-service";
 import { TeamService } from "@/lib/services/team/team-service";
 import MergeRequestsList from "@/components/merge-requests/merge-requests-list";
+import TeamBreadcrumb from "@/components/boards/breadcrumb";
 
 interface MergeRequestsPageProps {
   board: string;
@@ -25,9 +26,11 @@ export default function MergeRequestsPage({
       <div className="container mx-auto py-6">
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">
-              {parsedTeam.name} - {parsedBoard.name} - Merge Requests
-            </h1>
+            <TeamBreadcrumb
+              team={parsedTeam}
+              board={parsedBoard}
+              item="Merge Requests"
+            />
           </div>
           <MergeRequestsList mergeRequests={parsedMergeRequests} />
         </div>

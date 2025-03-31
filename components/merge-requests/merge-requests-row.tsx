@@ -65,13 +65,13 @@ export default function MergeRequestsRow({
       <TableCell>{new Date(request.updatedAt).toLocaleString()}</TableCell>
       <TableCell>
         <div className="flex flex-row gap-2">
-          {
+          {(request.status == "PENDING" || request.status == "OPEN") && (
             <Link
               href={`/boards/${request.boardId}/merge-requests/${request.id}`}
             >
               <Button variant="outline">View</Button>
             </Link>
-          }
+          )}
           {isUserReviewer &&
             (request.status == "PENDING" || request.status == "OPEN") && (
               <>

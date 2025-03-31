@@ -20,6 +20,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!result) {
     return res.status(404).json({ message: "Merge request not found" });
   }
+  const isUserReviewer = await MergeRequestService.isUserReviewer(
+    userId,
+    id as string
+  );
+  if (!isUserReviewer) {
+    return res.status(403).json({ message: "You are not a reviewer" });
+  }
   try {
     await MergeRequestService.accept(userId, id as string);
     return res.status(200).json({ message: "Merge request accepted" });

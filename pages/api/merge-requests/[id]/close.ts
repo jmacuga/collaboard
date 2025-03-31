@@ -18,24 +18,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const userId = session.user.id;
   const result = await MergeRequestService.getMergeRequestById(id as string);
+  const requesterId = result?.mergeRequest.requesterId;
+
   if (!result) {
     return res.status(404).json({ message: "Merge request not found" });
   }
-  const isUserReviewer = await MergeRequestService.isUserReviewer(
-    userId,
-    id as string
-  );
-  if (!isUserReviewer) {
+  if (requesterId !== userId) {
     return res
       .status(403)
-      .json({ message: "You are not a reviewer of this merge request" });
+      .json({ message: "You are not the author of this merge request" });
   }
   try {
-    await MergeRequestService.reject(userId, id as string);
-    return res.status(200).json({ message: "Merge request rejected" });
+    await MergeRequestService.close(id as string);
+    return res.status(200).json({ message: "Merge request closed" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Failed to reject merge request" });
+    return res.status(500).json({ message: "Failed to close merge request" });
   }
 }
 

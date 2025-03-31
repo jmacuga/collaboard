@@ -8,6 +8,7 @@ import {
 import { ReviewRequest, User } from "@prisma/client";
 import { MergeRequest } from "@prisma/client";
 import MergeRequestsRow from "./merge-requests-row";
+import { useSession } from "next-auth/react";
 
 interface MergeRequestsListProps {
   mergeRequests: MergeRequestExtended[];
@@ -19,6 +20,7 @@ type MergeRequestExtended = MergeRequest & {
 };
 
 const MergeRequestsList = ({ mergeRequests }: MergeRequestsListProps) => {
+  const session = useSession();
   if (!mergeRequests.length) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -42,7 +44,11 @@ const MergeRequestsList = ({ mergeRequests }: MergeRequestsListProps) => {
         </TableHeader>
         <TableBody>
           {mergeRequests.map((request) => (
-            <MergeRequestsRow key={request.id} request={request} />
+            <MergeRequestsRow
+              key={request.id}
+              request={request}
+              isUserRequester={request.requesterId === session.data?.user.id}
+            />
           ))}
         </TableBody>
       </Table>

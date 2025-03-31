@@ -100,7 +100,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     };
   }
 
-  const mergeRequest = await MergeRequestService.getMergeRequest(
+  const mergeRequest = await MergeRequestService.getRequesterMergeRequest(
     boardId,
     session.user.id
   );

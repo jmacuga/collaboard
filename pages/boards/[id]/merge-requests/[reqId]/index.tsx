@@ -13,14 +13,13 @@ import { MergeRequestHeader } from "@/components/preview/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
-import toast from "react-hot-toast";
-import { useRouter } from "next/router";
 interface MergeRequestPageProps {
   board: string;
   team: string;
   mergeRequest: string;
   changes: string;
   isUserReviewer: boolean;
+  isUserRequester: boolean;
 }
 
 export default function MergeRequestPage({
@@ -29,6 +28,7 @@ export default function MergeRequestPage({
   mergeRequest,
   changes,
   isUserReviewer,
+  isUserRequester,
 }: MergeRequestPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedMergeRequest = JSON.parse(mergeRequest);
@@ -53,7 +53,6 @@ export default function MergeRequestPage({
       if (!clientSyncServiceRef.current) return;
       const serverDoc = await clientSyncServiceRef.current.getServerDoc();
       const serverDocCopy = automerge.clone(serverDoc);
-      console.log("decoded changes", decodedChanges);
       const doc2 = automerge.applyChanges(serverDocCopy, decodedChanges)[0];
       setPreviewDoc(doc2);
     };
@@ -77,6 +76,7 @@ export default function MergeRequestPage({
       <MergeRequestHeader
         mergeRequest={parsedMergeRequest}
         isUserReviewer={isUserReviewer}
+        isUserRequester={isUserRequester}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
@@ -105,6 +105,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
   const isUserReviewer = mergeRequest.reviewRequests.some(
     (reviewRequest) => reviewRequest.reviewerId === session.user.id
   );
+  const isUserRequester = mergeRequest.requesterId === session.user.id;
   const changesString = changes.map((change: Uint8Array) =>
     Buffer.from(change).toString("base64")
   );
@@ -127,6 +128,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       mergeRequest: JSON.stringify(mergeRequest),
       changes: JSON.stringify(changesString),
       isUserReviewer,
+      isUserRequester,
     },
   };
 };

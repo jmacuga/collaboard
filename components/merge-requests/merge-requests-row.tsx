@@ -7,6 +7,7 @@ import RejectButton from "./reject-button";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { useSession } from "next-auth/react";
+import CloseButton from "./close-button";
 
 const statusColors = {
   OPEN: "bg-blue-100 text-blue-800",
@@ -17,11 +18,13 @@ const statusColors = {
 
 export default function MergeRequestsRow({
   request,
+  isUserRequester,
 }: {
   request: MergeRequest & {
     reviewRequests: ReviewRequest & { reviewer: User }[];
     requester: User;
   };
+  isUserRequester: boolean;
 }) {
   const session = useSession();
   const user = session.data?.user;
@@ -85,6 +88,12 @@ export default function MergeRequestsRow({
                 />
               </>
             )}
+          {request.status == "OPEN" && isUserRequester && (
+            <CloseButton
+              mergeRequestId={request.id}
+              boardId={request.boardId}
+            />
+          )}
         </div>
       </TableCell>
     </TableRow>

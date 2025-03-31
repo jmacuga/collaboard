@@ -4,15 +4,18 @@ import { useRouter } from "next/router";
 import { MergeRequest, User } from "@prisma/client";
 import RejectButton from "../merge-requests/reject-button";
 import AcceptButton from "../merge-requests/accept-button";
+import CloseButton from "../merge-requests/close-button";
 
 interface MergeRequestHeaderProps {
   mergeRequest: MergeRequest & { requester: User };
   isUserReviewer: boolean;
+  isUserRequester: boolean;
 }
 
 export const MergeRequestHeader = ({
   mergeRequest,
   isUserReviewer,
+  isUserRequester,
 }: MergeRequestHeaderProps) => {
   const router = useRouter();
 
@@ -36,8 +39,9 @@ export const MergeRequestHeader = ({
         <div className="flex items-center gap-2">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              Merge Request Review
+              Merge Request Result Preview
             </h1>
+
             <p className="text-sm text-muted-foreground mt-1">
               Created by: {mergeRequest.requester.email}
             </p>
@@ -47,18 +51,26 @@ export const MergeRequestHeader = ({
           </div>
         </div>
       </div>
-      {isUserReviewer && mergeRequest.status === "OPEN" && (
-        <div className="flex gap-2 justify-end">
-          <RejectButton
+      <div className="flex gap-2 justify-end">
+        {isUserReviewer && mergeRequest.status === "OPEN" && (
+          <>
+            <RejectButton
+              mergeRequestId={mergeRequest.id}
+              boardId={mergeRequest.boardId}
+            />
+            <AcceptButton
+              mergeRequestId={mergeRequest.id}
+              boardId={mergeRequest.boardId}
+            />
+          </>
+        )}
+        {mergeRequest.status == "OPEN" && isUserRequester && (
+          <CloseButton
             mergeRequestId={mergeRequest.id}
             boardId={mergeRequest.boardId}
           />
-          <AcceptButton
-            mergeRequestId={mergeRequest.id}
-            boardId={mergeRequest.boardId}
-          />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

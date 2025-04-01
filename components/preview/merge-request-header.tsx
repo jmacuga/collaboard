@@ -1,11 +1,11 @@
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
 import { MergeRequest, User } from "@prisma/client";
 import RejectButton from "../merge-requests/reject-button";
 import AcceptButton from "../merge-requests/accept-button";
 import CloseButton from "../merge-requests/close-button";
-
+import Link from "next/link";
 interface MergeRequestHeaderProps {
   mergeRequest: MergeRequest & { requester: User };
   isUserReviewer: boolean;
@@ -65,10 +65,17 @@ export const MergeRequestHeader = ({
           </>
         )}
         {mergeRequest.status == "OPEN" && isUserRequester && (
-          <CloseButton
-            mergeRequestId={mergeRequest.id}
-            boardId={mergeRequest.boardId}
-          />
+          <>
+            <CloseButton
+              mergeRequestId={mergeRequest.id}
+              boardId={mergeRequest.boardId}
+            />
+            <Link
+              href={`/boards/${mergeRequest.boardId}/merge-requests/${mergeRequest.id}/update`}
+            >
+              <Button variant="outline">Update</Button>
+            </Link>
+          </>
         )}
       </div>
     </div>

@@ -2,13 +2,7 @@ import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
 import { BoardProvider } from "@/components/board/board-provider";
 import { withTeamRolePage } from "@/lib/middleware";
-import { Team } from "@prisma/client";
-import { Board } from "@prisma/client";
 import { TeamService } from "@/lib/services/team/team-service";
-import { AnyDocumentId } from "@automerge/automerge-repo";
-import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
-import { Repo } from "@automerge/automerge-repo";
-
 interface BoardPageProps {
   board: string;
   team: string;

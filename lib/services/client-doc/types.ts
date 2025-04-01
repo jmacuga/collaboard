@@ -21,3 +21,8 @@ export interface IClientSyncService {
   deleteDoc(): void;
   revertLocalChanges(): Promise<void>;
 }
+
+export interface StorageConfig {
+  database: string;
+  store: string;
+}

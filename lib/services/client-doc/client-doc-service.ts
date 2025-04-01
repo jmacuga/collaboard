@@ -1,5 +1,5 @@
 "use client";
-import { IClientSyncService } from "./types";
+import { IClientSyncService, StorageConfig } from "./types";
 import {
   Repo,
   AnyDocumentId,
@@ -37,7 +37,13 @@ export class ClientSyncService implements IClientSyncService {
    * Creates a new ClientSyncService
    * @param docUrl The URL of the document to sync
    */
-  constructor({ docUrl }: { docUrl: string }) {
+  constructor({
+    docUrl,
+    storageConfig,
+  }: {
+    docUrl: string;
+    storageConfig?: StorageConfig;
+  }) {
     this.docUrl = docUrl;
     this.websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
     this.networkAdapter = new BrowserWebSocketClientAdapter(
@@ -48,7 +54,10 @@ export class ClientSyncService implements IClientSyncService {
     this.connected = false;
     this.repo = new Repo({
       network: [],
-      storage: new IndexedDBStorageAdapter(),
+      storage: new IndexedDBStorageAdapter(
+        storageConfig?.database,
+        storageConfig?.store
+      ),
       peerId: this.peerId,
     });
   }
@@ -141,7 +150,7 @@ export class ClientSyncService implements IClientSyncService {
    * Creates a server repository instance
    * @returns Repo instance configured for server connection
    */
-  private createServerRepo(): Repo {
+  public createServerRepo(): Repo {
     return new Repo({
       network: [
         new BrowserWebSocketClientAdapter(
@@ -353,8 +362,6 @@ export class ClientSyncService implements IClientSyncService {
     await localDocHandle.whenReady();
     const localDoc = await localDocHandle.doc();
     const serverDoc = await this.getServerDoc();
-    console.log("localDoc", localDoc);
-    console.log("serverDoc", serverDoc);
     const changes = getChanges(localDoc, serverDoc);
     return changes;
   }
@@ -370,10 +377,10 @@ export class ClientSyncService implements IClientSyncService {
     return changes;
   }
 
-  public async getServerDoc(): Promise<Doc<LayerSchema>> {
+  public async getServerDoc(docUrl?: string): Promise<Doc<LayerSchema>> {
     const serverRepo = this.createServerRepo();
     const serverDoc = serverRepo.find<LayerSchema>(
-      this.docUrl as AnyDocumentId
+      docUrl ? (docUrl as AnyDocumentId) : (this.docUrl as AnyDocumentId)
     );
     await serverDoc.whenReady();
     return await serverDoc.doc();

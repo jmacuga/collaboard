@@ -5,7 +5,7 @@ import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "@/components/board/context/client-doc-context";
-import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
+import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useText } from "@/components/board/hooks/use-text";
@@ -29,9 +29,11 @@ import { BoardHeader } from "./components/board-header";
 export default function Board({
   team,
   board,
+  hideActiveUsers = false,
 }: {
   team: PrismaTeam;
   board: PrismaBoard;
+  hideActiveUsers?: boolean;
 }) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
@@ -54,14 +56,6 @@ export default function Board({
     setCurrentTextId,
     textareaRef,
   } = useContext(BoardContext);
-
-  useEffect(() => {
-    const getServerChanges = async () => {
-      const serverChanges = await clientSyncService.getServerChanges();
-      console.log("serverChanges", serverChanges);
-    };
-    getServerChanges();
-  }, [localDoc]);
 
   const { activeUsers, objectEditors } = useActiveUsers();
   const { localPoints } = useDrawing();
@@ -118,75 +112,69 @@ export default function Board({
   const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
 
   return (
-    <div className="relative w-full h-full">
-      <div className="flex flex-col h-screen">
-        <BoardHeader
-          boardName={board.name}
-          teamName={team.name}
-          teamId={team.id}
-        />
-        <LocalChangesHeader />
-        <div className="flex flex-1 md:overflow-hidden">
-          <div className="z-10 flex-shrink">
-            <SideToolbar teamId={team.id} />
-          </div>
-          {isOnline && activeUsers && activeUsers.length > 0 && (
-            <ActiveUsersList users={activeUsers} />
-          )}
-          <div>
-            <Stage
-              width={width}
-              height={height}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onClick={handleStageClick}
-              x={stagePosition.x}
-              y={stagePosition.y}
-            >
-              <Layer>
-                {isOnline &&
-                  localDoc &&
-                  objectEditors &&
-                  Object.entries(objectEditors).map(([objectId, editors]) => (
-                    <ObjectEditIndicator
-                      key={`edit-indicator-${objectId}`}
-                      objectId={objectId}
-                      editors={editors}
-                      shape={localDoc[objectId]}
-                    />
-                  ))}
-                {localDoc &&
-                  (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
-                    ([id, shape]) => (
-                      <ShapeRenderer
-                        key={id}
-                        id={id}
-                        shape={shape}
-                        mode={mode as BoardMode}
-                        onMouseDown={handleShapeMouseDown}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onTransformEnd={handleTransformEnd}
-                        onTextDblClick={handleTextDblClick}
-                      />
-                    )
-                  )}
-                {localPoints && localPoints.length > 0 && (
-                  <Line
-                    key={currentLineId}
-                    points={localPoints}
-                    stroke={brushColor}
-                    strokeWidth={brushSize}
-                    lineCap="round"
-                    lineJoin="round"
-                    tension={0.5}
+    <>
+      <LocalChangesHeader />
+      <div className="flex flex-1 md:overflow-hidden">
+        <div className="z-10 flex-shrink">
+          <SideToolbar teamId={team.id} />
+        </div>
+        {!hideActiveUsers &&
+          isOnline &&
+          activeUsers &&
+          activeUsers.length > 0 && <ActiveUsersList users={activeUsers} />}
+        <div>
+          <Stage
+            width={width}
+            height={height}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onClick={handleStageClick}
+            x={stagePosition.x}
+            y={stagePosition.y}
+          >
+            <Layer>
+              {isOnline &&
+                localDoc &&
+                objectEditors &&
+                Object.entries(objectEditors).map(([objectId, editors]) => (
+                  <ObjectEditIndicator
+                    key={`edit-indicator-${objectId}`}
+                    objectId={objectId}
+                    editors={editors}
+                    shape={localDoc[objectId]}
                   />
+                ))}
+              {localDoc &&
+                (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
+                  ([id, shape]) => (
+                    <ShapeRenderer
+                      key={id}
+                      id={id}
+                      shape={shape}
+                      mode={mode as BoardMode}
+                      onMouseDown={handleShapeMouseDown}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      onTextDblClick={handleTextDblClick}
+                    />
+                  )
                 )}
-                <Transformer ref={transformerRef} />
-              </Layer>
-            </Stage>
-          </div>
+              {localPoints && localPoints.length > 0 && (
+                <Line
+                  key={currentLineId}
+                  points={localPoints}
+                  stroke={brushColor}
+                  strokeWidth={brushSize}
+                  lineCap="round"
+                  lineJoin="round"
+                  tension={0.5}
+                />
+              )}
+              <Transformer ref={transformerRef} />
+            </Layer>
+          </Stage>
         </div>
       </div>
       {editingText !== null && textPosition && (
@@ -221,13 +209,8 @@ export default function Board({
           />
         </div>
       )}
-      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
-        {showResetButton && (
-          <ResetPositionButton onClick={resetStagePosition} />
-        )}
-        <SyncStatusControl />
-      </div>
+      {showResetButton && <ResetPositionButton onClick={resetStagePosition} />}
       <ShapeColorPalette />
-    </div>
+    </>
   );
 }

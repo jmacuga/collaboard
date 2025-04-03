@@ -4,7 +4,7 @@ import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "@/components/board/context/client-doc-context";
+import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";

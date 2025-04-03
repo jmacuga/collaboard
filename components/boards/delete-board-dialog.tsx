@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 
 interface DeleteBoardDialogProps {
   boardId: string;

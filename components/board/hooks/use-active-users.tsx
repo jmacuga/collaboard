@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useContext, useRef } from "react";
 import { useHandle } from "@automerge/automerge-repo-react-hooks";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { v4 as uuidv4 } from "uuid";
 import {
   useLocalAwareness,

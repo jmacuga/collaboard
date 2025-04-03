@@ -1,11 +1,11 @@
 import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Doc } from "@automerge/automerge";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";

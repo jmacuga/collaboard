@@ -3,7 +3,7 @@ import { BoardContext } from "../context/board-context";
 import { colorTools } from "./color-palette";
 import ColorIcon from "../color-icon";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Palette } from "lucide-react";

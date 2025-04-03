@@ -1,7 +1,7 @@
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
 import { useContext, useEffect } from "react";

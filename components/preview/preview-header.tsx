@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import { Eye } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import { useContext } from "react";
 import { CreateMergeRequestDialog } from "./create-merge-request-dialog";
 import { Change } from "@automerge/automerge";

@@ -117,7 +117,6 @@ export class ClientSyncService implements IClientSyncService {
    * Adds a document URL to IndexedDB
    */
   private async addUrlToIndexedDB(): Promise<void> {
-    console.log("Adding url to indexedDB", this.docUrl);
     await db.docUrls.add({ docUrl: this.docUrl });
   }
 
@@ -125,7 +124,6 @@ export class ClientSyncService implements IClientSyncService {
    * Removes a document URL from IndexedDB
    */
   private async removeUrlFromIndexedDB(): Promise<void> {
-    console.log("Removing url from indexedDB", this.docUrl);
     await db.docUrls.delete(this.docUrl);
   }
 
@@ -195,8 +193,6 @@ export class ClientSyncService implements IClientSyncService {
       const serverChanges = await getAllChanges(serverDoc);
       const localChanges = await getAllChanges(localDoc);
 
-      console.log("local changes", localChanges);
-      console.log("server changes", serverChanges);
       if (localChanges.length > serverChanges.length) {
         return false;
       }
@@ -205,9 +201,6 @@ export class ClientSyncService implements IClientSyncService {
         const localHeads = await this.getDocumentHeads(localDocHandle);
         const serverHeads = await this.getDocumentHeads(serverDocHandle);
         const headsEqual = this.areArraysEqual(localHeads, serverHeads);
-        console.log("localHeads", localHeads);
-        console.log("serverHeads", serverHeads);
-        console.log("headsEqual", headsEqual);
         return headsEqual;
       }
 

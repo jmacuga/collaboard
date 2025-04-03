@@ -14,7 +14,7 @@ import { toast } from "react-hot-toast";
 import { getChanges } from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { ClientSyncContext } from "../board/context/client-doc-context";
+import { ClientSyncContext } from "../board/context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 
 export function UpdateMergeRequestDialog({

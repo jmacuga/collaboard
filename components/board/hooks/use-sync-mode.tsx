@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
-import { useClientSync } from "@/components/board/context/client-doc-context";
+import { useClientSync } from "@/components/board/context/client-sync-context";
 
 const useSyncMode = () => {
   const clientSyncService = useClientSync();

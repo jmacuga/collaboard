@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { ClientSyncContext } from "../board/context/client-doc-context";
+import { ClientSyncContext } from "../board/context/client-sync-context";
 
 export function RevertDialog({ boardId }: { boardId: string }) {
   const [open, setOpen] = useState(false);

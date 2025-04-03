@@ -6,7 +6,7 @@ import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { KonvaEventObject } from "konva/lib/Node";
 

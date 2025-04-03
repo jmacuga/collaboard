@@ -2,8 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import Board from "@/components/board/board";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import { BoardContextProvider } from "@/components/board/context/board-context";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { LayerSchema } from "@/types/KonvaNodeSchema";

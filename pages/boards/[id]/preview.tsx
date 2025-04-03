@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
@@ -11,7 +11,7 @@ import { BoardHeader } from "@/components/board/components/board-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 interface BoardPreviewPageProps {
   board: string;
   team: string;

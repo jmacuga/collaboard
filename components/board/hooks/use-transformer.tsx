@@ -4,7 +4,7 @@ import { useContext, useEffect, useRef, useCallback } from "react";
 import Konva from "konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 

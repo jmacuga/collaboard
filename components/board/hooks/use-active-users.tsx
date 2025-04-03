@@ -34,8 +34,8 @@ const getRandomColor = () => {
 
 export const useActiveUsers = () => {
   const clientSyncService = useClientSync();
-  const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
-  const handle = useHandle<LayerSchema>(docUrl);
+  const docId = clientSyncService.getDocId() as AnyDocumentId;
+  const handle = useHandle<LayerSchema>(docId);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const { isOnline, selectedShapeIds } = useContext(BoardContext);
   const { data: session } = useSession();

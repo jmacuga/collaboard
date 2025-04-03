@@ -20,11 +20,11 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 export function UpdateMergeRequestDialog({
   boardId,
   mergeRequestId,
-  serverDocUrl,
+  serverDocId,
 }: {
   boardId: string;
   mergeRequestId: string;
-  serverDocUrl: string;
+  serverDocId: string;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -37,7 +37,7 @@ export function UpdateMergeRequestDialog({
     if (!clientSyncService) return [];
     const serverDoc = await clientSyncService
       ?.createServerRepo()
-      .find<LayerSchema>(serverDocUrl as AnyDocumentId)
+      .find<LayerSchema>(serverDocId as AnyDocumentId)
       .doc();
     return getChanges(serverDoc, doc);
   };

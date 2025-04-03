@@ -350,7 +350,7 @@ export class MergeRequestService {
       throw new MergeRequestError("Server repo not found");
     }
 
-    const handle = serverRepo.find(board.docUrl as AnyDocumentId);
+    const handle = serverRepo.find(board.automergeDocId as AnyDocumentId);
     handle.update((doc) => {
       return A.applyChanges(doc, changes)[0];
     });

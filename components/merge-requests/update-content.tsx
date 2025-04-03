@@ -28,27 +28,27 @@ export function MergeRequestUpdateContent({
   const initialLoad = useRef(true);
   const [clientSyncService, setClientSyncService] =
     useState<ClientSyncService | null>(null);
-  const [updateDocUrl, setUpdateDocUrl] = useState<string | null>(
-    router.query.updateDocUrl as string
+  const [updateDocId, setUpdateDocId] = useState<string | null>(
+    router.query.updateDocId as string
   );
 
   useEffect(() => {
     if (initialLoad.current) {
-      let docUrl = updateDocUrl;
-      if (!docUrl) {
+      let docId = updateDocId;
+      if (!docId) {
         const repo = new Repo({
           storage: new IndexedDBStorageAdapter(),
         });
         const docHandle = repo.create<LayerSchema>();
-        docUrl = docHandle.documentId as string;
+        docId = docHandle.documentId as string;
       }
 
       setClientSyncService(
         new ClientSyncService({
-          docUrl: docUrl,
+          docId: docId,
         })
       );
-      setUpdateDocUrl(docUrl);
+      setUpdateDocId(docId);
       initialLoad.current = false;
     }
 
@@ -57,18 +57,18 @@ export function MergeRequestUpdateContent({
         clientSyncService.deleteDoc();
       }
     };
-  }, [updateDocUrl]);
+  }, [updateDocId]);
 
   useEffect(() => {
     const applyChangesToUpdateDoc = async () => {
       if (initialLoad.current || !clientSyncService) return;
       const serverRepo = clientSyncService.createServerRepo();
       const serverDoc = await serverRepo
-        .find<LayerSchema>(board.docUrl as AnyDocumentId)
+        .find<LayerSchema>(board.automergeDocId as AnyDocumentId)
         .doc();
       const docHandle = await clientSyncService
         .getRepo()
-        ?.find<LayerSchema>(updateDocUrl as AnyDocumentId);
+        ?.find<LayerSchema>(updateDocId as AnyDocumentId);
       docHandle?.update((doc) => {
         doc = automerge.merge(doc, serverDoc);
         return automerge.applyChanges(doc, changes)[0];
@@ -95,7 +95,7 @@ export function MergeRequestUpdateContent({
               />
               <MergeRequestUpdateHeader
                 boardId={board.id}
-                serverDocUrl={board.docUrl as string}
+                serverDocId={board.automergeDocId as string}
               />
               <Board team={team} board={board} hideActiveUsers={true} />
             </div>

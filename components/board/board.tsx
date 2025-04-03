@@ -37,8 +37,8 @@ export default function Board({
   hideActiveUsers?: boolean;
 }) {
   const clientSyncService = useClientSync();
-  const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
-  const [localDoc] = useDocument<LayerSchema>(docUrl);
+  const docId = clientSyncService.getDocId() as AnyDocumentId;
+  const [localDoc] = useDocument<LayerSchema>(docId);
   const { width, height } = useWindowDimensions();
 
   const {

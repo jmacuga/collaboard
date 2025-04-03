@@ -41,7 +41,7 @@ export const MergeRequestHeader = ({
         <div className="flex items-center gap-2">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              Merge Request Result Preview.
+              Merge Request Result Preview
             </h1>
             <Badge
               className={`${statusColors[mergeRequest.status]} font-medium`}

@@ -46,7 +46,7 @@ export default function MergeRequestPage({
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
       clientSyncServiceRef.current = new ClientSyncService({
-        docUrl: parsedBoard.docUrl,
+        docId: parsedBoard.automergeDocId,
       });
     }
     const getPreviewDoc = async () => {
@@ -58,7 +58,7 @@ export default function MergeRequestPage({
     };
 
     getPreviewDoc();
-  }, [parsedBoard.docUrl]);
+  }, [parsedBoard.automergeDocId]);
 
   if (!isMounted) {
     return null;
@@ -110,7 +110,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     Buffer.from(change).toString("base64")
   );
   const board = await BoardService.getBoardById(boardId);
-  if (!board || !board.docUrl) {
+  if (!board || !board.automergeDocId) {
     return {
       notFound: true,
     };

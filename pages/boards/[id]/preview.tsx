@@ -12,6 +12,7 @@ import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import { ClientSyncContext } from "@/components/board/context/client-sync-context";
+
 interface BoardPreviewPageProps {
   board: string;
   team: string;
@@ -34,7 +35,7 @@ export default function BoardPreviewPage({
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
       clientSyncServiceRef.current = new ClientSyncService({
-        docUrl: parsedBoard.docUrl,
+        docId: parsedBoard.automergeDocId,
       });
     }
     const fetchLocalChanges = async () => {
@@ -49,7 +50,7 @@ export default function BoardPreviewPage({
     };
 
     fetchLocalChanges();
-  }, [parsedBoard.docUrl]);
+  }, [parsedBoard.docId]);
 
   if (!isMounted) {
     return null;
@@ -67,7 +68,7 @@ export default function BoardPreviewPage({
       <PreviewHeader
         boardId={parsedBoard.id}
         localChanges={localChanges}
-        docUrl={parsedBoard.docUrl}
+        docId={parsedBoard.docId}
         isAdmin={isAdmin}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
@@ -87,7 +88,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     };
   }
   const board = await BoardService.getBoardById(boardId);
-  if (!board || !board.docUrl) {
+  if (!board || !board.automergeDocId) {
     return {
       notFound: true,
     };

@@ -37,7 +37,7 @@ export class BoardService {
         data: {
           name: data.name,
           teamId: data.teamId,
-          docUrl: handle.url,
+          automergeDocId: handle.documentId,
           isMergeRequestRequired: false,
         },
       });
@@ -60,7 +60,7 @@ export class BoardService {
     if (!serverRepo) {
       throw new Error("Server repo not found");
     }
-    serverRepo.delete(board.docUrl as AnyDocumentId);
+    serverRepo.delete(board.automergeDocId as AnyDocumentId);
     await prisma.board.update({
       where: { id: boardId },
       data: { archived: true },
@@ -90,7 +90,7 @@ export class BoardService {
     return board || null;
   }
 
-  static async getBoardDocUrl(
+  static async getBoardDocId(
     boardId: string,
     includeArchived: boolean = false
   ): Promise<string | null> {
@@ -100,7 +100,7 @@ export class BoardService {
         ...(includeArchived ? {} : { archived: false }),
       },
     });
-    return board?.docUrl || null;
+    return board?.automergeDocId || null;
   }
 
   static async getMergeRequests(boardId: string): Promise<MergeRequest[]> {

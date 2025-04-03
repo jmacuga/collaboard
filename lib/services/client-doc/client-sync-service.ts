@@ -25,7 +25,7 @@ import { getChanges, getHeads } from "@automerge/automerge";
  * Manages online/offline state and document synchronization
  */
 export class ClientSyncService implements IClientSyncService {
-  private readonly docUrl: string;
+  private readonly docId: string;
   private repo: Repo;
   private readonly websocketURL: string;
   private networkAdapter: BrowserWebSocketClientAdapter;
@@ -35,16 +35,16 @@ export class ClientSyncService implements IClientSyncService {
 
   /**
    * Creates a new ClientSyncService
-   * @param docUrl The URL of the document to sync
+   * @param docId The ID of the document to sync
    */
   constructor({
-    docUrl,
+    docId,
     storageConfig,
   }: {
-    docUrl: string;
+    docId: string;
     storageConfig?: StorageConfig;
   }) {
-    this.docUrl = docUrl;
+    this.docId = docId;
     this.websocketURL = NEXT_PUBLIC_WEBSOCKET_URL;
     this.networkAdapter = new BrowserWebSocketClientAdapter(
       this.websocketURL,
@@ -85,7 +85,7 @@ export class ClientSyncService implements IClientSyncService {
         console.log("Creating local doc");
         await this.connect();
         const handle = await this.findLocalDoc();
-        await this.addUrlToIndexedDB();
+        await this.addIdToIndexedDB();
         return handle;
       }
     } catch (error) {
@@ -95,11 +95,11 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Finds a local document by URL
+   * Finds a local document by ID
    * @returns The document handle
    */
   private async findLocalDoc(): Promise<DocHandle<LayerSchema>> {
-    const docHandle = this.repo.find<LayerSchema>(this.docUrl as AnyDocumentId);
+    const docHandle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
     await docHandle.whenReady();
     return docHandle;
   }
@@ -109,22 +109,22 @@ export class ClientSyncService implements IClientSyncService {
    * @returns Whether the document exists
    */
   private async docExistsInIndexedDB(): Promise<boolean> {
-    const docExists = await db.docUrls.get(this.docUrl);
-    return !!docExists && docExists.docUrl === this.docUrl;
+    const docExists = await db.docIds.get(this.docId);
+    return !!docExists && docExists.docId === this.docId;
   }
 
   /**
-   * Adds a document URL to IndexedDB
+   * Adds a document ID to IndexedDB
    */
-  private async addUrlToIndexedDB(): Promise<void> {
-    await db.docUrls.add({ docUrl: this.docUrl });
+  private async addIdToIndexedDB(): Promise<void> {
+    await db.docIds.add({ docId: this.docId });
   }
 
   /**
    * Removes a document URL from IndexedDB
    */
-  private async removeUrlFromIndexedDB(): Promise<void> {
-    await db.docUrls.delete(this.docUrl);
+  private async removeIdFromIndexedDB(): Promise<void> {
+    await db.docIds.delete(this.docId);
   }
 
   /**
@@ -180,12 +180,12 @@ export class ClientSyncService implements IClientSyncService {
       this.disconnect();
 
       const localDocHandle = this.repo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
+        this.getDocId() as AnyDocumentId
       );
       await localDocHandle.whenReady();
       const serverRepo = this.createServerRepo();
       const serverDocHandle = serverRepo.find<LayerSchema>(
-        this.docUrl as AnyDocumentId
+        this.getDocId() as AnyDocumentId
       );
       const serverDoc = await serverDocHandle.doc();
       const localDoc = await localDocHandle.doc();
@@ -272,18 +272,22 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Gets the document URL
-   * @returns The document URL
+   * Gets the document ID
+   * @returns The document ID
    */
+  public getDocId(): string {
+    return this.docId;
+  }
+
   public getDocUrl(): string {
-    return this.docUrl;
+    return `automerge:${this.docId}`;
   }
 
   /**
    * Updates server data
-   * @param docUrl The URL of the document to update
+   * @param docId The ID of the document to update
    */
-  public updateServerData(docUrl: string): void {
+  public updateServerData(docId: string): void {
     throw new Error("Method not implemented.");
   }
 
@@ -303,7 +307,7 @@ export class ClientSyncService implements IClientSyncService {
     try {
       await this.connect();
 
-      const handle = this.repo.find<LayerSchema>(this.docUrl as AnyDocumentId);
+      const handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
       await handle.whenReady();
 
       const activeUsers: Set<string> = new Set();
@@ -344,13 +348,13 @@ export class ClientSyncService implements IClientSyncService {
    * Deletes a document
    */
   public deleteDoc(): void {
-    this.repo.delete(this.docUrl as AnyDocumentId);
-    this.removeUrlFromIndexedDB();
+    this.repo.delete(this.docId as AnyDocumentId);
+    this.removeIdFromIndexedDB();
   }
 
   public async getServerChanges(): Promise<Change[]> {
     const localDocHandle = this.repo.find<LayerSchema>(
-      this.docUrl as AnyDocumentId
+      this.docId as AnyDocumentId
     );
     await localDocHandle.whenReady();
     const localDoc = await localDocHandle.doc();
@@ -361,7 +365,7 @@ export class ClientSyncService implements IClientSyncService {
 
   public async getLocalChanges(): Promise<Change[]> {
     const localDocHandle = this.repo.find<LayerSchema>(
-      this.docUrl as AnyDocumentId
+      this.docId as AnyDocumentId
     );
     await localDocHandle.whenReady();
     const localDoc = await localDocHandle.doc();
@@ -370,18 +374,17 @@ export class ClientSyncService implements IClientSyncService {
     return changes;
   }
 
-  public async getServerDoc(docUrl?: string): Promise<Doc<LayerSchema>> {
+  public async getServerDoc(docId?: string): Promise<Doc<LayerSchema>> {
     const serverRepo = this.createServerRepo();
     const serverDoc = serverRepo.find<LayerSchema>(
-      docUrl ? (docUrl as AnyDocumentId) : (this.docUrl as AnyDocumentId)
+      docId ? (docId as AnyDocumentId) : (this.docId as AnyDocumentId)
     );
     await serverDoc.whenReady();
     return await serverDoc.doc();
   }
 
   public async revertLocalChanges(): Promise<void> {
-    const docId = this.docUrl.split(":")[1];
-    this.repo.storageSubsystem!.removeDoc(docId as DocumentId);
-    this.removeUrlFromIndexedDB();
+    this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
+    this.removeIdFromIndexedDB();
   }
 }

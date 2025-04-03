@@ -16,7 +16,7 @@ export interface IClientSyncService {
   getRepo(): Repo | null;
   connect(): void;
   disconnect(): void;
-  updateServerData(docUrl: string): void;
+  updateServerData(docId: string): void;
   getActiveUsers(): Promise<string[]>;
   deleteDoc(): void;
   revertLocalChanges(): Promise<void>;

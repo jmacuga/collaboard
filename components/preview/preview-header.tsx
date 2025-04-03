@@ -2,24 +2,24 @@ import { ArrowLeft } from "lucide-react";
 import { Eye } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
-import { ClientSyncContext } from "@/components/board/context/client-sync-context";
-import { useContext } from "react";
-import { CreateMergeRequestDialog } from "./create-merge-request-dialog";
 import { Change } from "@automerge/automerge";
-import { MergeDialog } from "./merge-dialog";
 import { RevertDialog } from "./revert-dialog";
+import { MergeDialog } from "./merge-dialog";
+import { CreateMergeRequestDialog } from "./create-merge-request-dialog";
 
-export const PreviewHeader = ({
-  boardId,
-  localChanges,
-  docUrl,
-  isAdmin,
-}: {
+interface PreviewHeaderProps {
   boardId: string;
   localChanges: Change[];
-  docUrl: string;
+  docId: string;
   isAdmin: boolean;
-}) => {
+}
+
+export function PreviewHeader({
+  boardId,
+  localChanges,
+  docId,
+  isAdmin,
+}: PreviewHeaderProps) {
   const router = useRouter();
 
   const handleBackToEditor = () => {
@@ -63,4 +63,4 @@ export const PreviewHeader = ({
       </div>
     </div>
   );
-};
+}

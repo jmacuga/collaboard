@@ -3,8 +3,8 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { withTeamRoleApi } from "@/lib/middleware";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const docUrl = await BoardService.getBoardDocUrl(req.query?.id as string);
-  return res.status(200).json({ docUrl });
+  const docId = await BoardService.getBoardDocId(req.query?.id as string);
+  return res.status(200).json({ docId });
 }
 
 export default withTeamRoleApi(handler, {

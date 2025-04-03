@@ -36,7 +36,7 @@ export function BoardProvider({
       }
       isInitialized.current = true;
       const clientSyncService = new ClientSyncService({
-        docUrl: board.docUrl as string,
+        docId: board.automergeDocId as string,
       });
       await clientSyncService.initializeRepo();
       if (await clientSyncService.canConnect()) {
@@ -58,7 +58,7 @@ export function BoardProvider({
         state.clientSyncService.disconnect();
       }
     };
-  }, [board.docUrl]);
+  }, [board.automergeDocId]);
 
   if (!state.clientSyncService) {
     return <div>Loading board...</div>;

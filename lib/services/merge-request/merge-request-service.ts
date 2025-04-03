@@ -10,7 +10,7 @@ import {
 } from "@prisma/client";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import * as A from "@automerge/automerge";
-
+import { getOrCreateRepo } from "@/lib/automerge-server";
 export class MergeRequestError extends Error {
   constructor(message: string) {
     super(message);
@@ -345,7 +345,7 @@ export class MergeRequestService {
       throw new MergeRequestError("Board not found");
     }
 
-    const serverRepo = global.__serverRepo;
+    const serverRepo = await getOrCreateRepo();
     if (!serverRepo) {
       throw new MergeRequestError("Server repo not found");
     }

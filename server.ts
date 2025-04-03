@@ -3,6 +3,7 @@ import { WebSocketServer } from "ws";
 import { parse } from "url";
 import next from "next";
 import { getOrCreateRepo } from "@/lib/automerge-server";
+import { Repo } from "@automerge/automerge-repo";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
@@ -13,6 +14,12 @@ const app = next({
 
   customServer: true,
 });
+
+declare global {
+  var __serverRepo: Repo | undefined;
+  var __serverWSS: WebSocketServer | undefined;
+}
+
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -25,7 +32,7 @@ app.prepare().then(() => {
     });
   });
 
-  const wss = new WebSocketServer({
+  global.__serverWSS = new WebSocketServer({
     noServer: true,
   });
 
@@ -33,24 +40,23 @@ app.prepare().then(() => {
     if (!request.url) return socket.destroy();
 
     const { pathname } = new URL(request.url, `http://${hostname}:${port}`);
+    getOrCreateRepo();
 
     if (pathname === "/_next/webpack-hmr") {
       return;
     }
-
     if (pathname === "/api/socket") {
-      const { searchParams } = new URL(
-        request.url || "",
-        `http://${hostname}:${port}`
-      );
-      const docId = searchParams.get("doc") || "default-doc";
-      getOrCreateRepo(docId, hostname, wss);
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit("connection", ws, request);
+      if (!global.__serverWSS) {
+        throw new Error("WebSocket server not initialized");
+      }
+      global.__serverWSS.handleUpgrade(request, socket, head, (ws) => {
+        if (!global.__serverWSS) {
+          throw new Error("WebSocket server not initialized");
+        }
+        global.__serverWSS.emit("connection", ws, request);
       });
       return;
     }
-
     socket.destroy();
   });
 

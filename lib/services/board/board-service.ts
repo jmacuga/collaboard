@@ -3,9 +3,8 @@ import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Board, MergeRequest } from "@prisma/client";
 import prisma from "@/db/prisma";
-import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
-import { AnyDocumentId, Repo } from "@automerge/automerge-repo";
-
+import { AnyDocumentId } from "@automerge/automerge-repo";
+import { getOrCreateRepo } from "@/lib/automerge-server";
 export class BoardServiceError extends Error {
   constructor(message: string) {
     super(message);
@@ -29,22 +28,16 @@ export class BoardService {
   }): Promise<Board | null> {
     try {
       await dbConnect();
-      const mongoAdapter = new MongoDBStorageAdapter(
-        process.env.MONGODB_URI || "",
-        {
-          dbName: process.env.MONGODB_DB_NAME,
-          collectionName: process.env.DOCS_COLLECTION_NAME,
-          keyStorageStrategy: "array",
-        }
-      );
-      const serverRepo = new Repo({ storage: mongoAdapter, network: [] });
+      const serverRepo = await getOrCreateRepo();
+      if (!serverRepo) {
+        throw new Error("Server repo not found");
+      }
       const handle = serverRepo.create<LayerSchema>();
-      const docUrl = handle.url;
       const board = await prisma.board.create({
         data: {
           name: data.name,
           teamId: data.teamId,
-          docUrl: docUrl,
+          docUrl: handle.url,
           isMergeRequestRequired: false,
         },
       });
@@ -57,28 +50,17 @@ export class BoardService {
 
   static async archive(boardId: string): Promise<void> {
     let board: Board | null = null;
-
     board = await prisma.board.findUnique({
       where: { id: boardId, archived: false },
     });
-
     if (!board) {
       throw new BoardNotFoundError(boardId);
     }
-
-    const url = board.docUrl;
-    const mongoAdapter = new MongoDBStorageAdapter(
-      process.env.MONGODB_URI || "",
-      {
-        dbName: "collaboard",
-        collectionName: "docs",
-        keyStorageStrategy: "array",
-      }
-    );
-    const serverRepo = new Repo({
-      storage: mongoAdapter,
-    });
-    serverRepo.delete(url as AnyDocumentId);
+    const serverRepo = await getOrCreateRepo();
+    if (!serverRepo) {
+      throw new Error("Server repo not found");
+    }
+    serverRepo.delete(board.docUrl as AnyDocumentId);
     await prisma.board.update({
       where: { id: boardId },
       data: { archived: true },

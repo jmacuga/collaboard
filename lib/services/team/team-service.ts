@@ -406,15 +406,19 @@ export class TeamService {
     return board?.team || null;
   }
 
+  static async isAllBoardsArchived(teamId: string): Promise<boolean> {
+    const boards = await prisma.board.findMany({
+      where: { teamId, archived: false },
+    });
+    return boards.length === 0;
+  }
+
   static async deleteTeam(teamId: string): Promise<boolean> {
     const team = await this.getTeamById(teamId);
     if (!team) {
       throw new TeamNotFoundError(teamId);
     }
-    const boards = await prisma.board.findMany({
-      where: { teamId },
-    });
-    if (boards.length > 0) {
+    if (!(await this.isAllBoardsArchived(teamId))) {
       throw new TeamHasBoardsError(teamId);
     }
     const deletedTeam = await prisma.team.delete({
@@ -521,5 +525,13 @@ export class TeamService {
       console.error(e);
       return [];
     }
+  }
+
+  static async getBoardsIds(teamId: string): Promise<string[]> {
+    const boards = await prisma.board.findMany({
+      where: { teamId },
+      select: { id: true },
+    });
+    return boards.map((board) => board.id);
   }
 }

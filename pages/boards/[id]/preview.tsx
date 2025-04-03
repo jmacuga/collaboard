@@ -15,11 +15,13 @@ import { ClientSyncContext } from "@/components/board/context/client-doc-context
 interface BoardPreviewPageProps {
   board: string;
   team: string;
+  isAdmin: boolean;
 }
 
 export default function BoardPreviewPage({
   board,
   team,
+  isAdmin,
 }: BoardPreviewPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
@@ -66,6 +68,7 @@ export default function BoardPreviewPage({
         boardId={parsedBoard.id}
         localChanges={localChanges}
         docUrl={parsedBoard.docUrl}
+        isAdmin={isAdmin}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
@@ -89,6 +92,9 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       notFound: true,
     };
   }
+  const isAdmin =
+    (await TeamService.getUserTeamRole(session.user.id, board.teamId)) ==
+    "Admin";
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {
@@ -99,6 +105,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
+      isAdmin,
     },
   };
 };

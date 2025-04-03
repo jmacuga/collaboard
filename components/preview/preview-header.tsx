@@ -6,27 +6,23 @@ import { ClientSyncContext } from "@/components/board/context/client-doc-context
 import { useContext } from "react";
 import { CreateMergeRequestDialog } from "./create-merge-request-dialog";
 import { Change } from "@automerge/automerge";
+import { MergeDialog } from "./merge-dialog";
+import { RevertDialog } from "./revert-dialog";
 
 export const PreviewHeader = ({
   boardId,
   localChanges,
   docUrl,
+  isAdmin,
 }: {
   boardId: string;
   localChanges: Change[];
   docUrl: string;
+  isAdmin: boolean;
 }) => {
   const router = useRouter();
-  const { clientSyncService } = useContext(ClientSyncContext);
 
   const handleBackToEditor = () => {
-    router.push(`/boards/${boardId}`);
-  };
-
-  const handleRejectChanges = async () => {
-    console.log("reject changes");
-    if (!clientSyncService) return;
-    await clientSyncService.revertLocalChanges();
     router.push(`/boards/${boardId}`);
   };
 
@@ -55,14 +51,20 @@ export const PreviewHeader = ({
         </div>
       </div>
       <div className="flex gap-2 justify-end">
-        <CreateMergeRequestDialog
-          boardId={boardId}
-          localChanges={localChanges}
-          docUrl={docUrl}
-        />
-        <Button variant="outline" onClick={handleRejectChanges}>
-          Revert Changes
-        </Button>
+        {isAdmin ? (
+          <MergeDialog
+            boardId={boardId}
+            localChanges={localChanges}
+            docUrl={docUrl}
+          />
+        ) : (
+          <CreateMergeRequestDialog
+            boardId={boardId}
+            localChanges={localChanges}
+            docUrl={docUrl}
+          />
+        )}
+        <RevertDialog boardId={boardId} />
       </div>
     </div>
   );

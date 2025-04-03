@@ -2,9 +2,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
 import { MergeRequest, User } from "@prisma/client";
-import RejectButton from "../merge-requests/reject-button";
-import AcceptButton from "../merge-requests/accept-button";
-import CloseButton from "../merge-requests/close-button";
+import RejectButton from "./reject-button";
+import AcceptButton from "./accept-button";
+import CloseButton from "./close-button";
 import Link from "next/link";
 interface MergeRequestHeaderProps {
   mergeRequest: MergeRequest & { requester: User };
@@ -20,7 +20,7 @@ export const MergeRequestHeader = ({
   const router = useRouter();
 
   const handleBack = () => {
-    router.back();
+    router.push(`/boards/${mergeRequest.boardId}/merge-requests`);
   };
 
   return (

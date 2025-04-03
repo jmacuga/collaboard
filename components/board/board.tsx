@@ -9,14 +9,16 @@ import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useText } from "@/components/board/hooks/use-text";
-import { useActiveUsers } from "@/components/board/hooks/use-active-users";
+import {
+  ActiveUser,
+  useActiveUsers,
+} from "@/components/board/hooks/use-active-users";
 import { useBoardInteractions } from "@/components/board/hooks/use-board-interactions";
 import { ShapeRenderer } from "@/components/board/components/shape-renderer";
 import { ObjectEditIndicator } from "@/components/board/components/object-edit-indicator";
-import { BoardProps, BoardMode } from "@/types/board";
+import { BoardMode } from "@/types/board";
 import SideToolbar from "@/components/board/side-toolbar";
 import { ActiveUsersList } from "@/components/board/components/active-users-list";
-import { SyncStatusControl } from "@/components/board/components/sync-status-control";
 import { ResetPositionButton } from "@/components/board/components/reset-position-button";
 import { ShapeColorPalette } from "@/components/board/components/shape-color-palette";
 import { LocalChangesHeader } from "@/components/board/components/local-changes-header";
@@ -24,7 +26,6 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
-import { BoardHeader } from "./components/board-header";
 
 export default function Board({
   team,
@@ -57,7 +58,13 @@ export default function Board({
     textareaRef,
   } = useContext(BoardContext);
 
-  const { activeUsers, objectEditors } = useActiveUsers();
+  let activeUsers: ActiveUser[] = [];
+  let objectEditors: Record<string, ActiveUser[]> = {};
+  if (!hideActiveUsers) {
+    const userStatus = useActiveUsers();
+    activeUsers = userStatus.activeUsers;
+    objectEditors = userStatus.objectEditors ?? {};
+  }
   const { localPoints } = useDrawing();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleTextChange, handleTextKeyDown } = useText();

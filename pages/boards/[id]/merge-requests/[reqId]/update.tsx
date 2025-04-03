@@ -3,21 +3,9 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
 import { MergeRequestService } from "@/lib/services/merge-request";
-import { useEffect, useRef, useState } from "react";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
-import * as automerge from "@automerge/automerge";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
-import {
-  AnyDocumentId,
-  DocHandle,
-  NetworkAdapterInterface,
-  Repo,
-} from "@automerge/automerge-repo";
-import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
-import { MergeRequestUpdateProvider } from "@/components/merge-requests/merge-request-update-provider";
+import { MergeRequestUpdateProvider } from "@/components/merge-requests/update-provider";
 import { getSession } from "next-auth/react";
-import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
-import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+
 interface MergeRequestUpdatePageProps {
   board: string;
   team: string;

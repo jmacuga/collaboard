@@ -438,4 +438,20 @@ export class MergeRequestService {
       data: { status: ReviewRequestStatus.REJECTED },
     });
   }
+
+  /**
+   * Updates a merge request
+   */
+  public static async update(
+    mergeRequestId: string,
+    changes: Buffer[]
+  ): Promise<void> {
+    this.validateInput({ mergeRequestId, changes });
+    const result = await this.getMergeRequestById(mergeRequestId);
+    if (!result) {
+      throw new MergeRequestError("Merge request not found");
+    }
+    const { mergeRequest } = result;
+    await Change.updateOne({ _id: mergeRequest.changesId }, { data: changes });
+  }
 }

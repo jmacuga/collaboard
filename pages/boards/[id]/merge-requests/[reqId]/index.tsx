@@ -9,7 +9,7 @@ import { ClientSyncContext } from "@/components/board/context/client-doc-context
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
-import { MergeRequestHeader } from "@/components/preview/merge-request-header";
+import { MergeRequestHeader } from "@/components/merge-requests/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";

@@ -6,13 +6,12 @@ import * as automerge from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Change, Doc } from "@automerge/automerge";
 import { PreviewHeader } from "@/components/preview/preview-header";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
-
+import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 interface BoardPreviewPageProps {
   board: string;
   team: string;

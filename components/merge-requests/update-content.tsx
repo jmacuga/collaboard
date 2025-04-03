@@ -15,7 +15,7 @@ import { BoardHeader } from "../board/components/board-header";
 import { useRouter } from "next/router";
 import { NetworkStatusProvider } from "../providers/network-status-provider";
 
-export function MergeRequestUpdateProvider({
+export function MergeRequestUpdateContent({
   board,
   team,
   changes,

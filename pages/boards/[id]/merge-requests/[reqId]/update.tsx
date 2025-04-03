@@ -3,7 +3,7 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
 import { MergeRequestService } from "@/lib/services/merge-request";
-import { MergeRequestUpdateProvider } from "@/components/merge-requests/update-provider";
+import { MergeRequestUpdateContent } from "@/components/merge-requests/update-content";
 import { getSession } from "next-auth/react";
 
 interface MergeRequestUpdatePageProps {
@@ -24,7 +24,7 @@ export default function UpdateMergeRequestPage({
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );
   return (
-    <MergeRequestUpdateProvider
+    <MergeRequestUpdateContent
       board={parsedBoard}
       team={parsedTeam}
       changes={decodedChanges}

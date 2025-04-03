@@ -5,6 +5,8 @@ import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 import { TeamService } from "@/lib/services/team/team-service";
 import { withTeamRolePage } from "@/lib/middleware";
 import { getTeamBoards } from "@/db/data";
+import TeamBreadcrumb from "@/components/boards/breadcrumb";
+import { TeamNav } from "@/components/teams/team-nav";
 interface BoardsPageProps {
   boards: string;
   team: string;
@@ -21,8 +23,12 @@ export default function BoardsPage({
   const parsedUserRole = JSON.parse(userRole);
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8">
+        <TeamBreadcrumb team={parsedTeam} />
         <h1 className="text-3xl font-bold">{parsedTeam.name} - Boards</h1>
+      </div>
+      <div className="flex justify-between items-center mb-8">
+        <TeamNav teamId={parsedTeam.id as string} />
         <CreateBoardDialog teamId={parsedTeam.id as string} />
       </div>
 

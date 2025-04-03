@@ -4,31 +4,43 @@ import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service"
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Change, Doc } from "@automerge/automerge";
-import { PreviewHeader } from "@/components/preview/preview-header";
+import { Doc } from "@automerge/automerge";
+import { ClientSyncContext } from "@/components/board/context/client-doc-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
+import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
+import { MergeRequestHeader } from "@/components/merge-requests/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
-interface BoardPreviewPageProps {
+interface MergeRequestPageProps {
   board: string;
   team: string;
-  isAdmin: boolean;
+  mergeRequest: string;
+  changes: string;
+  isUserReviewer: boolean;
+  isUserRequester: boolean;
 }
 
-export default function BoardPreviewPage({
+export default function MergeRequestPage({
   board,
   team,
-  isAdmin,
-}: BoardPreviewPageProps) {
+  mergeRequest,
+  changes,
+  isUserReviewer,
+  isUserRequester,
+}: MergeRequestPageProps) {
   const parsedBoard = JSON.parse(board);
+  const parsedMergeRequest = JSON.parse(mergeRequest);
+  const parsedChanges = JSON.parse(changes);
   const parsedTeam = JSON.parse(team);
+  const decodedChanges = parsedChanges.map(
+    (change: string) => new Uint8Array(Buffer.from(change, "base64"))
+  );
+
+  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
-  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
-  const [localChanges, setLocalChanges] = useState<Change[]>([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -37,18 +49,15 @@ export default function BoardPreviewPage({
         docUrl: parsedBoard.docUrl,
       });
     }
-    const fetchLocalChanges = async () => {
+    const getPreviewDoc = async () => {
       if (!clientSyncServiceRef.current) return;
-
-      const localChanges = await clientSyncServiceRef.current.getLocalChanges();
-      setLocalChanges(localChanges);
       const serverDoc = await clientSyncServiceRef.current.getServerDoc();
       const serverDocCopy = automerge.clone(serverDoc);
-      const doc2 = automerge.applyChanges(serverDocCopy, localChanges)[0];
+      const doc2 = automerge.applyChanges(serverDocCopy, decodedChanges)[0];
       setPreviewDoc(doc2);
     };
 
-    fetchLocalChanges();
+    getPreviewDoc();
   }, [parsedBoard.docUrl]);
 
   if (!isMounted) {
@@ -64,11 +73,10 @@ export default function BoardPreviewPage({
         teamName={parsedTeam.name}
         teamId={parsedTeam.id}
       />
-      <PreviewHeader
-        boardId={parsedBoard.id}
-        localChanges={localChanges}
-        docUrl={parsedBoard.docUrl}
-        isAdmin={isAdmin}
+      <MergeRequestHeader
+        mergeRequest={parsedMergeRequest}
+        isUserReviewer={isUserReviewer}
+        isUserRequester={isUserRequester}
       />
       {previewDoc && <BoardReadonly doc={previewDoc} />}
     </ClientSyncContext.Provider>
@@ -77,6 +85,7 @@ export default function BoardPreviewPage({
 
 const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
   const boardId = params?.id as string;
+  const reqId = params?.reqId as string;
   const session = await getSession({ req });
   if (!session) {
     return {
@@ -86,15 +95,26 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       },
     };
   }
+  const result = await MergeRequestService.getMergeRequestById(reqId);
+  if (!result) {
+    return {
+      notFound: true,
+    };
+  }
+  const { mergeRequest, changes } = result;
+  const isUserReviewer = mergeRequest.reviewRequests.some(
+    (reviewRequest) => reviewRequest.reviewerId === session.user.id
+  );
+  const isUserRequester = mergeRequest.requesterId === session.user.id;
+  const changesString = changes.map((change: Uint8Array) =>
+    Buffer.from(change).toString("base64")
+  );
   const board = await BoardService.getBoardById(boardId);
   if (!board || !board.docUrl) {
     return {
       notFound: true,
     };
   }
-  const isAdmin =
-    (await TeamService.getUserTeamRole(session.user.id, board.teamId)) ==
-    "Admin";
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {
@@ -105,7 +125,10 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
-      isAdmin,
+      mergeRequest: JSON.stringify(mergeRequest),
+      changes: JSON.stringify(changesString),
+      isUserReviewer,
+      isUserRequester,
     },
   };
 };

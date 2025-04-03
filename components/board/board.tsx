@@ -5,18 +5,20 @@ import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import { useClientSync } from "@/components/board/context/client-doc-context";
-import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
+import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useText } from "@/components/board/hooks/use-text";
-import { useActiveUsers } from "@/components/board/hooks/use-active-users";
+import {
+  ActiveUser,
+  useActiveUsers,
+} from "@/components/board/hooks/use-active-users";
 import { useBoardInteractions } from "@/components/board/hooks/use-board-interactions";
 import { ShapeRenderer } from "@/components/board/components/shape-renderer";
 import { ObjectEditIndicator } from "@/components/board/components/object-edit-indicator";
-import { BoardProps, BoardMode } from "@/types/board";
+import { BoardMode } from "@/types/board";
 import SideToolbar from "@/components/board/side-toolbar";
 import { ActiveUsersList } from "@/components/board/components/active-users-list";
-import { SyncStatusControl } from "@/components/board/components/sync-status-control";
 import { ResetPositionButton } from "@/components/board/components/reset-position-button";
 import { ShapeColorPalette } from "@/components/board/components/shape-color-palette";
 import { LocalChangesHeader } from "@/components/board/components/local-changes-header";
@@ -24,14 +26,15 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
-import { BoardHeader } from "./components/board-header";
 
 export default function Board({
   team,
   board,
+  hideActiveUsers = false,
 }: {
   team: PrismaTeam;
   board: PrismaBoard;
+  hideActiveUsers?: boolean;
 }) {
   const clientSyncService = useClientSync();
   const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
@@ -55,7 +58,13 @@ export default function Board({
     textareaRef,
   } = useContext(BoardContext);
 
-  const { activeUsers, objectEditors } = useActiveUsers();
+  let activeUsers: ActiveUser[] = [];
+  let objectEditors: Record<string, ActiveUser[]> = {};
+  if (!hideActiveUsers) {
+    const userStatus = useActiveUsers();
+    activeUsers = userStatus.activeUsers;
+    objectEditors = userStatus.objectEditors ?? {};
+  }
   const { localPoints } = useDrawing();
   const { transformerRef, handleTransformEnd } = useTransformer(localDoc);
   const { handleTextChange, handleTextKeyDown } = useText();
@@ -110,75 +119,69 @@ export default function Board({
   const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
 
   return (
-    <div className="relative w-full h-full">
-      <div className="flex flex-col h-screen">
-        <BoardHeader
-          boardName={board.name}
-          teamName={team.name}
-          teamId={team.id}
-        />
-        <LocalChangesHeader />
-        <div className="flex flex-1 md:overflow-hidden">
-          <div className="z-10 flex-shrink">
-            <SideToolbar teamId={team.id} />
-          </div>
-          {isOnline && activeUsers && activeUsers.length > 0 && (
-            <ActiveUsersList users={activeUsers} />
-          )}
-          <div>
-            <Stage
-              width={width}
-              height={height}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onClick={handleStageClick}
-              x={stagePosition.x}
-              y={stagePosition.y}
-            >
-              <Layer>
-                {isOnline &&
-                  localDoc &&
-                  objectEditors &&
-                  Object.entries(objectEditors).map(([objectId, editors]) => (
-                    <ObjectEditIndicator
-                      key={`edit-indicator-${objectId}`}
-                      objectId={objectId}
-                      editors={editors}
-                      shape={localDoc[objectId]}
-                    />
-                  ))}
-                {localDoc &&
-                  (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
-                    ([id, shape]) => (
-                      <ShapeRenderer
-                        key={id}
-                        id={id}
-                        shape={shape}
-                        mode={mode as BoardMode}
-                        onMouseDown={handleShapeMouseDown}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onTransformEnd={handleTransformEnd}
-                        onTextDblClick={handleTextDblClick}
-                      />
-                    )
-                  )}
-                {localPoints && localPoints.length > 0 && (
-                  <Line
-                    key={currentLineId}
-                    points={localPoints}
-                    stroke={brushColor}
-                    strokeWidth={brushSize}
-                    lineCap="round"
-                    lineJoin="round"
-                    tension={0.5}
+    <>
+      <LocalChangesHeader />
+      <div className="flex flex-1 md:overflow-hidden">
+        <div className="z-10 flex-shrink">
+          <SideToolbar teamId={team.id} />
+        </div>
+        {!hideActiveUsers &&
+          isOnline &&
+          activeUsers &&
+          activeUsers.length > 0 && <ActiveUsersList users={activeUsers} />}
+        <div>
+          <Stage
+            width={width}
+            height={height}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onClick={handleStageClick}
+            x={stagePosition.x}
+            y={stagePosition.y}
+          >
+            <Layer>
+              {isOnline &&
+                localDoc &&
+                objectEditors &&
+                Object.entries(objectEditors).map(([objectId, editors]) => (
+                  <ObjectEditIndicator
+                    key={`edit-indicator-${objectId}`}
+                    objectId={objectId}
+                    editors={editors}
+                    shape={localDoc[objectId]}
                   />
+                ))}
+              {localDoc &&
+                (Object.entries(localDoc) as [string, KonvaNodeSchema][]).map(
+                  ([id, shape]) => (
+                    <ShapeRenderer
+                      key={id}
+                      id={id}
+                      shape={shape}
+                      mode={mode as BoardMode}
+                      onMouseDown={handleShapeMouseDown}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onTransformEnd={handleTransformEnd}
+                      onTextDblClick={handleTextDblClick}
+                    />
+                  )
                 )}
-                <Transformer ref={transformerRef} />
-              </Layer>
-            </Stage>
-          </div>
+              {localPoints && localPoints.length > 0 && (
+                <Line
+                  key={currentLineId}
+                  points={localPoints}
+                  stroke={brushColor}
+                  strokeWidth={brushSize}
+                  lineCap="round"
+                  lineJoin="round"
+                  tension={0.5}
+                />
+              )}
+              <Transformer ref={transformerRef} />
+            </Layer>
+          </Stage>
         </div>
       </div>
       {editingText !== null && textPosition && (
@@ -213,13 +216,8 @@ export default function Board({
           />
         </div>
       )}
-      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
-        {showResetButton && (
-          <ResetPositionButton onClick={resetStagePosition} />
-        )}
-        <SyncStatusControl />
-      </div>
+      {showResetButton && <ResetPositionButton onClick={resetStagePosition} />}
       <ShapeColorPalette />
-    </div>
+    </>
   );
 }

@@ -1,11 +1,4 @@
-import {
-  Wifi,
-  WifiOff,
-  HelpCircleIcon,
-  InfoIcon,
-  CloudOff,
-  AlertCircle,
-} from "lucide-react";
+import { Wifi, WifiOff, HelpCircleIcon, AlertCircle } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
@@ -89,7 +82,6 @@ export const SyncStatusControl = () => {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="bg-white/95 shadow-lg rounded-lg px-4 py-2.5 flex items-center gap-4 border border-gray-200 backdrop-blur-sm transition-all hover:shadow-md">
-        {/* Network Status with Tooltip */}
         <Tooltip>
           <TooltipTrigger asChild>
             <div
@@ -118,10 +110,8 @@ export const SyncStatusControl = () => {
           </TooltipContent>
         </Tooltip>
 
-        {/* Separator */}
         <div className="h-5 w-px bg-gray-200" aria-hidden="true"></div>
 
-        {/* Mode Switch with Labels */}
         <div className="flex items-center gap-3">
           <span
             className={cn(
@@ -132,7 +122,6 @@ export const SyncStatusControl = () => {
             Local
           </span>
 
-          {/* Shadcn Switch */}
           <Tooltip>
             <TooltipTrigger asChild>
               <div>

@@ -4,6 +4,8 @@ import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
 import { InviteMembersDialog } from "@/components/teams/invite-members-dialog";
 import { withTeamRolePage } from "@/lib/middleware";
+import TeamBreadcrumb from "@/components/boards/breadcrumb";
+import { TeamNav } from "@/components/teams/team-nav";
 
 interface MembersPageProps {
   members: string;
@@ -24,8 +26,12 @@ export default function MembersPage({
   const parsedUserId = JSON.parse(userId);
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8">
+        <TeamBreadcrumb team={parsedTeam} />
         <h1 className="text-3xl font-bold">{parsedTeam.name} - Members </h1>
+      </div>
+      <div className="flex justify-between items-center mb-8">
+        <TeamNav teamId={parsedTeam.id as string} />
         <InviteMembersDialog />
       </div>
 

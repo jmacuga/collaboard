@@ -136,6 +136,8 @@ model ReviewRequest {
   reviewerId      String
   status          ReviewRequestStatus
   mergeRequestId  String
+  updatedAt       DateTime  @updatedAt @default(now())
+  createdAt       DateTime  @default(now())
 
   // Relations
   board          Board         @relation("BoardReviewRequests", fields: [boardId], references: [id], onDelete: Cascade)

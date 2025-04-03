@@ -7,6 +7,8 @@ import { ClientSyncContext } from "./context/client-doc-context";
 import { BoardContextProvider } from "./context/board-context";
 import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
+import { SyncStatusControl } from "./components/sync-status-control";
+import { BoardHeader } from "./components/board-header";
 
 interface BoardState {
   clientSyncService: ClientSyncService | null;
@@ -69,7 +71,17 @@ export function BoardProvider({
           value={{ clientSyncService: state.clientSyncService }}
         >
           <BoardContextProvider syncedInitial={state.synced}>
-            <Board team={team} board={board} />
+            <div className="flex flex-col h-screen">
+              <BoardHeader
+                boardName={board.name}
+                teamName={team.name}
+                teamId={team.id}
+              />
+              <Board team={team} board={board} />
+              <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
+                <SyncStatusControl />
+              </div>
+            </div>
           </BoardContextProvider>
         </ClientSyncContext.Provider>
       </RepoContext.Provider>

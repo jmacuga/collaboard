@@ -52,16 +52,11 @@ export const PreviewHeader = ({
       </div>
       <div className="flex gap-2 justify-end">
         {isAdmin ? (
-          <MergeDialog
-            boardId={boardId}
-            localChanges={localChanges}
-            docUrl={docUrl}
-          />
+          <MergeDialog boardId={boardId} />
         ) : (
           <CreateMergeRequestDialog
             boardId={boardId}
             localChanges={localChanges}
-            docUrl={docUrl}
           />
         )}
         <RevertDialog boardId={boardId} />

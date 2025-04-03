@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,34 +12,25 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import { Change } from "@automerge/automerge";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncContext } from "../board/context/client-doc-context";
 
 export function CreateMergeRequestDialog({
   boardId,
   localChanges,
-  docUrl,
 }: {
   boardId: string;
   localChanges: Change[];
-  docUrl: string;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const clientSyncServiceRef = useRef<ClientSyncService | null>(null);
-
-  useEffect(() => {
-    if (!clientSyncServiceRef.current) {
-      clientSyncServiceRef.current = new ClientSyncService({
-        docUrl: docUrl,
-      });
-    }
-  }, [boardId]);
+  const { clientSyncService } = useContext(ClientSyncContext);
 
   const onSubmit = async () => {
     try {
       const changes = localChanges.map((change) =>
         Buffer.from(change).toString("base64")
       );
+      if (!clientSyncService) return;
       const response = await fetch("/api/merge-requests/create", {
         method: "POST",
         headers: {
@@ -53,7 +44,7 @@ export function CreateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request created successfully");
-        clientSyncServiceRef.current?.revertLocalChanges();
+        clientSyncService?.revertLocalChanges();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;

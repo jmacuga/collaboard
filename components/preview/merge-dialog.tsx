@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,16 +10,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Change } from "@automerge/automerge";
 import { ClientSyncContext } from "../board/context/client-doc-context";
 
-export function MergeDialog({
-  boardId,
-}: {
-  boardId: string;
-  localChanges: Change[];
-  docUrl: string;
-}) {
+export function MergeDialog({ boardId }: { boardId: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { clientSyncService } = useContext(ClientSyncContext);

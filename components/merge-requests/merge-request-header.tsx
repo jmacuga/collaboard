@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { MergeRequest, User } from "@prisma/client";
 import RejectButton from "./reject-button";
 import AcceptButton from "./accept-button";
-import CloseButton from "./close-button";
+import CloseMergeRequestDialog from "./close-dialog";
 import Link from "next/link";
 interface MergeRequestHeaderProps {
   mergeRequest: MergeRequest & { requester: User };
@@ -66,7 +66,7 @@ export const MergeRequestHeader = ({
         )}
         {mergeRequest.status == "OPEN" && isUserRequester && (
           <>
-            <CloseButton
+            <CloseMergeRequestDialog
               mergeRequestId={mergeRequest.id}
               boardId={mergeRequest.boardId}
             />

@@ -7,7 +7,7 @@ import RejectButton from "./reject-button";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { useSession } from "next-auth/react";
-import CloseButton from "./close-button";
+import CloseMergeRequestDialog from "./close-dialog";
 
 const statusColors = {
   OPEN: "bg-blue-100 text-blue-800",
@@ -89,7 +89,7 @@ export default function MergeRequestsRow({
               </>
             )}
           {request.status == "OPEN" && isUserRequester && (
-            <CloseButton
+            <CloseMergeRequestDialog
               mergeRequestId={request.id}
               boardId={request.boardId}
             />

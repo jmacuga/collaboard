@@ -64,6 +64,7 @@ export function UpdateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request updated successfully");
+        clientSyncService?.deleteDoc();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;
@@ -86,14 +87,12 @@ export function UpdateMergeRequestDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex gap-1 items-center">
-          Update Merge Request
-        </Button>
+        <Button className="flex gap-1 items-center">Submit Changes</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            Update Merge Request
+            Submit Changes
           </DialogTitle>
           <DialogDescription>
             Your local changes will be added to the merge request.
@@ -108,7 +107,7 @@ export function UpdateMergeRequestDialog({
           >
             Cancel
           </Button>
-          <Button onClick={onSubmit}>Update Merge Request</Button>
+          <Button onClick={onSubmit}>Submit Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

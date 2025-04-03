@@ -1,6 +1,10 @@
-import { MergeRequest, ReviewRequest, User } from "@prisma/client";
-import { TableRow } from "../ui/table";
-import { TableCell } from "../ui/table";
+import {
+  MergeRequest,
+  ReviewRequest,
+  User,
+  MergeRequestStatus,
+} from "@prisma/client";
+import { TableRow, TableCell } from "../ui/table";
 import { Badge } from "../ui/badge";
 import AcceptButton from "./accept-button";
 import RejectButton from "./reject-button";
@@ -8,13 +12,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { useSession } from "next-auth/react";
 import CloseMergeRequestDialog from "./close-dialog";
-
-const statusColors = {
-  OPEN: "bg-blue-100 text-blue-800",
-  PENDING: "bg-yellow-100 text-yellow-800",
-  MERGED: "bg-green-100 text-green-800",
-  CLOSED: "bg-gray-100 text-gray-800",
-};
+import statusColors from "@/lib/utils/statusColors";
 
 export default function MergeRequestsRow({
   request,
@@ -68,32 +66,33 @@ export default function MergeRequestsRow({
       <TableCell>{new Date(request.updatedAt).toLocaleString()}</TableCell>
       <TableCell>
         <div className="flex flex-row gap-2">
-          {(request.status == "PENDING" || request.status == "OPEN") && (
+          {request.status != MergeRequestStatus.MERGED && (
             <Link
               href={`/boards/${request.boardId}/merge-requests/${request.id}`}
             >
               <Button variant="outline">View</Button>
             </Link>
           )}
-          {isUserReviewer &&
-            (request.status == "PENDING" || request.status == "OPEN") && (
-              <>
-                <AcceptButton
-                  mergeRequestId={request.id}
-                  boardId={request.boardId}
-                />
-                <RejectButton
-                  mergeRequestId={request.id}
-                  boardId={request.boardId}
-                />
-              </>
-            )}
-          {request.status == "OPEN" && isUserRequester && (
-            <CloseMergeRequestDialog
-              mergeRequestId={request.id}
-              boardId={request.boardId}
-            />
+          {isUserReviewer && request.status == MergeRequestStatus.OPEN && (
+            <>
+              <AcceptButton
+                mergeRequestId={request.id}
+                boardId={request.boardId}
+              />
+              <RejectButton
+                mergeRequestId={request.id}
+                boardId={request.boardId}
+              />
+            </>
           )}
+          {(request.status == MergeRequestStatus.OPEN ||
+            request.status == MergeRequestStatus.PENDING) &&
+            isUserRequester && (
+              <CloseMergeRequestDialog
+                mergeRequestId={request.id}
+                boardId={request.boardId}
+              />
+            )}
         </div>
       </TableCell>
     </TableRow>

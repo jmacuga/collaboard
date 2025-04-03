@@ -439,6 +439,19 @@ export class MergeRequestService {
     });
   }
 
+  private static async updateReviewRequests(
+    mergeRequestId: string,
+    prismaTx: PrismaTransactionalClient
+  ): Promise<void> {
+    await prismaTx.reviewRequest.updateMany({
+      where: { mergeRequestId, status: { not: ReviewRequestStatus.PENDING } },
+      data: {
+        status: ReviewRequestStatus.PENDING,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   /**
    * Updates a merge request
    */
@@ -447,11 +460,27 @@ export class MergeRequestService {
     changes: Buffer[]
   ): Promise<void> {
     this.validateInput({ mergeRequestId, changes });
-    const result = await this.getMergeRequestById(mergeRequestId);
-    if (!result) {
-      throw new MergeRequestError("Merge request not found");
-    }
-    const { mergeRequest } = result;
-    await Change.updateOne({ _id: mergeRequest.changesId }, { data: changes });
+    await prisma.$transaction(async (prismaTx) => {
+      const result = await this.getMergeRequestById(mergeRequestId);
+      if (!result) {
+        throw new MergeRequestError("Merge request not found");
+      }
+      const { mergeRequest } = result;
+      if (mergeRequest.status === MergeRequestStatus.MERGED) {
+        throw new MergeRequestError("Merge request is already merged");
+      }
+      await prismaTx.mergeRequest.update({
+        where: { id: mergeRequest.id },
+        data: {
+          updatedAt: new Date(),
+          status: MergeRequestStatus.PENDING,
+        },
+      });
+      await this.updateReviewRequests(mergeRequest.id, prismaTx);
+      await Change.updateOne(
+        { _id: mergeRequest.changesId },
+        { data: changes }
+      );
+    });
   }
 }

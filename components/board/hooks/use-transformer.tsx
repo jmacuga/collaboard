@@ -13,7 +13,7 @@ export const useTransformer = (localDoc: LayerSchema | undefined) => {
   const transformerRef = useRef<Konva.Transformer>(null);
   const clientSyncService = useClientSync();
   const [_, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const handleTransformEnd = useCallback(

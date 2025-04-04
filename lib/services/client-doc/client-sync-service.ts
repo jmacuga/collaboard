@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
 import { getChanges, getHeads } from "@automerge/automerge";
+import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
 /**
  * Service for synchronizing local documents with the server
  * Manages online/offline state and document synchronization
@@ -32,6 +33,7 @@ export class ClientSyncService implements IClientSyncService {
   private readonly peerId: PeerId;
   private connected: boolean;
   private readonly DISABLE_RETRY_INTERVAL = 10_000_000;
+  private handle: DocHandle<LayerSchema>;
 
   /**
    * Creates a new ClientSyncService
@@ -60,6 +62,7 @@ export class ClientSyncService implements IClientSyncService {
       ),
       peerId: this.peerId,
     });
+    this.handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
   }
 
   /**
@@ -72,21 +75,20 @@ export class ClientSyncService implements IClientSyncService {
 
       if (docExists) {
         try {
-          this.disconnect();
-          const handle = await this.findLocalDoc();
-          return handle;
+          await this.handle.whenReady();
+          return this.handle;
         } catch (error) {
           console.log("Could not find local doc. Creating new from server");
           await this.connect();
-          const handle = await this.findLocalDoc();
-          return handle;
+          await this.handle.whenReady();
+          return this.handle;
         }
       } else {
         console.log("Creating local doc");
         await this.connect();
-        const handle = await this.findLocalDoc();
-        await this.addIdToIndexedDB();
-        return handle;
+        await this.addDocIdToIndexedDB();
+        await this.handle.whenReady();
+        return this.handle;
       }
     } catch (error) {
       console.error("Could not find or create local doc. Reason:", error);
@@ -94,14 +96,9 @@ export class ClientSyncService implements IClientSyncService {
     }
   }
 
-  /**
-   * Finds a local document by ID
-   * @returns The document handle
-   */
-  private async findLocalDoc(): Promise<DocHandle<LayerSchema>> {
-    const docHandle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
-    await docHandle.whenReady();
-    return docHandle;
+  public async getHandle(): Promise<DocHandle<LayerSchema>> {
+    await this.handle.whenReady();
+    return this.handle;
   }
 
   /**
@@ -110,20 +107,20 @@ export class ClientSyncService implements IClientSyncService {
    */
   private async docExistsInIndexedDB(): Promise<boolean> {
     const docExists = await db.docIds.get(this.docId);
-    return !!docExists && docExists.docId === this.docId;
+    return !!docExists;
   }
 
   /**
    * Adds a document ID to IndexedDB
    */
-  private async addIdToIndexedDB(): Promise<void> {
+  private async addDocIdToIndexedDB(): Promise<void> {
     await db.docIds.add({ docId: this.docId });
   }
 
   /**
    * Removes a document URL from IndexedDB
    */
-  private async removeIdFromIndexedDB(): Promise<void> {
+  private async removeDocIdFromIndexedDB(): Promise<void> {
     await db.docIds.delete(this.docId);
   }
 
@@ -142,20 +139,6 @@ export class ClientSyncService implements IClientSyncService {
       array2.every((element) => set.has(element)) &&
       array1.every((element) => set.has(element))
     );
-  }
-
-  /**
-   * Creates a server repository instance
-   * @returns Repo instance configured for server connection
-   */
-  public createServerRepo(): Repo {
-    return new Repo({
-      network: [
-        new BrowserWebSocketClientAdapter(
-          this.websocketURL
-        ) as any as NetworkAdapterInterface,
-      ],
-    });
   }
 
   /**
@@ -179,16 +162,12 @@ export class ClientSyncService implements IClientSyncService {
     try {
       this.disconnect();
 
-      const localDocHandle = this.repo.find<LayerSchema>(
-        this.getDocId() as AnyDocumentId
-      );
-      await localDocHandle.whenReady();
-      const serverRepo = this.createServerRepo();
+      const serverRepo = clientGetServerRepo();
       const serverDocHandle = serverRepo.find<LayerSchema>(
-        this.getDocId() as AnyDocumentId
+        this.docId as AnyDocumentId
       );
       const serverDoc = await serverDocHandle.doc();
-      const localDoc = await localDocHandle.doc();
+      const localDoc = await this.handle.doc();
 
       const serverChanges = await getAllChanges(serverDoc);
       const localChanges = await getAllChanges(localDoc);
@@ -198,7 +177,7 @@ export class ClientSyncService implements IClientSyncService {
       }
 
       if (localChanges.length == serverChanges.length) {
-        const localHeads = await this.getDocumentHeads(localDocHandle);
+        const localHeads = await this.getDocumentHeads(this.handle);
         const serverHeads = await this.getDocumentHeads(serverDocHandle);
         const headsEqual = this.areArraysEqual(localHeads, serverHeads);
         return headsEqual;
@@ -284,14 +263,6 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Updates server data
-   * @param docId The ID of the document to update
-   */
-  public updateServerData(docId: string): void {
-    throw new Error("Method not implemented.");
-  }
-
-  /**
    * Sets the online state
    * @param online Whether the client is online
    */
@@ -306,10 +277,7 @@ export class ClientSyncService implements IClientSyncService {
   public async getActiveUsers(): Promise<string[]> {
     try {
       await this.connect();
-
-      const handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
-      await handle.whenReady();
-
+      await this.getHandle();
       const activeUsers: Set<string> = new Set();
 
       return new Promise((resolve, reject) => {
@@ -332,11 +300,11 @@ export class ClientSyncService implements IClientSyncService {
 
         const cleanupAndResolve = () => {
           clearTimeout(timeoutId);
-          handle.off("ephemeral-message", handleEphemeralMessage);
+          this.handle.off("ephemeral-message", handleEphemeralMessage);
           resolve(Array.from(activeUsers));
         };
 
-        handle.on("ephemeral-message", handleEphemeralMessage);
+        this.handle.on("ephemeral-message", handleEphemeralMessage);
       });
     } catch (error) {
       console.error("Error getting active users:", error);
@@ -345,46 +313,44 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
-   * Deletes a document
+   * Deletes a document from the repository
    */
   public deleteDoc(): void {
     this.repo.delete(this.docId as AnyDocumentId);
-    this.removeIdFromIndexedDB();
+    this.removeDocIdFromIndexedDB();
   }
 
-  public async getServerChanges(): Promise<Change[]> {
-    const localDocHandle = this.repo.find<LayerSchema>(
-      this.docId as AnyDocumentId
-    );
-    await localDocHandle.whenReady();
-    const localDoc = await localDocHandle.doc();
-    const serverDoc = await this.getServerDoc();
-    const changes = getChanges(localDoc, serverDoc);
-    return changes;
-  }
-
+  /**
+   * Gets the local changes
+   * @returns The local changes
+   */
   public async getLocalChanges(): Promise<Change[]> {
-    const localDocHandle = this.repo.find<LayerSchema>(
-      this.docId as AnyDocumentId
-    );
-    await localDocHandle.whenReady();
-    const localDoc = await localDocHandle.doc();
+    const handle = await this.getHandle();
+    const localDoc = await handle.doc();
     const serverDoc = await this.getServerDoc();
     const changes = getChanges(serverDoc, localDoc);
     return changes;
   }
 
+  /**
+   * Gets the server version of the document
+   * @param docId The ID of the document to get
+   * @returns The server document
+   */
   public async getServerDoc(docId?: string): Promise<Doc<LayerSchema>> {
-    const serverRepo = this.createServerRepo();
-    const serverDoc = serverRepo.find<LayerSchema>(
+    const serverRepo = clientGetServerRepo();
+    const serverHandle = serverRepo.find<LayerSchema>(
       docId ? (docId as AnyDocumentId) : (this.docId as AnyDocumentId)
     );
-    await serverDoc.whenReady();
-    return await serverDoc.doc();
+    await serverHandle.whenReady();
+    return await serverHandle.doc();
   }
 
-  public async revertLocalChanges(): Promise<void> {
+  /**
+   * Removes the local document from the IndexedDB
+   */
+  public async removeLocalDoc(): Promise<void> {
     this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
-    this.removeIdFromIndexedDB();
+    this.removeDocIdFromIndexedDB();
   }
 }

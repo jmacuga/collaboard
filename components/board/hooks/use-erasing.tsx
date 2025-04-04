@@ -9,7 +9,7 @@ import { useClientSync } from "../context/client-sync-context";
 export const useErasing = () => {
   const clientSyncService = useClientSync();
   const [doc, setDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
   const isErasing = useRef(false);
 

@@ -12,7 +12,7 @@ const ShapeColorPalette = () => {
   const { selectedShapeIds, mode } = useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
   const [isOpen, setIsOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("rgb(0,0,0)");

@@ -10,7 +10,7 @@ export const useDeleting = () => {
     useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const handleDelete = useCallback(() => {

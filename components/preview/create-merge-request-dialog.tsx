@@ -44,7 +44,7 @@ export function CreateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request created successfully");
-        clientSyncService?.revertLocalChanges();
+        clientSyncService?.removeLocalDoc();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;

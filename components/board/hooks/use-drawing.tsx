@@ -36,7 +36,7 @@ function useDrawing() {
   } = useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const addLineToDoc = useCallback(

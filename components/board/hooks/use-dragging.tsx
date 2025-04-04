@@ -14,7 +14,7 @@ interface DraggingState {
 export const useDragging = () => {
   const clientSyncService = useClientSync();
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const [draggingState, setDraggingState] = useState<DraggingState>({

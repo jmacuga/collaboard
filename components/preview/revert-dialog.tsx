@@ -20,7 +20,7 @@ export function RevertDialog({ boardId }: { boardId: string }) {
 
   const handleRevertChanges = async () => {
     if (!clientSyncService) return;
-    await clientSyncService.revertLocalChanges();
+    await clientSyncService.removeLocalDoc();
     router.push(`/boards/${boardId}`);
   };
 

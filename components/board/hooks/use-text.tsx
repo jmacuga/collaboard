@@ -11,7 +11,7 @@ import { next as Automerge } from "@automerge/automerge";
 const useText = () => {
   const clientSyncService = useClientSync();
   const [localDoc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
   const {
     mode,

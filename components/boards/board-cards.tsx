@@ -79,19 +79,6 @@ export function BoardCards({
                     style={{ color: getColorForIndex(index).primary }}
                   />
                   {board.name}
-                  <div className="relative">
-                    {updatedBoards.includes(board.id) && (
-                      <div className="flex items-center gap-1">
-                        <div
-                          className="h-2 w-2 rounded-full bg-primary"
-                          aria-label="Board has unseen changes"
-                        ></div>
-                        <p className="text-xs text-muted-foreground">
-                          New changes
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 </CardTitle>
                 {userRole === "Admin" && (
                   <DeleteBoardDialog
@@ -99,6 +86,17 @@ export function BoardCards({
                     boardName={board.name}
                     teamId={board.teamId}
                   />
+                )}
+              </div>
+              <div className="relative">
+                {updatedBoards.includes(board.id) && (
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-2 w-2 rounded-full bg-primary"
+                      aria-label="Board has unseen changes"
+                    ></div>
+                    <p className="text-xs text-muted-foreground">New changes</p>
+                  </div>
                 )}
               </div>
             </CardHeader>

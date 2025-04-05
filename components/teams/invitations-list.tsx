@@ -8,31 +8,18 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { TeamInvitationStatus } from "@prisma/client";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
-type TeamInvitation = {
-  id: string;
-  status: TeamInvitationStatus;
-  teamId: string;
-  hostId: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-  team: {
-    name: string;
-  };
-  host: {
-    name: string;
-    email: string;
-  };
-};
+import { TeamInvitation } from "@prisma/client";
 
 export function InvitationsList({
   invitations,
 }: {
-  invitations: TeamInvitation[];
+  invitations: (TeamInvitation & {
+    team: { name: string };
+    host: { name: string; email: string };
+  })[];
 }) {
   const router = useRouter();
   const [processingInvitations, setProcessingInvitations] = useState<

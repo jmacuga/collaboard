@@ -148,13 +148,23 @@ export class TeamService {
     return teamMember.role.name;
   }
 
-  static async getUserInvitations(userId: string): Promise<TeamInvitation[]> {
+  static async getUserInvitations(email: string): Promise<TeamInvitation[]> {
     try {
       return await prisma.teamInvitation.findMany({
         where: {
-          email: userId,
+          email: email,
           status: TeamInvitationStatus.PENDING,
           team: { archived: false },
+        },
+        include: {
+          team: {
+            select: {
+              name: true,
+            },
+          },
+          host: {
+            select: { name: true, email: true },
+          },
         },
       });
     } catch (error) {

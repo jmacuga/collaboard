@@ -6,6 +6,7 @@ import { MergeRequestService } from "@/lib/services/merge-request";
 import { MergeRequestUpdateContent } from "@/components/merge-requests/update-content";
 import { getSession } from "next-auth/react";
 import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 
 interface MergeRequestUpdatePageProps {
   board: string;
@@ -27,6 +28,12 @@ export default function UpdateMergeRequestPage({
   const decodedChanges = parsedChanges.map(
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
+  }
   return (
     <MergeRequestUpdateContent
       board={parsedBoard}
@@ -70,7 +77,6 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       notFound: true,
     };
   }
-
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {

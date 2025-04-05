@@ -27,6 +27,6 @@ export const getServerSideProps: GetServerSideProps = async ({
     };
   }
   const invitations =
-    (await TeamService.getUserInvitations(session.user.id)) || [];
+    (await TeamService.getUserInvitations(session.user.email)) || [];
   return { props: { invitations: JSON.stringify(invitations) } };
 };

@@ -13,6 +13,7 @@ import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 
 interface BoardPreviewPageProps {
   board: string;
@@ -29,6 +30,9 @@ export default function BoardPreviewPage({
   const parsedTeam = JSON.parse(team);
   if (parsedTeam.archived) {
     return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
   }
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();

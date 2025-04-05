@@ -6,6 +6,7 @@ import { TeamService } from "@/lib/services/team/team-service";
 import MergeRequestsList from "@/components/merge-requests/merge-requests-list";
 import TeamBreadcrumb from "@/components/boards/breadcrumb";
 import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 
 interface MergeRequestsPageProps {
   board: string;
@@ -24,6 +25,9 @@ export default function MergeRequestsPage({
 
   if (parsedTeam.archived) {
     return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
   }
 
   return (

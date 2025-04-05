@@ -4,6 +4,7 @@ import { BoardProvider } from "@/components/board/board-provider";
 import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
 import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 interface BoardPageProps {
   board: string;
   team: string;
@@ -15,6 +16,9 @@ export default function BoardPage({ board, team }: BoardPageProps) {
 
   if (parsedTeam.archived) {
     return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
   }
   return <BoardProvider board={parsedBoard} team={parsedTeam} />;
 }

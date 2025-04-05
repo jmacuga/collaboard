@@ -13,6 +13,8 @@ import { MergeRequestHeader } from "@/components/merge-requests/merge-request-he
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
+import BoardArchived from "@/components/boards/board-archived";
+import TeamArchived from "@/components/teams/team-archived";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -34,6 +36,12 @@ export default function MergeRequestPage({
   const parsedMergeRequest = JSON.parse(mergeRequest);
   const parsedChanges = JSON.parse(changes);
   const parsedTeam = JSON.parse(team);
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
+  }
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
   const decodedChanges = parsedChanges.map(
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );

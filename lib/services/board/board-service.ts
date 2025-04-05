@@ -77,14 +77,10 @@ export class BoardService {
     return board?.teamId || null;
   }
 
-  static async getBoardById(
-    boardId: string,
-    includeArchived: boolean = false
-  ): Promise<Board | null> {
+  static async getBoardById(boardId: string): Promise<Board | null> {
     const board = await prisma.board.findUnique({
       where: {
         id: boardId,
-        ...(includeArchived ? {} : { archived: false }),
       },
     });
     return board || null;

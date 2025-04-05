@@ -57,6 +57,7 @@ export function BoardProvider({
       (async () => {
         if (state.clientSyncService) {
           await state.clientSyncService.disconnect();
+          await db.updateBoardLastSeen(board.id);
         }
       })();
     };

@@ -2,11 +2,35 @@ import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 import { useClientSync } from "@/components/board/context/client-sync-context";
+import { useRouter } from "next/router";
 
 const useSyncMode = () => {
   const clientSyncService = useClientSync();
   const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
+  const router = useRouter();
+
+  const fetchBoard = async () => {
+    try {
+      const boardId = router.query.id as string;
+      const response = await fetch(`/api/boards/${boardId}`);
+      if (!response.ok) {
+        return null;
+      }
+      const board = await response.json();
+      return board;
+    } catch (error) {
+      console.error("Failed to fetch board:", error);
+    }
+  };
+
+  const boardArchived = async () => {
+    const board = await fetchBoard();
+    if (!board) {
+      return null;
+    }
+    return board.archived;
+  };
 
   useEffect(() => {
     if (networkStatus === "OFFLINE") {
@@ -29,6 +53,10 @@ const useSyncMode = () => {
         return;
       }
       if (!isOnline) {
+        if (await boardArchived()) {
+          const boardId = router.query.id as string;
+          router.push(`/boards/${boardId}`);
+        }
         if (await clientSyncService.canConnect()) {
           await clientSyncService.setOnline(true);
           setIsOnline(true);

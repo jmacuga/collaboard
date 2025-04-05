@@ -1,7 +1,7 @@
-import { getInvitations } from "@/db/data";
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { InvitationsList } from "@/components/teams/invitations-list";
+import { TeamService } from "@/lib/services/team/team-service";
 
 export default function Invitations({ invitations }: { invitations: string }) {
   const parsedInvitations = JSON.parse(invitations);
@@ -26,6 +26,7 @@ export const getServerSideProps: GetServerSideProps = async ({
       },
     };
   }
-  const invitations = (await getInvitations(session.user.email)) || [];
+  const invitations =
+    (await TeamService.getUserInvitations(session.user.email)) || [];
   return { props: { invitations: JSON.stringify(invitations) } };
 };

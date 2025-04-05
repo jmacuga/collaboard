@@ -7,6 +7,10 @@ import {
   TeamMember as PrismaTeamMember,
   Board,
   User,
+  TeamInvitationStatus,
+  Team,
+  TeamInvitation,
+  Prisma,
 } from "@prisma/client";
 
 export class TeamServiceError extends Error {
@@ -89,29 +93,45 @@ export interface TeamMemberWithRelations {
     name: string;
   };
 }
+
+type PrismaTransactionalClient = Prisma.TransactionClient;
+
 export class TeamService {
   static async getTeamBoards(teamId: string): Promise<Board[]> {
-    return await prisma.board.findMany({
-      where: {
-        teamId,
-        archived: false,
-      },
-    });
+    try {
+      return await prisma.board.findMany({
+        where: {
+          teamId,
+          archived: false,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
   /**
-   * Check if a user is a member of a team
+   * Get member by user id and team id
    */
-  static async isUserMemberOfTeam(
+  static async getMember(
     userId: string,
     teamId: string
-  ): Promise<boolean> {
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        teamId,
-      },
-    });
-    return teamMember !== null;
+  ): Promise<TeamMemberWithRole | null> {
+    try {
+      const teamMember = await prisma.teamMember.findFirst({
+        where: {
+          userId,
+          teamId,
+        },
+        include: {
+          role: true,
+        },
+      });
+      return teamMember;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
   }
 
   /**
@@ -121,31 +141,64 @@ export class TeamService {
     userId: string,
     teamId: string
   ): Promise<string | null> {
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        teamId,
-      },
-      include: {
-        role: true,
-      },
-    });
-    if (!teamMember) {
+    try {
+      const teamMember = await prisma.teamMember.findFirst({
+        where: {
+          userId,
+          teamId,
+        },
+        include: {
+          role: true,
+        },
+      });
+      if (!teamMember) {
+        return null;
+      }
+
+      return teamMember.role.name;
+    } catch (error) {
+      console.error(error);
       return null;
     }
-
-    return teamMember.role.name;
   }
 
+  static async getUserInvitations(email: string): Promise<TeamInvitation[]> {
+    try {
+      return await prisma.teamInvitation.findMany({
+        where: {
+          email: email,
+          status: TeamInvitationStatus.PENDING,
+          team: { archived: false },
+        },
+        include: {
+          team: {
+            select: {
+              name: true,
+            },
+          },
+          host: {
+            select: { name: true, email: true },
+          },
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
   /**
    * Check if an invitation exists for a user in a team
    */
-  static async invitationExists(
+  static async invitationForEmailExists(
     email: string,
     teamId: string
   ): Promise<boolean> {
     const teamInvitation = await prisma.teamInvitation.findFirst({
-      where: { email, teamId, status: "PENDING" },
+      where: {
+        email,
+        teamId,
+        status: TeamInvitationStatus.PENDING,
+      },
     });
     return teamInvitation !== null;
   }
@@ -168,23 +221,23 @@ export class TeamService {
     email: string
   ): Promise<PrismaTeamInvitation> {
     const team = await this.getTeamById(teamId);
-    if (!team) {
+    if (!team || team.archived) {
       throw new TeamNotFoundError(teamId);
     }
 
     const invitee = await getUser(email);
     if (invitee) {
-      const isUserMemberOfTeam = await this.isUserMemberOfTeam(
-        invitee.id,
-        teamId
-      );
+      const member = await this.getMember(invitee.id, teamId);
 
-      if (isUserMemberOfTeam) {
+      if (member) {
         throw new UserAlreadyTeamMemberError(invitee.id, teamId);
       }
     }
 
-    const existingTeamInvitation = await this.invitationExists(email, teamId);
+    const existingTeamInvitation = await this.invitationForEmailExists(
+      email,
+      teamId
+    );
     if (existingTeamInvitation) {
       throw new TeamServiceError(
         `Invitation for ${email} to team ${teamId} already exists`
@@ -206,7 +259,7 @@ export class TeamService {
           email,
           teamId,
           hostId,
-          status: "PENDING",
+          status: TeamInvitationStatus.PENDING,
         },
       });
     } catch (error) {
@@ -235,7 +288,7 @@ export class TeamService {
       throw new InvitationNotFoundError(invitationId);
     }
 
-    if (invitation.status !== "PENDING") {
+    if (invitation.status !== TeamInvitationStatus.PENDING) {
       throw new InvitationNotPendingError(invitationId);
     }
 
@@ -244,59 +297,26 @@ export class TeamService {
       throw new UserNotFoundError(invitation.email);
     }
 
-    const memberRole = await prisma.teamRole.findUnique({
-      where: { name: "Member" },
-    });
-
-    if (!memberRole) {
-      throw new RoleNotFoundError("Member");
-    }
-
-    const isAlreadyMember = await this.isUserMemberOfTeam(
-      user.id,
-      invitation.team.id
-    );
-    if (isAlreadyMember) {
+    const member = await this.getMember(user.id, invitation.team.id);
+    if (member) {
       await prisma.teamInvitation.update({
         where: { id: invitationId },
-        data: { status: "ACCEPTED" },
+        data: { status: TeamInvitationStatus.ACCEPTED },
       });
-
-      const existingMember = await prisma.teamMember.findFirst({
-        where: {
-          userId: user.id,
-          teamId: invitation.team.id,
-        },
-        include: {
-          role: true,
-        },
-      });
-
-      if (!existingMember) {
-        throw new TeamServiceError(
-          `Failed to find existing team member for user ${user.id} in team ${invitation.team.id}`
-        );
-      }
-
-      return existingMember as TeamMemberWithRole;
+      return member;
     }
 
     try {
       return await prisma.$transaction(async (tx) => {
-        const teamMember = await tx.teamMember.create({
-          data: {
-            userId: user.id,
-            teamId: invitation.team.id,
-            roleId: memberRole.id,
-          },
-          include: {
-            role: true,
-          },
-        });
+        const teamMember = await this.createMember(
+          invitation.team.id,
+          user.id,
+          tx
+        );
 
         await tx.teamInvitation.update({
           where: { id: invitationId },
-          data: { status: "ACCEPTED" },
+          data: { status: TeamInvitationStatus.ACCEPTED },
         });
 
         return teamMember as TeamMemberWithRole;
@@ -334,7 +354,7 @@ export class TeamService {
 
       return await prisma.teamInvitation.update({
         where: { id: invitationId },
-        data: { status: "REJECTED" },
+        data: { status: TeamInvitationStatus.REJECTED },
       });
     } catch (error) {
       if (error instanceof TeamServiceError) {
@@ -352,22 +372,13 @@ export class TeamService {
   /**
    * Add a member to a team
    */
-  static async addMemberToTeam(
+  static async createMember(
     teamId: string,
-    userId: string
+    userId: string,
+    tx: PrismaTransactionalClient
   ): Promise<TeamMemberWithRole> {
     try {
-      const team = await this.getTeamById(teamId);
-      if (!team) {
-        throw new TeamNotFoundError(teamId);
-      }
-
-      const isAlreadyMember = await this.isUserMemberOfTeam(userId, teamId);
-      if (isAlreadyMember) {
-        throw new UserAlreadyTeamMemberError(userId, teamId);
-      }
-
-      const memberRole = await prisma.teamRole.findUnique({
+      const memberRole = await tx.teamRole.findUnique({
         where: { name: "Member" },
       });
 
@@ -375,7 +386,7 @@ export class TeamService {
         throw new RoleNotFoundError("Member");
       }
 
-      return (await prisma.teamMember.create({
+      return (await tx.teamMember.create({
         data: {
           userId,
           teamId,
@@ -391,7 +402,7 @@ export class TeamService {
       }
 
       throw new TeamServiceError(
-        `Failed to add member to team: ${
+        `Failed to create member: ${
           error instanceof Error ? error.message : String(error)
         }`
       );
@@ -406,35 +417,39 @@ export class TeamService {
     return board?.team || null;
   }
 
-  static async deleteTeam(teamId: string): Promise<boolean> {
-    const team = await this.getTeamById(teamId);
-    if (!team) {
-      throw new TeamNotFoundError(teamId);
-    }
+  static async isAllBoardsArchived(teamId: string): Promise<boolean> {
     const boards = await prisma.board.findMany({
+      where: { teamId, archived: false },
+    });
+    return boards.length === 0;
+  }
+
+  private static async deleteInvitations(teamId: string): Promise<boolean> {
+    const deletedInvitations = await prisma.teamInvitation.deleteMany({
       where: { teamId },
     });
-    if (boards.length > 0) {
+    return deletedInvitations.count > 0;
+  }
+
+  static async deleteTeam(teamId: string): Promise<void> {
+    const team = await this.getTeamById(teamId);
+    if (!team || team.archived) {
+      throw new TeamNotFoundError(teamId);
+    }
+    if (!(await this.isAllBoardsArchived(teamId))) {
       throw new TeamHasBoardsError(teamId);
     }
-    const deletedTeam = await prisma.team.delete({
+    await this.deleteInvitations(teamId);
+    await prisma.team.update({
       where: { id: teamId },
+      data: { archived: true },
     });
-    return !!deletedTeam;
   }
 
   static async getArchivedBaordsForTeams(teamIds: string[]): Promise<Board[]> {
     return await prisma.board.findMany({
       where: { teamId: { in: teamIds }, archived: true },
     });
-  }
-
-  static async getUserTeams(userId: string): Promise<PrismaTeam[]> {
-    const memberTeams = await prisma.teamMember.findMany({
-      where: { userId },
-      select: { team: true },
-    });
-    return memberTeams.map((member) => member.team);
   }
 
   /**
@@ -495,7 +510,7 @@ export class TeamService {
     }
   }
 
-  static async getMember(memberId: string): Promise<PrismaTeamMember> {
+  static async getMemberById(memberId: string): Promise<PrismaTeamMember> {
     const member = await prisma.teamMember.findUnique({
       where: { id: memberId },
       include: { role: true, user: true },
@@ -517,6 +532,33 @@ export class TeamService {
       });
 
       return members;
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  static async getBoardsIds(teamId: string): Promise<string[]> {
+    const boards = await prisma.board.findMany({
+      where: { teamId },
+      select: { id: true },
+    });
+    return boards.map((board) => board.id);
+  }
+
+  static async getUserTeams(userId: string): Promise<Team[]> {
+    try {
+      const teams = await prisma.team.findMany({
+        where: {
+          members: {
+            some: {
+              userId,
+            },
+          },
+          archived: false,
+        },
+      });
+      return teams;
     } catch (e) {
       console.error(e);
       return [];

@@ -8,9 +8,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!boardId) {
       return res.status(400).json({ message: "Board ID is required" });
     }
-
     const board = await BoardService.archive(boardId);
-
     return res.status(200).json({ message: "Board deleted successfully" });
   } catch (error) {
     console.error("Board deletion error:", error);

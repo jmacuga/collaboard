@@ -3,6 +3,8 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { BoardProvider } from "@/components/board/board-provider";
 import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
+import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 interface BoardPageProps {
   board: string;
   team: string;
@@ -11,6 +13,13 @@ interface BoardPageProps {
 export default function BoardPage({ board, team }: BoardPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
+
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
+  }
   return <BoardProvider board={parsedBoard} team={parsedTeam} />;
 }
 

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 
 interface DeleteBoardDialogProps {
   boardId: string;
@@ -33,12 +33,12 @@ export function DeleteBoardDialog({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const docUrl = await fetch(`/api/boards/${boardId}/url`).then((res) =>
+      const docId = await fetch(`/api/boards/${boardId}/docId`).then((res) =>
         res.json()
       );
 
       try {
-        const syncService = new ClientSyncService(docUrl);
+        const syncService = new ClientSyncService(docId);
         setCheckingUsers(true);
         const activeUsers = await syncService.getActiveUsers();
         setCheckingUsers(false);
@@ -56,13 +56,11 @@ export function DeleteBoardDialog({
 
         if (response.ok) {
           try {
-            console.log("Deleting board doc", docUrl);
             syncService.deleteDoc();
           } catch (error) {
             console.error(error);
             toast.error("Failed to delete board doc");
           }
-          console.log("Board deleted successfully");
           toast.success("Board deleted successfully");
           router.push(`/teams/${teamId}/boards/`);
           setOpen(false);

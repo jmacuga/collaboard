@@ -3,7 +3,7 @@ import { BoardContext } from "../context/board-context";
 import { colorTools } from "./color-palette";
 import ColorIcon from "../color-icon";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Palette } from "lucide-react";
@@ -12,7 +12,7 @@ const ShapeColorPalette = () => {
   const { selectedShapeIds, mode } = useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
   const [isOpen, setIsOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState("rgb(0,0,0)");

@@ -9,7 +9,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const teamId = req.query.id as string;
     const memberId = req.query.memberId as string;
 
-    const userMember = await TeamService.getMember(memberId);
+    const userMember = await TeamService.getMemberById(memberId);
 
     const sessionUser = await getServerSession(req, res, authOptions);
     if (userMember.userId === sessionUser?.user.id) {

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import { Change } from "@automerge/automerge";
-import { ClientSyncContext } from "../board/context/client-doc-context";
+import { ClientSyncContext } from "../board/context/client-sync-context";
 
 export function CreateMergeRequestDialog({
   boardId,
@@ -44,7 +44,7 @@ export function CreateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request created successfully");
-        clientSyncService?.revertLocalChanges();
+        clientSyncService?.removeLocalDoc();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;

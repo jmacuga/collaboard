@@ -52,6 +52,7 @@ model Team {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  archived  Boolean  @default(false)
 
   // Relations
   members     TeamMember[]
@@ -87,7 +88,7 @@ model TeamInvitation {
   status    TeamInvitationStatus @default(PENDING)
   teamId    String
   hostId    String
-  email String
+  email     String
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
@@ -99,9 +100,9 @@ model TeamInvitation {
 model Board {
   id                    String    @id @default(uuid())
   name                  String
-  teamId               String
+  teamId                String
   isMergeRequestRequired Boolean  @default(true)
-  docUrl               String?
+  automergeDocId       String?
   archived             Boolean  @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

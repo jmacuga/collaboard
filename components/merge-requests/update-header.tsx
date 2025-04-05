@@ -1,15 +1,16 @@
-import { ArrowLeft } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
 import { UpdateMergeRequestDialog } from "./update-dialog";
 
-export const MergeRequestUpdateHeader = ({
-  boardId,
-  serverDocUrl,
-}: {
+interface MergeRequestUpdateHeaderProps {
   boardId: string;
-  serverDocUrl: string;
-}) => {
+  serverDocId: string;
+}
+
+export function MergeRequestUpdateHeader({
+  boardId,
+  serverDocId,
+}: MergeRequestUpdateHeaderProps) {
   const router = useRouter();
   const reqId = router.query.reqId as string;
 
@@ -36,9 +37,9 @@ export const MergeRequestUpdateHeader = ({
         <UpdateMergeRequestDialog
           boardId={boardId}
           mergeRequestId={reqId}
-          serverDocUrl={serverDocUrl}
+          serverDocId={serverDocId}
         />
       </div>
     </div>
   );
-};
+}

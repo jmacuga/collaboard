@@ -1,11 +1,11 @@
 import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { Doc } from "@automerge/automerge";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
@@ -13,6 +13,8 @@ import { MergeRequestHeader } from "@/components/merge-requests/merge-request-he
 import BoardReadonly from "@/components/preview/board-readonly";
 import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
+import BoardArchived from "@/components/boards/board-archived";
+import TeamArchived from "@/components/teams/team-archived";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -34,6 +36,12 @@ export default function MergeRequestPage({
   const parsedMergeRequest = JSON.parse(mergeRequest);
   const parsedChanges = JSON.parse(changes);
   const parsedTeam = JSON.parse(team);
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
+  }
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
   const decodedChanges = parsedChanges.map(
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );
@@ -46,7 +54,7 @@ export default function MergeRequestPage({
     setIsMounted(true);
     if (!clientSyncServiceRef.current) {
       clientSyncServiceRef.current = new ClientSyncService({
-        docUrl: parsedBoard.docUrl,
+        docId: parsedBoard.automergeDocId,
       });
     }
     const getPreviewDoc = async () => {
@@ -58,7 +66,7 @@ export default function MergeRequestPage({
     };
 
     getPreviewDoc();
-  }, [parsedBoard.docUrl]);
+  }, [parsedBoard.automergeDocId]);
 
   if (!isMounted) {
     return null;
@@ -110,7 +118,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
     Buffer.from(change).toString("base64")
   );
   const board = await BoardService.getBoardById(boardId);
-  if (!board || !board.docUrl) {
+  if (!board || !board.automergeDocId) {
     return {
       notFound: true,
     };
@@ -119,6 +127,14 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
   if (!team) {
     return {
       notFound: true,
+    };
+  }
+  if (team.archived) {
+    return {
+      redirect: {
+        destination: "/teams",
+        permanent: false,
+      },
     };
   }
   return {

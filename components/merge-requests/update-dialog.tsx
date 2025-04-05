@@ -14,30 +14,31 @@ import { toast } from "react-hot-toast";
 import { getChanges } from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { ClientSyncContext } from "../board/context/client-doc-context";
+import { ClientSyncContext } from "../board/context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
 
 export function UpdateMergeRequestDialog({
   boardId,
   mergeRequestId,
-  serverDocUrl,
+  serverDocId,
 }: {
   boardId: string;
   mergeRequestId: string;
-  serverDocUrl: string;
+  serverDocId: string;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { clientSyncService } = useContext(ClientSyncContext);
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService?.getDocUrl() as AnyDocumentId
+    clientSyncService?.getDocId() as AnyDocumentId
   );
 
   const calculateChanges = async () => {
     if (!clientSyncService) return [];
-    const serverDoc = await clientSyncService
-      ?.createServerRepo()
-      .find<LayerSchema>(serverDocUrl as AnyDocumentId)
+    const serverRepo = clientGetServerRepo();
+    const serverDoc = await serverRepo
+      .find<LayerSchema>(serverDocId as AnyDocumentId)
       .doc();
     return getChanges(serverDoc, doc);
   };

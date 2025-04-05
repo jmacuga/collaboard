@@ -2,8 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import Board from "@/components/board/board";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
-import { ClientSyncContext } from "@/components/board/context/client-doc-context";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
+import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import { BoardContextProvider } from "@/components/board/context/board-context";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
@@ -14,8 +14,9 @@ import * as automerge from "@automerge/automerge";
 import { BoardHeader } from "../board/components/board-header";
 import { useRouter } from "next/router";
 import { NetworkStatusProvider } from "../providers/network-status-provider";
+import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
 
-export function MergeRequestUpdateProvider({
+export function MergeRequestUpdateContent({
   board,
   team,
   changes,
@@ -28,27 +29,27 @@ export function MergeRequestUpdateProvider({
   const initialLoad = useRef(true);
   const [clientSyncService, setClientSyncService] =
     useState<ClientSyncService | null>(null);
-  const [updateDocUrl, setUpdateDocUrl] = useState<string | null>(
-    router.query.updateDocUrl as string
+  const [updateDocId, setUpdateDocId] = useState<string | null>(
+    router.query.updateDocId as string
   );
 
   useEffect(() => {
     if (initialLoad.current) {
-      let docUrl = updateDocUrl;
-      if (!docUrl) {
+      let docId = updateDocId;
+      if (!docId) {
         const repo = new Repo({
           storage: new IndexedDBStorageAdapter(),
         });
         const docHandle = repo.create<LayerSchema>();
-        docUrl = docHandle.documentId as string;
+        docId = docHandle.documentId as string;
       }
 
       setClientSyncService(
         new ClientSyncService({
-          docUrl: docUrl,
+          docId: docId,
         })
       );
-      setUpdateDocUrl(docUrl);
+      setUpdateDocId(docId);
       initialLoad.current = false;
     }
 
@@ -57,18 +58,18 @@ export function MergeRequestUpdateProvider({
         clientSyncService.deleteDoc();
       }
     };
-  }, [updateDocUrl]);
+  }, [updateDocId]);
 
   useEffect(() => {
     const applyChangesToUpdateDoc = async () => {
       if (initialLoad.current || !clientSyncService) return;
-      const serverRepo = clientSyncService.createServerRepo();
+      const serverRepo = clientGetServerRepo();
       const serverDoc = await serverRepo
-        .find<LayerSchema>(board.docUrl as AnyDocumentId)
+        .find<LayerSchema>(board.automergeDocId as AnyDocumentId)
         .doc();
       const docHandle = await clientSyncService
         .getRepo()
-        ?.find<LayerSchema>(updateDocUrl as AnyDocumentId);
+        ?.find<LayerSchema>(updateDocId as AnyDocumentId);
       docHandle?.update((doc) => {
         doc = automerge.merge(doc, serverDoc);
         return automerge.applyChanges(doc, changes)[0];
@@ -95,7 +96,7 @@ export function MergeRequestUpdateProvider({
               />
               <MergeRequestUpdateHeader
                 boardId={board.id}
-                serverDocUrl={board.docUrl as string}
+                serverDocId={board.automergeDocId as string}
               />
               <Board team={team} board={board} hideActiveUsers={true} />
             </div>

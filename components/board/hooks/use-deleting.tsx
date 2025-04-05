@@ -2,7 +2,7 @@ import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { useEffect, useCallback, useContext } from "react";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { BoardContext } from "../context/board-context";
 
 export const useDeleting = () => {
@@ -10,7 +10,7 @@ export const useDeleting = () => {
     useContext(BoardContext);
   const clientSyncService = useClientSync();
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const handleDelete = useCallback(() => {

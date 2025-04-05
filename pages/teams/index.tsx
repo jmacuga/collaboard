@@ -1,8 +1,9 @@
 import { GetServerSideProps } from "next";
-import { getUser, getUserTeams } from "@/db/data";
+import { getUser } from "@/db/data";
 import TeamsCards from "@/components/teams/teams-cards";
 import { getSession } from "next-auth/react";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
+import { TeamService } from "@/lib/services/team/team-service";
 interface TeamsPageProps {
   teams: string;
   userId: string;
@@ -25,7 +26,7 @@ export default function TeamsPage({ teams, userId }: TeamsPageProps) {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context);
   const user = await getUser(session!.user.email as string);
-  const teams = await getUserTeams(user!.id);
+  const teams = await TeamService.getUserTeams(user!.id);
   return {
     props: {
       teams: JSON.stringify(teams),

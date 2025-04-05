@@ -4,9 +4,9 @@ import { getSession } from "next-auth/react";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
 import { TeamService } from "@/lib/services/team/team-service";
 import { withTeamRolePage } from "@/lib/middleware";
-import { getTeamBoards } from "@/db/data";
 import TeamBreadcrumb from "@/components/boards/breadcrumb";
 import { TeamNav } from "@/components/teams/team-nav";
+import TeamArchived from "@/components/teams/team-archived";
 interface BoardsPageProps {
   boards: string;
   team: string;
@@ -21,6 +21,9 @@ export default function BoardsPage({
   const parsedBoards = JSON.parse(boards);
   const parsedTeam = JSON.parse(team);
   const parsedUserRole = JSON.parse(userRole);
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
   return (
     <div className="container mx-auto py-6">
       <div className="mb-8">
@@ -53,7 +56,7 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
     };
   }
 
-  const boards = await getTeamBoards(teamId);
+  const boards = await TeamService.getTeamBoards(teamId);
 
   return {
     props: {

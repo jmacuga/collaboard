@@ -1,15 +1,8 @@
-import { WebSocketServer } from "ws";
-import { AnyDocumentId, DocumentId, Repo } from "@automerge/automerge-repo";
+import { Repo } from "@automerge/automerge-repo";
 import { NodeWSServerAdapter } from "@automerge/automerge-repo-network-websocket";
 import { MongoDBStorageAdapter } from "@/lib/automerge-repo-storage-mongodb";
 
-let SERVER_WSS: WebSocketServer | null = null;
-
-declare global {
-  var __serverRepo: Repo | undefined;
-}
-
-export async function createServerRepo(hostname: string, docId: string) {
+export async function createServerRepo() {
   const mongoAdapter = new MongoDBStorageAdapter(
     process.env.MONGODB_URI || "",
     {
@@ -20,32 +13,24 @@ export async function createServerRepo(hostname: string, docId: string) {
   );
 
   const config = {
-    network: [new NodeWSServerAdapter(SERVER_WSS as any)],
+    network: [new NodeWSServerAdapter(global.__serverWSS as any)],
     storage: mongoAdapter,
-    peerId: `storage-server-${hostname}`,
+    peerId: `storage-server-${process.env.HOSTNAME}`,
     sharePolicy: async (
       _peerId: string,
-      requestedDocId: string
+      hostname: string
     ): Promise<boolean> => {
-      return requestedDocId === docId;
+      return hostname === process.env.HOSTNAME;
     },
   };
-  console.log("Creating new repo");
   return new Repo(config as any);
 }
 
-export async function getOrCreateRepo(
-  docId: string,
-  hostname: string,
-  wss: WebSocketServer
-): Promise<Repo> {
-  if (SERVER_WSS === null) {
-    SERVER_WSS = wss;
-  }
+export async function getOrCreateRepo(): Promise<Repo> {
   if (global.__serverRepo) {
     return global.__serverRepo;
   }
-  const repo = await createServerRepo(hostname, docId);
+  const repo = await createServerRepo();
   global.__serverRepo = repo;
   return repo;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
 import { createContext, useContext } from "react";
 
 interface ClientSyncContextType {

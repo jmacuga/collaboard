@@ -3,8 +3,10 @@ import { BoardService } from "@/lib/services/board/board-service";
 import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
 import { MergeRequestService } from "@/lib/services/merge-request";
-import { MergeRequestUpdateProvider } from "@/components/merge-requests/update-provider";
+import { MergeRequestUpdateContent } from "@/components/merge-requests/update-content";
 import { getSession } from "next-auth/react";
+import TeamArchived from "@/components/teams/team-archived";
+import BoardArchived from "@/components/boards/board-archived";
 
 interface MergeRequestUpdatePageProps {
   board: string;
@@ -19,12 +21,21 @@ export default function UpdateMergeRequestPage({
 }: MergeRequestUpdatePageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
   const parsedChanges = JSON.parse(changes);
   const decodedChanges = parsedChanges.map(
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
+  if (parsedBoard.archived) {
+    return <BoardArchived />;
+  }
   return (
-    <MergeRequestUpdateProvider
+    <MergeRequestUpdateContent
       board={parsedBoard}
       team={parsedTeam}
       changes={decodedChanges}
@@ -66,7 +77,6 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       notFound: true,
     };
   }
-
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {

@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useContext, useRef } from "react";
 import { useHandle } from "@automerge/automerge-repo-react-hooks";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "../context/client-doc-context";
+import { useClientSync } from "../context/client-sync-context";
 import { v4 as uuidv4 } from "uuid";
 import {
   useLocalAwareness,
@@ -34,8 +34,8 @@ const getRandomColor = () => {
 
 export const useActiveUsers = () => {
   const clientSyncService = useClientSync();
-  const docUrl = clientSyncService.getDocUrl() as AnyDocumentId;
-  const handle = useHandle<LayerSchema>(docUrl);
+  const docId = clientSyncService.getDocId() as AnyDocumentId;
+  const handle = useHandle<LayerSchema>(docId);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const { isOnline, selectedShapeIds } = useContext(BoardContext);
   const { data: session } = useSession();

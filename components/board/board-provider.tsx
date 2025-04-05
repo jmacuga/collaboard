@@ -2,8 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import Board from "@/components/board/board";
-import { ClientSyncService } from "@/lib/services/client-doc/client-doc-service";
-import { ClientSyncContext } from "./context/client-doc-context";
+import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
+import { ClientSyncContext } from "./context/client-sync-context";
 import { BoardContextProvider } from "./context/board-context";
 import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
@@ -36,7 +36,7 @@ export function BoardProvider({
       }
       isInitialized.current = true;
       const clientSyncService = new ClientSyncService({
-        docUrl: board.docUrl as string,
+        docId: board.automergeDocId as string,
       });
       await clientSyncService.initializeRepo();
       if (await clientSyncService.canConnect()) {
@@ -58,7 +58,7 @@ export function BoardProvider({
         state.clientSyncService.disconnect();
       }
     };
-  }, [board.docUrl]);
+  }, [board.automergeDocId]);
 
   if (!state.clientSyncService) {
     return <div>Loading board...</div>;

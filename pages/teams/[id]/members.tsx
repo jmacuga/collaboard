@@ -6,6 +6,7 @@ import { InviteMembersDialog } from "@/components/teams/invite-members-dialog";
 import { withTeamRolePage } from "@/lib/middleware";
 import TeamBreadcrumb from "@/components/boards/breadcrumb";
 import { TeamNav } from "@/components/teams/team-nav";
+import TeamArchived from "@/components/teams/team-archived";
 
 interface MembersPageProps {
   members: string;
@@ -24,6 +25,9 @@ export default function MembersPage({
   const parsedMembers = JSON.parse(members);
   const parsedUserRole = JSON.parse(userRole);
   const parsedUserId = JSON.parse(userId);
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
   return (
     <div className="container mx-auto py-6">
       <div className="mb-8">

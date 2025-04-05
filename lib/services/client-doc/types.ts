@@ -16,10 +16,9 @@ export interface IClientSyncService {
   getRepo(): Repo | null;
   connect(): void;
   disconnect(): void;
-  updateServerData(docUrl: string): void;
   getActiveUsers(): Promise<string[]>;
   deleteDoc(): void;
-  revertLocalChanges(): Promise<void>;
+  removeLocalDoc(): Promise<void>;
 }
 
 export interface StorageConfig {

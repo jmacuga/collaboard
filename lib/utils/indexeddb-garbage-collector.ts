@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 
 const ONE_DAY_MS = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
 
-type BoardDocUrl = {
-  docUrl: string;
+type BoardDocIds = {
+  docId: string;
 };
 
 /**
@@ -75,7 +75,7 @@ export async function fetchBoardsToCleanup(
     }
 
     const data = await response.json();
-    return data.boards.map((board: BoardDocUrl) => board.docUrl);
+    return data.boards.map((board: BoardDocIds) => board.docId);
   } catch (error) {
     console.error("Error fetching boards to clean up:", error);
     return [];
@@ -93,17 +93,17 @@ export async function deleteArchivedBoards(): Promise<void> {
       return;
     }
 
-    const localDocUrls = await db.docUrls.toArray();
-    const localUrls = localDocUrls.map((doc) => doc.docUrl);
+    const localDocIds = await db.docIds.toArray();
+    const localIds = localDocIds.map((doc) => doc.docId);
 
-    if (!localUrls.length) {
+    if (!localIds.length) {
       await updateLastGarbageCollectionDate();
       return;
     }
 
-    const boardUrlsToCleanup = await fetchBoardsToCleanup(localUrls);
+    const boardIdsToCleanup = await fetchBoardsToCleanup(localIds);
 
-    if (!boardUrlsToCleanup.length) {
+    if (!boardIdsToCleanup.length) {
       await updateLastGarbageCollectionDate();
       return;
     }
@@ -114,13 +114,13 @@ export async function deleteArchivedBoards(): Promise<void> {
       peerId: uuidv4() as unknown as PeerId,
     });
 
-    const boardsToDelete = localDocUrls.filter((local) =>
-      boardUrlsToCleanup.includes(local.docUrl)
+    const boardsToDelete = localIds.filter((local) =>
+      boardIdsToCleanup.includes(local)
     );
 
     for (const board of boardsToDelete) {
-      repo.delete(board.docUrl as AnyDocumentId);
-      await db.docUrls.delete(board.docUrl);
+      repo.delete(board as AnyDocumentId);
+      await db.docIds.delete(board);
     }
 
     await updateLastGarbageCollectionDate();

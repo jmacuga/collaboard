@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { TeamNav } from "@/components/teams/team-nav";
 import TeamBreadcrumb from "@/components/boards/breadcrumb";
+import TeamArchived from "@/components/teams/team-archived";
 
 interface SettingsPageProps {
   team: string;
@@ -27,6 +28,9 @@ export default function SettingsPage({
   const adminsCount = parsedMembers.filter(
     (member: any) => member.role.name === "Admin"
   ).length;
+  if (parsedTeam.archived) {
+    return <TeamArchived />;
+  }
 
   return (
     <div className="container mx-auto py-6">

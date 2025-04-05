@@ -3,7 +3,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "@/components/board/context/client-doc-context";
+import { useClientSync } from "@/components/board/context/client-sync-context";
 
 interface DraggingState {
   draggedShapeId: string | null;
@@ -14,7 +14,7 @@ interface DraggingState {
 export const useDragging = () => {
   const clientSyncService = useClientSync();
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocUrl() as AnyDocumentId
+    clientSyncService.getDocId() as AnyDocumentId
   );
 
   const [draggingState, setDraggingState] = useState<DraggingState>({

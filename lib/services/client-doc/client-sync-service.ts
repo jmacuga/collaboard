@@ -300,7 +300,7 @@ export class ClientSyncService implements IClientSyncService {
 
         const cleanupAndResolve = () => {
           clearTimeout(timeoutId);
-          this.handle.off("ephemeral-message", handleEphemeralMessage);
+          this.handle.removeListener("ephemeral-message");
           resolve(Array.from(activeUsers));
         };
 

@@ -9,6 +9,7 @@ import { NetworkStatusProvider } from "@/components/providers/network-status-pro
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { SyncStatusControl } from "./components/sync-status-control";
 import { BoardHeader } from "./components/board-header";
+import { db } from "@/lib/indexed-db";
 
 interface BoardState {
   clientSyncService: ClientSyncService | null;
@@ -40,8 +41,8 @@ export function BoardProvider({
       });
       await clientSyncService.initializeRepo();
       if (await clientSyncService.canConnect()) {
-        console.log("connecting");
         await clientSyncService.connect();
+        await db.updateBoardLastSeen(board.id);
         synced = true;
       } else {
         console.log("Staying disconnected");
@@ -52,13 +53,14 @@ export function BoardProvider({
       });
     };
     initializeClientSyncService();
-
     return () => {
-      if (state.clientSyncService) {
-        state.clientSyncService.disconnect();
-      }
+      (async () => {
+        if (state.clientSyncService) {
+          await state.clientSyncService.disconnect();
+        }
+      })();
     };
-  }, [board.automergeDocId]);
+  }, [board.automergeDocId, board.id, state.clientSyncService]);
 
   if (!state.clientSyncService) {
     return <div>Loading board...</div>;

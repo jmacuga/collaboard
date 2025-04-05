@@ -121,6 +121,14 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ req, params }) => {
       notFound: true,
     };
   }
+  if (team.archived) {
+    return {
+      redirect: {
+        destination: "/teams",
+        permanent: false,
+      },
+    };
+  }
   return {
     props: {
       board: JSON.stringify(board),

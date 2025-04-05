@@ -283,7 +283,7 @@ export class ClientSyncService implements IClientSyncService {
       return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           cleanupAndResolve();
-        }, 5000);
+        }, 2500);
 
         const handleEphemeralMessage = (
           event: DocHandleEphemeralMessagePayload<UserStatusPayload>

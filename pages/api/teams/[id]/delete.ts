@@ -17,11 +17,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     await TeamService.deleteTeam(req.query.id as string);
   } catch (e) {
     if (e instanceof TeamHasBoardsError) {
+      console.error(e);
       return res.status(400).json({ message: "Team has boards" });
     }
     if (e instanceof TeamNotFoundError) {
+      console.error(e);
       return res.status(404).json({ message: "Team not found" });
     }
+    console.error(e);
     return res.status(500).json({ message: "Internal server error" });
   }
 

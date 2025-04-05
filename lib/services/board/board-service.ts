@@ -1,7 +1,7 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Board, MergeRequest } from "@prisma/client";
+import { Board, MergeRequest, Prisma } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { getOrCreateRepo } from "@/lib/automerge-server";
@@ -18,6 +18,7 @@ export class BoardNotFoundError extends BoardServiceError {
     this.name = "BoardNotFoundError";
   }
 }
+export type PrismaTransactionalClient = Prisma.TransactionClient;
 
 export class BoardService {
   constructor() {}
@@ -48,22 +49,44 @@ export class BoardService {
     }
   }
 
-  static async archive(boardId: string): Promise<void> {
-    let board: Board | null = null;
-    board = await prisma.board.findUnique({
-      where: { id: boardId, archived: false },
+  private static async deleteReviewRequests(
+    boardId: string,
+    tx: PrismaTransactionalClient
+  ): Promise<void> {
+    await tx.mergeRequest.deleteMany({
+      where: { boardId },
     });
-    if (!board) {
-      throw new BoardNotFoundError(boardId);
-    }
-    const serverRepo = await getOrCreateRepo();
-    if (!serverRepo) {
-      throw new Error("Server repo not found");
-    }
-    serverRepo.delete(board.automergeDocId as AnyDocumentId);
-    await prisma.board.update({
-      where: { id: boardId },
-      data: { archived: true },
+  }
+
+  private static async deleteMergeRequests(
+    boardId: string,
+    tx: PrismaTransactionalClient
+  ): Promise<void> {
+    await tx.mergeRequest.deleteMany({
+      where: { boardId },
+    });
+  }
+
+  static async archive(boardId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      let board: Board | null = null;
+      board = await tx.board.findUnique({
+        where: { id: boardId, archived: false },
+      });
+      if (!board) {
+        throw new BoardNotFoundError(boardId);
+      }
+      const serverRepo = await getOrCreateRepo();
+      if (!serverRepo) {
+        throw new Error("Server repo not found");
+      }
+      await this.deleteReviewRequests(boardId, tx);
+      await this.deleteMergeRequests(boardId, tx);
+      serverRepo.delete(board.automergeDocId as AnyDocumentId);
+      await prisma.board.update({
+        where: { id: boardId },
+        data: { archived: true },
+      });
     });
 
     return;

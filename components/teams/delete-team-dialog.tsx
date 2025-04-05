@@ -144,32 +144,6 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
     }
   };
 
-  const handleForceDelete = async () => {
-    try {
-      setIsDeleting(true);
-      const boards = await fetchBoards();
-      for (const board of boards) {
-        const clientSyncService = new ClientSyncService({
-          docId: board.automergeDocId,
-        });
-        clientSyncService.connect();
-        const deleted = await deleteBoard(
-          board.id,
-          board.name,
-          clientSyncService
-        );
-        if (!deleted) {
-          toast.error(`Failed to delete board ${board.name}`);
-          return;
-        }
-        clientSyncService.disconnect();
-      }
-      await deleteTeam(teamId);
-    } catch (error) {
-      console.error("Error", error);
-    }
-  };
-
   return (
     <>
       {boardsFailedToDelete.length === 0 && (
@@ -257,7 +231,6 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
               Please try again later or delete the boards manually.
             </DialogHeader>
             <DialogFooter>
-              <Button onClick={handleForceDelete}>Force Delete</Button>
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Close
               </Button>

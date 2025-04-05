@@ -40,7 +40,7 @@ function buildKeyPrefixFilter(keyPrefix: StorageKey) {
   );
 }
 
-type ChunkDocument = { key: StorageKey; data: BSON.Binary };
+type ChunkDocument = { key: StorageKey; data: BSON.Binary; updatedAt: Date };
 
 type MongoDBStorageAdapterOptions = {
   dbName?: string;
@@ -115,7 +115,7 @@ export class MongoDBStorageAdapter implements StorageAdapterInterface {
     const collection = await this.collection;
     await collection.updateOne(
       { key: key },
-      { $set: { data: new BSON.Binary(data) } },
+      { $set: { data: new BSON.Binary(data), updatedAt: new Date() } },
       { upsert: true }
     );
   }

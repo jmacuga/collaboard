@@ -5,6 +5,8 @@ import { Board, MergeRequest, Prisma } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { getOrCreateRepo } from "@/lib/automerge-server";
+import { Doc } from "@/db/models/Doc";
+import { CodeSquare } from "lucide-react";
 export class BoardServiceError extends Error {
   constructor(message: string) {
     super(message);
@@ -138,5 +140,41 @@ export class BoardService {
       },
     });
     return mergeRequests;
+  }
+
+  static async getBoardLastUpdated(boardId: string): Promise<Date | null> {
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      select: {
+        automergeDocId: true,
+      },
+    });
+    if (!board) {
+      throw new BoardNotFoundError(boardId);
+    }
+    const lastUpdated = await this.getDocLastUpdated(
+      board.automergeDocId as string
+    );
+    if (!lastUpdated) {
+      return null;
+    }
+    return lastUpdated;
+  }
+
+  private static async getDocLastUpdated(
+    docId: string
+  ): Promise<Date | undefined> {
+    await dbConnect();
+
+    try {
+      const doc = await Doc.findOne({ "key.0": docId })
+        .sort({ updatedAt: -1 })
+        .select("updatedAt");
+
+      return doc?.updatedAt;
+    } catch (error) {
+      console.error("Error getting document last updated:", error);
+      return undefined;
+    }
   }
 }

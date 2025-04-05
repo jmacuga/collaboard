@@ -7,20 +7,24 @@ import { withTeamRolePage } from "@/lib/middleware";
 import TeamBreadcrumb from "@/components/boards/breadcrumb";
 import { TeamNav } from "@/components/teams/team-nav";
 import TeamArchived from "@/components/teams/team-archived";
+import { BoardService } from "@/lib/services/board/board-service";
 interface BoardsPageProps {
   boards: string;
   team: string;
   userRole: string;
+  lastUpdatedMap: string;
 }
 
 export default function BoardsPage({
   boards,
   team,
   userRole,
+  lastUpdatedMap,
 }: BoardsPageProps) {
   const parsedBoards = JSON.parse(boards);
   const parsedTeam = JSON.parse(team);
   const parsedUserRole = JSON.parse(userRole);
+  const parsedLastUpdatedMap = JSON.parse(lastUpdatedMap);
   if (parsedTeam.archived) {
     return <TeamArchived />;
   }
@@ -36,7 +40,11 @@ export default function BoardsPage({
       </div>
 
       {parsedBoards && (
-        <BoardCards teamBoards={parsedBoards} userRole={parsedUserRole} />
+        <BoardCards
+          teamBoards={parsedBoards}
+          userRole={parsedUserRole}
+          lastUpdatedMap={parsedLastUpdatedMap}
+        />
       )}
     </div>
   );
@@ -57,12 +65,19 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
   }
 
   const boards = await TeamService.getTeamBoards(teamId);
-
+  const lastUpdatedMap: Record<string, Date> = {};
+  for (const board of boards) {
+    const lastUpdated = await BoardService.getBoardLastUpdated(board.id);
+    if (lastUpdated) {
+      lastUpdatedMap[board.id] = lastUpdated;
+    }
+  }
   return {
     props: {
       boards: JSON.stringify(boards),
       team: JSON.stringify(team),
       userRole: JSON.stringify(userRole),
+      lastUpdatedMap: JSON.stringify(lastUpdatedMap),
     },
   };
 };

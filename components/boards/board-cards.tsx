@@ -15,9 +15,11 @@ import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 export function BoardCards({
   teamBoards,
   userRole,
+  lastUpdatedMap,
 }: {
   teamBoards: Board[] | null;
   userRole: string;
+  lastUpdatedMap: Record<string, Date>;
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -55,6 +57,12 @@ export function BoardCards({
                 <p>
                   Created {format(new Date(board.createdAt), "MMM d, yyyy")}
                 </p>
+                {lastUpdatedMap[board.id as string] && (
+                  <p>
+                    Last Updated{" "}
+                    {format(lastUpdatedMap[board.id as string], "MMM d, HH:mm")}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Link

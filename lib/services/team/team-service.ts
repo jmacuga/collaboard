@@ -559,8 +559,43 @@ export class TeamService {
         },
       });
       return teams;
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
+
+  static async getTeamBoardLogs(teamId: string): Promise<any[]> {
+    try {
+      const logs = await prisma.boardLog.findMany({
+        where: {
+          board: {
+            teamId,
+          },
+        },
+        include: {
+          board: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+              username: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      return logs;
+    } catch (error) {
+      console.error(error);
       return [];
     }
   }

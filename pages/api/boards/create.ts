@@ -6,6 +6,8 @@ import {
 import { BoardService } from "@/lib/services/board";
 import { ZodError } from "zod";
 import { withTeamRoleApi } from "@/lib/middleware";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/auth";
 
 type ErrorResponse = {
   message: string;
@@ -23,12 +25,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ message: "Team ID is required" });
     }
 
+    const session = await getServerSession(req, res, authOptions);
+
+    if (!session) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const boardSchema = createBoardSchemaWithTeamCheck(teamId);
     const validatedData = await boardSchema.parseAsync(data);
 
     const board = await BoardService.create({
       name: validatedData.name,
       teamId,
+      userId: session.user.id,
     });
 
     return res.status(201).json(board);

@@ -1,7 +1,7 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Board, MergeRequest, Prisma } from "@prisma/client";
+import { Board, BoardAction, MergeRequest, Prisma } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { getOrCreateRepo } from "@/lib/automerge-server";
@@ -28,23 +28,33 @@ export class BoardService {
   static async create(data: {
     name: string;
     teamId: string;
+    userId: string;
   }): Promise<Board | null> {
     try {
-      await dbConnect();
-      const serverRepo = await getOrCreateRepo();
-      if (!serverRepo) {
-        throw new Error("Server repo not found");
-      }
-      const handle = serverRepo.create<LayerSchema>();
-      const board = await prisma.board.create({
-        data: {
-          name: data.name,
-          teamId: data.teamId,
-          automergeDocId: handle.documentId,
-          isMergeRequestRequired: false,
-        },
+      return await prisma.$transaction(async (tx) => {
+        await dbConnect();
+        const serverRepo = await getOrCreateRepo();
+        if (!serverRepo) {
+          throw new Error("Server repo not found");
+        }
+        const handle = serverRepo.create<LayerSchema>();
+        const board = await tx.board.create({
+          data: {
+            name: data.name,
+            teamId: data.teamId,
+            automergeDocId: handle.documentId,
+            isMergeRequestRequired: false,
+          },
+        });
+        await tx.boardLog.create({
+          data: {
+            boardId: board.id,
+            action: BoardAction.CREATED,
+            userId: data.userId,
+          },
+        });
+        return board;
       });
-      return board;
     } catch (error) {
       console.error(error);
       throw error;

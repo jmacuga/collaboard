@@ -26,6 +26,10 @@ enum MergeRequestStatus {
   CLOSED
 }
 
+enum BoardAction {
+  CREATED
+  DELETED
+}
 
 // Models
 model User {
@@ -164,25 +168,14 @@ model BoardLog {
   id        String      @id @default(uuid())
   boardId   String
   userId    String
-  actionId  String
+  action  BoardAction
   objectId  String?
   headId    String?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
   // Relations
-  action    BoardAction @relation(fields: [actionId], references: [id])
   board     Board       @relation("BoardLogs", fields: [boardId], references: [id], onDelete: Cascade)
   user      User        @relation(fields: [userId], references: [id])
 } 
 
-model BoardAction {
-  id        String    @id @default(uuid())
-  name      String
-  reversable Boolean @default(true)
-
-  // Relations
-  boardLogs BoardLog[]
-
-  @@unique([name])
-}

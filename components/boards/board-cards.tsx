@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 import { db } from "@/lib/indexed-db";
 import { useEffect, useState } from "react";
-import { isAfter, parseISO } from "date-fns";
+import { isAfter } from "date-fns";
 
 export function BoardCards({
   teamBoards,

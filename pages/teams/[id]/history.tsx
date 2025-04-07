@@ -6,8 +6,18 @@ import TeamBreadcrumb from "@/components/boards/breadcrumb";
 import { TeamNav } from "@/components/teams/team-nav";
 import TeamArchived from "@/components/teams/team-archived";
 import { format } from "date-fns";
-import { Clock, AlertCircle } from "lucide-react";
+import {
+  Clock,
+  AlertCircle,
+  UserPlus,
+  UserMinus,
+  Settings,
+  CheckCircle2,
+  Bell,
+} from "lucide-react";
 import { TeamAction } from "@prisma/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface HistoryPageProps {
   logs: string;
@@ -53,6 +63,49 @@ export default function HistoryPage({ logs, team }: HistoryPageProps) {
     }
   };
 
+  const getActionIcon = (action: TeamAction) => {
+    switch (action) {
+      case "MEMBER_ADDED":
+        return <UserPlus className="h-4 w-4" />;
+      case "MEMBER_REMOVED":
+        return <UserMinus className="h-4 w-4" />;
+      case "ROLE_UPDATED":
+        return <Settings className="h-4 w-4" />;
+      case "BOARD_CREATED":
+      case "BOARD_DELETED":
+        return <CheckCircle2 className="h-4 w-4" />;
+      case "MERGE_REQUEST_CREATED":
+      case "MERGE_REQUEST_UPDATED":
+      case "REVIEW_REQUEST_CREATED":
+      case "REVIEW_REQUEST_UPDATED":
+        return <Bell className="h-4 w-4" />;
+      default:
+        return <Bell className="h-4 w-4" />;
+    }
+  };
+
+  const getActionColor = (action: TeamAction) => {
+    switch (action) {
+      case "MEMBER_ADDED":
+        return "bg-green-100 text-green-800 px-2 py-1 rounded-md";
+      case "MEMBER_REMOVED":
+        return "bg-red-100 text-red-800 px-2 py-1 rounded-md";
+      case "ROLE_UPDATED":
+        return "bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md";
+      case "BOARD_CREATED":
+        return "bg-blue-100 text-blue-800 px-2 py-1 rounded-md";
+      case "BOARD_DELETED":
+        return "bg-red-100 text-red-800 px-2 py-1 rounded-md";
+      case "MERGE_REQUEST_CREATED":
+      case "MERGE_REQUEST_UPDATED":
+      case "REVIEW_REQUEST_CREATED":
+      case "REVIEW_REQUEST_UPDATED":
+        return "bg-purple-100 text-purple-800 px-2 py-1 rounded-md";
+      default:
+        return "bg-gray-100 text-gray-800 px-2 py-1 rounded-md";
+    }
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-8">
@@ -74,27 +127,34 @@ export default function HistoryPage({ logs, team }: HistoryPageProps) {
       ) : (
         <div className="space-y-2">
           {parsedLogs.map((log: any) => (
-            <div
-              key={log.id}
-              className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium">
-                    <span className="text-gray-900">{log.message}</span>
-                  </p>
-                  <p className="text-sm">
-                    <span className="text-gray-700">
-                      Author: {log.user.name} {log.user.surname}
-                    </span>
-                  </p>
-                  <div className="flex items-center mt-1 text-sm text-gray-500">
-                    <Clock className="h-3.5 w-3.5 mr-1" />
-                    {format(new Date(log.createdAt), "MMM d, yyyy 'at' h:mm")}
+            <Card key={log.id} className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={getActionColor(log.action)}
+                      >
+                        {getActionIcon(log.action)}
+                        <span className="ml-1 text-xs">
+                          {getActionLabel(log.action)}
+                        </span>
+                      </Badge>
+                      <span className="text-gray-500 text-xs ml-auto">
+                        {format(new Date(log.createdAt), "MMM d, h:mm a")}
+                      </span>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <span>
+                        Author: {log.user.name} {log.user.surname}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-1">{log.message}</p>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

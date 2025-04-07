@@ -5,6 +5,7 @@ import {
   GitPullRequest,
   LogOut,
   ChevronRight,
+  Bell,
 } from "lucide-react";
 import {
   Collapsible,
@@ -49,6 +50,11 @@ const data = {
       url: "#",
       icon: Users,
       items: [
+        {
+          title: "Notifications",
+          url: "/profile/notifications",
+          icon: Bell,
+        },
         {
           title: "Settings",
           url: "/profile/settings",

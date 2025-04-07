@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth/auth";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { withApiAuth } from "@/lib/middleware";
+import { TeamService } from "@/lib/services/team/team-service";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions);
@@ -11,27 +12,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
   const { name } = req.body;
 
-  const team = await prisma.team.create({
-    data: {
-      name,
-    },
-  });
-  const adminRole = await prisma.teamRole.findFirst({
-    where: {
-      name: "Admin",
-    },
-  });
-  if (!adminRole) {
-    return res.status(500).json({ error: "Admin role not found" });
-  }
-
-  await prisma.teamMember.create({
-    data: {
-      teamId: team.id,
-      userId: session.user.id,
-      roleId: adminRole.id,
-    },
-  });
+  const team = await TeamService.createTeam(name, session.user.id);
 
   return res.status(200).json(team);
 }

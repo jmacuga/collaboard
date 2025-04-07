@@ -100,6 +100,33 @@ export interface TeamMemberWithRelations {
 type PrismaTransactionalClient = Prisma.TransactionClient;
 
 export class TeamService {
+  static async createTeam(name: string, userId: string): Promise<Team> {
+    return await prisma.$transaction(async (tx) => {
+      const team = await tx.team.create({
+        data: {
+          name,
+        },
+      });
+      const adminRole = await this.getRoleByName("Admin", tx);
+      await tx.teamMember.create({
+        data: {
+          userId,
+          teamId: team.id,
+          roleId: adminRole.id,
+        },
+      });
+      await tx.teamLog.create({
+        data: {
+          teamId: team.id,
+          userId,
+          action: TeamAction.CREATED,
+          message: `Team ${team.name} was created`,
+        },
+      });
+      return team;
+    });
+  }
+
   static async getTeamBoards(teamId: string): Promise<Board[]> {
     try {
       return await prisma.board.findMany({
@@ -429,33 +456,60 @@ export class TeamService {
     return board?.team || null;
   }
 
-  static async isAllBoardsArchived(teamId: string): Promise<boolean> {
-    const boards = await prisma.board.findMany({
+  static async isAllBoardsArchived(
+    teamId: string,
+    tx?: PrismaTransactionalClient
+  ): Promise<boolean> {
+    tx = tx ?? prisma;
+    const boards = await tx.board.findMany({
       where: { teamId, archived: false },
     });
     return boards.length === 0;
   }
 
-  private static async deleteInvitations(teamId: string): Promise<boolean> {
-    const deletedInvitations = await prisma.teamInvitation.deleteMany({
+  private static async deleteInvitations(
+    teamId: string,
+    tx?: PrismaTransactionalClient
+  ): Promise<boolean> {
+    tx = tx ?? prisma;
+    const deletedInvitations = await tx.teamInvitation.deleteMany({
       where: { teamId },
     });
     return deletedInvitations.count > 0;
   }
 
-  static async deleteTeam(teamId: string): Promise<void> {
-    const team = await this.getTeamById(teamId);
-    if (!team || team.archived) {
-      throw new TeamNotFoundError(teamId);
+  static async deleteTeam(teamId: string, userId: string): Promise<void> {
+    try {
+      await prisma.$transaction(async (tx) => {
+        const team = await tx.team.findUnique({
+          where: { id: teamId },
+        });
+        if (!team || team.archived) {
+          throw new TeamNotFoundError(teamId);
+        }
+        if (!(await this.isAllBoardsArchived(teamId, tx))) {
+          throw new TeamHasBoardsError(teamId);
+        }
+        await this.deleteInvitations(teamId, tx);
+        await tx.team.update({
+          where: { id: teamId },
+          data: { archived: true },
+        });
+        await tx.teamLog.create({
+          data: {
+            teamId,
+            userId: userId,
+            action: TeamAction.DELETED,
+            message: `Team ${team.name} was deleted`,
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof TeamServiceError) {
+        throw error;
+      }
+      throw new TeamServiceError(`Failed to delete team: ${error}`);
     }
-    if (!(await this.isAllBoardsArchived(teamId))) {
-      throw new TeamHasBoardsError(teamId);
-    }
-    await this.deleteInvitations(teamId);
-    await prisma.team.update({
-      where: { id: teamId },
-      data: { archived: true },
-    });
   }
 
   static async getArchivedBaordsForTeams(teamIds: string[]): Promise<Board[]> {
@@ -574,7 +628,10 @@ export class TeamService {
     return boards.map((board) => board.id);
   }
 
-  static async getUserTeams(userId: string): Promise<Team[]> {
+  static async getUserTeams(
+    userId: string,
+    includeArchived?: boolean
+  ): Promise<Team[]> {
     try {
       const teams = await prisma.team.findMany({
         where: {
@@ -583,7 +640,9 @@ export class TeamService {
               userId,
             },
           },
-          archived: false,
+          ...(includeArchived !== true && {
+            archived: false,
+          }),
         },
       });
       return teams;
@@ -593,10 +652,14 @@ export class TeamService {
     }
   }
 
-  static async getRoleByName(roleName: string): Promise<TeamRole> {
+  static async getRoleByName(
+    roleName: string,
+    tx?: PrismaTransactionalClient
+  ): Promise<TeamRole> {
+    tx = tx ?? prisma;
     let role: TeamRole | null = null;
     try {
-      role = await prisma.teamRole.findUnique({
+      role = await tx.teamRole.findUnique({
         where: { name: roleName },
       });
     } catch (error) {

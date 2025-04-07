@@ -14,7 +14,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    await TeamService.deleteTeam(req.query.id as string);
+    await TeamService.deleteTeam(req.query.id as string, session.user.id);
   } catch (e) {
     if (e instanceof TeamHasBoardsError) {
       console.error(e);

@@ -26,7 +26,6 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
-import { db } from "@/lib/indexed-db";
 
 export default function Board({
   team,
@@ -80,7 +79,6 @@ export default function Board({
     handleDragEnd,
     handleKeyDown,
   } = useBoardInteractions();
-
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

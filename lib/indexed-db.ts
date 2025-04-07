@@ -1,5 +1,4 @@
 import Dexie, { Table } from "dexie";
-import { fromZonedTime } from "date-fns-tz";
 
 interface DocUrls {
   docUrl: string;

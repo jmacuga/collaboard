@@ -79,7 +79,7 @@ export class BoardService {
     });
   }
 
-  static async archive(boardId: string): Promise<void> {
+  static async archive(boardId: string, userId: string): Promise<void> {
     await prisma.$transaction(async (tx) => {
       let board: Board | null = null;
       board = await tx.board.findUnique({
@@ -95,9 +95,17 @@ export class BoardService {
       await this.deleteReviewRequests(boardId, tx);
       await this.deleteMergeRequests(boardId, tx);
       serverRepo.delete(board.automergeDocId as AnyDocumentId);
-      await prisma.board.update({
+      await tx.board.update({
         where: { id: boardId },
         data: { archived: true },
+      });
+
+      await tx.boardLog.create({
+        data: {
+          boardId: boardId,
+          action: BoardAction.DELETED,
+          userId: userId,
+        },
       });
     });
 

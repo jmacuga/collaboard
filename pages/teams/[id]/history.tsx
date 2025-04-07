@@ -7,7 +7,6 @@ import { TeamNav } from "@/components/teams/team-nav";
 import TeamArchived from "@/components/teams/team-archived";
 import { format } from "date-fns";
 import {
-  Clock,
   AlertCircle,
   UserPlus,
   UserMinus,
@@ -15,19 +14,51 @@ import {
   CheckCircle2,
   Bell,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { TeamAction } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NotificationService } from "@/lib/services/notification/notification-service";
 
 interface HistoryPageProps {
   logs: string;
   team: string;
   userRole: string;
+  lastViewedAt: string | null;
 }
 
-export default function HistoryPage({ logs, team }: HistoryPageProps) {
+export default function HistoryPage({
+  logs,
+  team,
+  lastViewedAt,
+}: HistoryPageProps) {
   const parsedTeam = JSON.parse(team);
   const parsedLogs = JSON.parse(logs);
+  const lastViewed = lastViewedAt ? new Date(lastViewedAt) : null;
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    const updateLastViewed = async () => {
+      try {
+        await fetch("/api/notifications/mark-viewed", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            teamId: parsedTeam.id,
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to update last viewed timestamp:", error);
+      }
+    };
+
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      updateLastViewed();
+    }
+  }, [parsedTeam.id]);
 
   if (parsedTeam.archived) {
     return <TeamArchived />;
@@ -127,7 +158,14 @@ export default function HistoryPage({ logs, team }: HistoryPageProps) {
       ) : (
         <div className="space-y-2">
           {parsedLogs.map((log: any) => (
-            <Card key={log.id} className="hover:shadow-sm transition-shadow">
+            <Card
+              key={log.id}
+              className={`hover:shadow-sm transition-shadow ${
+                lastViewed && new Date(log.createdAt) > lastViewed
+                  ? "border-l-4 border-l-blue-500"
+                  : ""
+              }`}
+            >
               <CardContent className="p-2">
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
@@ -141,6 +179,11 @@ export default function HistoryPage({ logs, team }: HistoryPageProps) {
                           {getActionLabel(log.action)}
                         </span>
                       </Badge>
+                      {lastViewed && new Date(log.createdAt) > lastViewed && (
+                        <Badge className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
+                          New
+                        </Badge>
+                      )}
                       <span className="text-gray-500 text-xs ml-auto">
                         {format(new Date(log.createdAt), "MMM d, h:mm a")}
                       </span>
@@ -178,11 +221,17 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
 
   const logs = await TeamService.getTeamLogs(teamId);
 
+  const lastViewedAt = await NotificationService.getLastViewedTeamTimestamp(
+    session!.user.id,
+    teamId
+  );
+
   return {
     props: {
       logs: JSON.stringify(logs),
       team: JSON.stringify(team),
       userRole: JSON.stringify(userRole),
+      lastViewedAt: lastViewedAt ? lastViewedAt.toISOString() : null,
     },
   };
 };

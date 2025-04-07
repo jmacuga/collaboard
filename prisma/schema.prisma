@@ -52,6 +52,7 @@ model User {
   username      String          @unique
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+   
   
   // Relations
   teamMembers      TeamMember[]
@@ -60,6 +61,7 @@ model User {
   reviewRequests   ReviewRequest[]
   comments         Comment[]
   teamLogs         TeamLog[]
+  lastViewedLogs   UserLastViewedLog[]
 }
 
 model Team {
@@ -185,6 +187,19 @@ model Comment {
   // Relations
   board     Board     @relation("BoardComments", fields: [boardId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id])
+}
+
+
+model UserLastViewedLog {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String    // Can be "all", "team:{teamId}", etc.
+  timestamp   DateTime  @default(now())
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
 }
 
 

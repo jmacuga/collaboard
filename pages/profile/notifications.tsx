@@ -1,35 +1,32 @@
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
-import { AppLayout } from "@/components/layouts/app-layout";
 import { TeamAction, TeamLog, Team } from "@prisma/client";
 import { format } from "date-fns";
 import {
-  Clock,
   Bell,
   AlertCircle,
-  Filter,
   CheckCircle2,
   UserPlus,
   UserMinus,
   Settings,
+  Trash,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { NotificationService } from "@/lib/services/notification/notification-service";
 
 interface NotificationsPageProps {
   logs: string;
   teams: string;
+  lastViewedAt: string | null;
 }
 
 type LogWithUser = TeamLog & {
@@ -40,31 +37,41 @@ type LogWithUser = TeamLog & {
     image: string | null;
   };
   team: Team;
+  isNew?: boolean;
 };
 
 export default function NotificationsPage({
   logs,
   teams,
+  lastViewedAt,
 }: NotificationsPageProps) {
   const parsedLogs: LogWithUser[] = JSON.parse(logs);
   const parsedTeams: Team[] = JSON.parse(teams);
+  const lastViewed = lastViewedAt ? new Date(lastViewedAt) : null;
 
   const [filter, setFilter] = useState<string | null>(null);
-  const [tab, setTab] = useState<string>("all");
+  const mountedRef = useRef(false);
 
-  const displayLogs =
-    tab === "all"
-      ? parsedLogs
-      : parsedLogs.filter((log) => {
-          if (tab === "members")
-            return ["MEMBER_ADDED", "MEMBER_REMOVED", "ROLE_UPDATED"].includes(
-              log.action
-            );
-          if (tab === "boards")
-            return ["BOARD_CREATED", "BOARD_DELETED"].includes(log.action);
-
-          return false;
+  useEffect(() => {
+    const updateLastViewed = async () => {
+      try {
+        await fetch("/api/notifications/mark-viewed", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
         });
+      } catch (error) {
+        console.error("Failed to update last viewed timestamp:", error);
+      }
+    };
+
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      updateLastViewed();
+    }
+  }, []);
 
   const getActionIcon = (action: TeamAction) => {
     switch (action) {
@@ -82,6 +89,8 @@ export default function NotificationsPage({
       case "REVIEW_REQUEST_CREATED":
       case "REVIEW_REQUEST_UPDATED":
         return <Bell className="h-4 w-4" />;
+      case "DELETED":
+        return <Trash className="h-4 w-4" />;
       default:
         return <Bell className="h-4 w-4" />;
     }
@@ -91,6 +100,7 @@ export default function NotificationsPage({
       case "MEMBER_ADDED":
         return "bg-green-100 text-green-800 px-2 py-1 rounded-md";
       case "MEMBER_REMOVED":
+      case "DELETED":
         return "bg-red-100 text-red-800 px-2 py-1 rounded-md";
       case "ROLE_UPDATED":
         return "bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md";
@@ -116,23 +126,8 @@ export default function NotificationsPage({
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <Tabs value={tab} onValueChange={setTab} className="w-full max-w-md">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="boards">Boards</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              {filter
-                ? parsedTeams.find((t) => t.id === filter)?.name
-                : "All teams"}
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild></DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setFilter(null)}>
               All teams
@@ -149,7 +144,7 @@ export default function NotificationsPage({
         </DropdownMenu>
       </div>
 
-      {displayLogs.length === 0 ? (
+      {parsedLogs.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
             <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
@@ -163,8 +158,15 @@ export default function NotificationsPage({
         </Card>
       ) : (
         <div className="space-y-2">
-          {displayLogs.map((log) => (
-            <Card key={log.id} className="hover:shadow-sm transition-shadow">
+          {parsedLogs.map((log) => (
+            <Card
+              key={log.id}
+              className={`hover:shadow-sm transition-shadow ${
+                lastViewed && new Date(log.createdAt) > lastViewed
+                  ? "border-l-4 border-l-blue-500"
+                  : ""
+              }`}
+            >
               <CardContent className="p-2">
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
@@ -181,6 +183,11 @@ export default function NotificationsPage({
                           {log.action.replace(/_/g, " ")}
                         </span>
                       </Badge>
+                      {lastViewed && new Date(log.createdAt) > lastViewed && (
+                        <Badge className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
+                          New
+                        </Badge>
+                      )}
                       <span className="text-gray-500 text-xs ml-auto">
                         {format(new Date(log.createdAt), "MMM d, h:mm a")}
                       </span>
@@ -213,6 +220,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
+    const lastViewedAt = await NotificationService.getLastViewedTimestamp(
+      session.user.id
+    );
+
     const teams = await TeamService.getUserTeams(session.user.id, true);
     const logsPromises = teams.map((team) => TeamService.getTeamLogs(team.id));
     const logsArrays = await Promise.all(logsPromises);
@@ -233,6 +244,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         logs: JSON.stringify(logsWithTeam),
         teams: JSON.stringify(teams),
+        lastViewedAt: lastViewedAt ? lastViewedAt.toISOString() : null,
       },
     };
   } catch (error) {
@@ -241,6 +253,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         logs: JSON.stringify([]),
         teams: JSON.stringify([]),
+        lastViewedAt: null,
         error: "Failed to load notifications",
       },
     };

@@ -1,7 +1,12 @@
 import { GetServerSideProps } from "next";
 import { getSession } from "next-auth/react";
 import { TeamService } from "@/lib/services/team/team-service";
-import { TeamAction, TeamLog, Team } from "@prisma/client";
+import {
+  TeamAction,
+  TeamLog,
+  Team,
+  UserLastViewedLogType,
+} from "@prisma/client";
 import { format } from "date-fns";
 import {
   Bell,
@@ -22,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationService } from "@/lib/services/notification/notification-service";
+import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
 
 interface NotificationsPageProps {
   logs: string;
@@ -51,25 +57,12 @@ export default function NotificationsPage({
 
   const [filter, setFilter] = useState<string | null>(null);
   const mountedRef = useRef(false);
+  const { updateLastViewed } = useUpdateLastViewed();
 
   useEffect(() => {
-    const updateLastViewed = async () => {
-      try {
-        await fetch("/api/notifications/mark-viewed", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-      } catch (error) {
-        console.error("Failed to update last viewed timestamp:", error);
-      }
-    };
-
     if (!mountedRef.current) {
       mountedRef.current = true;
-      updateLastViewed();
+      updateLastViewed({ type: UserLastViewedLogType.ALL });
     }
   }, []);
 
@@ -223,6 +216,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const lastViewedAt = await NotificationService.getLastViewedTimestamp(
       session.user.id
     );
+    console.log("Last viewed at", lastViewedAt);
 
     const teams = await TeamService.getUserTeams(session.user.id, true);
     const logsPromises = teams.map((team) => TeamService.getTeamLogs(team.id));

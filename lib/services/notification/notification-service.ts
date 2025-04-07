@@ -1,5 +1,5 @@
 import { prisma } from "@/db/prisma";
-
+import { UserLastViewedLog, UserLastViewedLogType } from "@prisma/client";
 /**
  * Service for managing user notification preferences and tracking viewed status
  */
@@ -11,20 +11,65 @@ export class NotificationService {
    * @param type - The type of notification view (e.g., "all", "team:{teamId}")
    * @returns The updated record
    */
-  static async updateLastViewedTimestamp(userId: string, type: string = "all") {
-    return prisma.userLastViewedLog.upsert({
-      where: {
-        userId_type: { userId, type },
-      },
-      update: {
-        timestamp: new Date(),
-      },
-      create: {
-        userId,
-        type,
-        timestamp: new Date(),
-      },
-    });
+  static async updateLastViewedTimestamp(
+    userId: string,
+    type: UserLastViewedLogType = UserLastViewedLogType.ALL,
+    teamId?: string,
+    boardId?: string
+  ) {
+    if (type === UserLastViewedLogType.ALL) {
+      const log = await prisma.userLastViewedLog.findFirst({
+        where: {
+          userId,
+          type,
+        },
+      });
+      if (log) {
+        return prisma.userLastViewedLog.update({
+          where: { id: log.id },
+          data: { timestamp: new Date() },
+        });
+      } else {
+        return prisma.userLastViewedLog.create({
+          data: {
+            userId,
+            type,
+            timestamp: new Date(),
+          },
+        });
+      }
+    } else if (type === UserLastViewedLogType.TEAM && teamId) {
+      return prisma.userLastViewedLog.upsert({
+        where: {
+          userId_type_teamId: { userId, type, teamId },
+        },
+        update: {
+          timestamp: new Date(),
+        },
+        create: {
+          userId,
+          type,
+          timestamp: new Date(),
+          teamId,
+        },
+      });
+    } else if (type === UserLastViewedLogType.BOARD && boardId) {
+      return prisma.userLastViewedLog.upsert({
+        where: {
+          userId_type_boardId: { userId, type, boardId },
+          boardId,
+        },
+        update: {
+          timestamp: new Date(),
+        },
+        create: {
+          userId,
+          type,
+          timestamp: new Date(),
+          boardId,
+        },
+      });
+    }
   }
 
   /**
@@ -36,16 +81,31 @@ export class NotificationService {
    */
   static async getLastViewedTimestamp(
     userId: string,
-    type: string = "all"
+    type: UserLastViewedLogType = UserLastViewedLogType.ALL,
+    teamId?: string,
+    boardId?: string
   ): Promise<Date | null> {
-    const record = await prisma.userLastViewedLog.findUnique({
-      where: {
-        userId_type: { userId, type },
-      },
-      select: {
-        timestamp: true,
-      },
-    });
+    let record: UserLastViewedLog | null = null;
+    if (type === UserLastViewedLogType.ALL) {
+      record = await prisma.userLastViewedLog.findFirst({
+        where: {
+          userId,
+          type,
+        },
+      });
+    } else if (type === UserLastViewedLogType.TEAM && teamId) {
+      record = await prisma.userLastViewedLog.findUnique({
+        where: {
+          userId_type_teamId: { userId, type, teamId },
+        },
+      });
+    } else if (type === UserLastViewedLogType.BOARD && boardId) {
+      record = await prisma.userLastViewedLog.findUnique({
+        where: {
+          userId_type_boardId: { userId, type, boardId },
+        },
+      });
+    }
 
     return record?.timestamp || null;
   }
@@ -61,7 +121,11 @@ export class NotificationService {
     userId: string,
     teamId: string
   ): Promise<Date | null> {
-    return this.getLastViewedTimestamp(userId, `team:${teamId}`);
+    return this.getLastViewedTimestamp(
+      userId,
+      UserLastViewedLogType.TEAM,
+      teamId
+    );
   }
 
   /**
@@ -71,7 +135,4 @@ export class NotificationService {
    * @param teamId - The ID of the team
    * @returns The updated record
    */
-  static async updateLastViewedTeamTimestamp(userId: string, teamId: string) {
-    return this.updateLastViewedTimestamp(userId, `team:${teamId}`);
-  }
 }

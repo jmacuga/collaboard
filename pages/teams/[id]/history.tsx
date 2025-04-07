@@ -15,10 +15,11 @@ import {
   Bell,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { TeamAction } from "@prisma/client";
+import { TeamAction, UserLastViewedLogType } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NotificationService } from "@/lib/services/notification/notification-service";
+import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
 
 interface HistoryPageProps {
   logs: string;
@@ -36,27 +37,14 @@ export default function HistoryPage({
   const parsedLogs = JSON.parse(logs);
   const lastViewed = lastViewedAt ? new Date(lastViewedAt) : null;
   const mountedRef = useRef(false);
-
+  const { updateLastViewed } = useUpdateLastViewed();
   useEffect(() => {
-    const updateLastViewed = async () => {
-      try {
-        await fetch("/api/notifications/mark-viewed", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            teamId: parsedTeam.id,
-          }),
-        });
-      } catch (error) {
-        console.error("Failed to update last viewed timestamp:", error);
-      }
-    };
-
     if (!mountedRef.current) {
       mountedRef.current = true;
-      updateLastViewed();
+      updateLastViewed({
+        type: UserLastViewedLogType.TEAM,
+        teamId: parsedTeam.id,
+      });
     }
   }, [parsedTeam.id]);
 
@@ -221,10 +209,12 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
 
   const logs = await TeamService.getTeamLogs(teamId);
 
-  const lastViewedAt = await NotificationService.getLastViewedTeamTimestamp(
+  const lastViewedAt = await NotificationService.getLastViewedTimestamp(
     session!.user.id,
+    UserLastViewedLogType.TEAM,
     teamId
   );
+  console.log("Last viewed at", lastViewedAt);
 
   return {
     props: {

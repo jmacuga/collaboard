@@ -14,15 +14,9 @@ interface Settings {
   value: string;
 }
 
-interface Boards {
-  id: string;
-  lastSeen: Date;
-}
-
 export class CollaboardDB extends Dexie {
   settings!: Table<Settings>;
   docIds!: Table<DocIds>;
-  boards!: Table<Boards>;
 
   constructor() {
     super("collaboard");
@@ -45,19 +39,10 @@ export class CollaboardDB extends Dexie {
       docIds: "docId",
       boards: "id, lastSeen",
     });
-  }
-
-  async updateBoardLastSeen(boardId: string) {
-    console.log("Updating board last seen", boardId);
-    await this.boards.put({
-      id: boardId,
-      lastSeen: new Date(),
+    this.version(4).stores({
+      settings: "key",
+      docIds: "docId",
     });
-  }
-
-  async getBoardLastSeen(boardId: string): Promise<Date | undefined> {
-    const board = await this.boards.get(boardId);
-    return board?.lastSeen;
   }
 }
 

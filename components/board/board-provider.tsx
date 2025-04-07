@@ -9,8 +9,8 @@ import { NetworkStatusProvider } from "@/components/providers/network-status-pro
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { SyncStatusControl } from "./components/sync-status-control";
 import { BoardHeader } from "./components/board-header";
-import { db } from "@/lib/indexed-db";
-
+import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
+import { UserLastViewedLogType } from "@prisma/client";
 interface BoardState {
   clientSyncService: ClientSyncService | null;
   synced: boolean;
@@ -28,6 +28,7 @@ export function BoardProvider({
     synced: false,
   });
   const isInitialized = useRef(false);
+  const { updateLastViewed } = useUpdateLastViewed();
 
   useEffect(() => {
     const initializeClientSyncService = async () => {
@@ -42,7 +43,10 @@ export function BoardProvider({
       await clientSyncService.initializeRepo();
       if (await clientSyncService.canConnect()) {
         await clientSyncService.connect();
-        await db.updateBoardLastSeen(board.id);
+        await updateLastViewed({
+          type: UserLastViewedLogType.BOARD,
+          boardId: board.id,
+        });
         synced = true;
       } else {
         console.log("Staying disconnected");
@@ -57,11 +61,15 @@ export function BoardProvider({
       (async () => {
         if (state.clientSyncService) {
           await state.clientSyncService.disconnect();
-          await db.updateBoardLastSeen(board.id);
         }
       })();
     };
-  }, [board.automergeDocId, board.id, state.clientSyncService]);
+  }, [
+    board.automergeDocId,
+    board.id,
+    state.clientSyncService,
+    updateLastViewed,
+  ]);
 
   if (!state.clientSyncService) {
     return <div>Loading board...</div>;

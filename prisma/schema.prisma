@@ -42,6 +42,12 @@ enum TeamAction {
   REVIEW_REQUEST_UPDATED
 }
 
+enum UserLastViewedLogType {
+  ALL
+  TEAM
+  BOARD
+}
+
 // Models
 model User {
   id            String          @id @default(uuid())
@@ -193,13 +199,16 @@ model Comment {
 model UserLastViewedLog {
   id          String    @id @default(uuid())
   userId      String
-  type        String    // Can be "all", "team:{teamId}", etc.
+  type        UserLastViewedLogType
   timestamp   DateTime  @default(now())
+  teamId      String?
+  boardId     String?
   
   // Relations
   user        User      @relation(fields: [userId], references: [id])
 
-  @@unique([userId, type])
+  @@unique([userId, type, teamId])
+  @@unique([userId, type, boardId])
 }
 
 

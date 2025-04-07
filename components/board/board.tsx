@@ -117,26 +117,6 @@ export default function Board({
     }, 10);
   };
 
-  useEffect(() => {
-    const updateBoardLastSeen = async () => {
-      if (!clientSyncService || !isOnline) return;
-      const handle = await clientSyncService.getHandle();
-      if (!handle) return;
-      handle.on("change", async () => {
-        await db.updateBoardLastSeen(board.id);
-      });
-    };
-    updateBoardLastSeen();
-    return () => {
-      (async () => {
-        if (!clientSyncService) return;
-        const handle = await clientSyncService.getHandle();
-        if (!handle) return;
-        handle.off("change", updateBoardLastSeen);
-      })();
-    };
-  }, [board.id, clientSyncService]);
-
   const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
 
   return (

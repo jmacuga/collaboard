@@ -1,4 +1,4 @@
-import { Board } from "@prisma/client";
+import { Board, UserLastViewedLogType } from "@prisma/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   LayoutDashboard,
@@ -11,10 +11,9 @@ import Link from "next/link";
 import { getColorForIndex } from "@/lib/utils/colors";
 import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
-import { db } from "@/lib/indexed-db";
 import { useEffect, useState } from "react";
 import { isAfter } from "date-fns";
-
+import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
 export function BoardCards({
   teamBoards,
   userRole,
@@ -25,7 +24,7 @@ export function BoardCards({
   lastUpdatedMap: Record<string, Date>;
 }) {
   const [updatedBoards, setUpdatedBoards] = useState<string[]>([]);
-
+  const { getLastViewed } = useUpdateLastViewed();
   useEffect(() => {
     const roundToSeconds = (date: Date): Date => {
       const newDate = new Date(date);
@@ -39,16 +38,22 @@ export function BoardCards({
       await Promise.all(
         teamBoards?.map(async (board) => {
           const boardLastUpdated = lastUpdatedMap[board.id];
-          const lastSeen = await db.getBoardLastSeen(board.id);
-
-          if (!lastSeen || !boardLastUpdated) return;
+          const lastViewed = await getLastViewed(
+            UserLastViewedLogType.BOARD,
+            board.id
+          );
+          if (!lastViewed) {
+            boardIds.push(board.id);
+            return;
+          }
+          if (!boardLastUpdated) return;
 
           const boardLastUpdatedDate = new Date(boardLastUpdated);
 
           const roundedLastUpdated = roundToSeconds(boardLastUpdatedDate);
-          const roundedLastSeen = roundToSeconds(lastSeen);
+          const roundedLastViewed = roundToSeconds(lastViewed);
 
-          if (isAfter(roundedLastUpdated, roundedLastSeen)) {
+          if (isAfter(roundedLastUpdated, roundedLastViewed)) {
             boardIds.push(board.id);
           }
         }) ?? []

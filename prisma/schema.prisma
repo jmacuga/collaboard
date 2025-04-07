@@ -26,9 +26,20 @@ enum MergeRequestStatus {
   CLOSED
 }
 
-enum BoardAction {
+
+
+enum TeamAction {
   CREATED
   DELETED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  ROLE_UPDATED
+  BOARD_CREATED
+  BOARD_DELETED
+  MERGE_REQUEST_CREATED
+  MERGE_REQUEST_UPDATED
+  REVIEW_REQUEST_CREATED
+  REVIEW_REQUEST_UPDATED
 }
 
 // Models
@@ -48,7 +59,7 @@ model User {
   mergeRequests    MergeRequest[]
   reviewRequests   ReviewRequest[]
   comments         Comment[]
-  boardLogs        BoardLog[]
+  teamLogs         TeamLog[]
 }
 
 model Team {
@@ -62,6 +73,21 @@ model Team {
   members     TeamMember[]
   boards      Board[]
   invitations TeamInvitation[]
+  logs        TeamLog[]
+}
+
+model TeamLog {
+  id           String     @id @default(uuid())
+  teamId       String
+  userId       String
+  action       TeamAction
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  message      String?
+
+  // Relations
+  team         Team       @relation(fields: [teamId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
 }
 
 model TeamMember {
@@ -79,12 +105,11 @@ model TeamMember {
 }
 
 model TeamRole {
-  id        String      @id @default(uuid())
-  name      String      @unique
-
+  id           String      @id @default(uuid())
+  name         String      @unique
+  
   // Relations
-  members   TeamMember[]
-
+  members      TeamMember[]
 }
 
 model TeamInvitation {
@@ -116,8 +141,6 @@ model Board {
   mergeRequests  MergeRequest[]  @relation("BoardMergeRequests")
   reviewRequests ReviewRequest[] @relation("BoardReviewRequests")
   comments       Comment[]       @relation("BoardComments")
-  boardLogs      BoardLog[]      @relation("BoardLogs")
-
 }
 
 model MergeRequest {
@@ -164,18 +187,5 @@ model Comment {
   user      User      @relation(fields: [userId], references: [id])
 }
 
-model BoardLog {
-  id        String      @id @default(uuid())
-  boardId   String
-  userId    String
-  action  BoardAction
-  objectId  String?
-  headId    String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
 
-  // Relations
-  board     Board       @relation("BoardLogs", fields: [boardId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id])
-} 
 

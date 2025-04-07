@@ -1,12 +1,11 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Board, BoardAction, MergeRequest, Prisma } from "@prisma/client";
+import { Board, MergeRequest, Prisma, TeamAction } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { getOrCreateRepo } from "@/lib/automerge-server";
 import { Doc } from "@/db/models/Doc";
-import { CodeSquare } from "lucide-react";
 export class BoardServiceError extends Error {
   constructor(message: string) {
     super(message);
@@ -46,11 +45,12 @@ export class BoardService {
             isMergeRequestRequired: false,
           },
         });
-        await tx.boardLog.create({
+        await tx.teamLog.create({
           data: {
-            boardId: board.id,
-            action: BoardAction.CREATED,
+            teamId: data.teamId,
+            action: TeamAction.BOARD_CREATED,
             userId: data.userId,
+            message: `Board ${board.name} created`,
           },
         });
         return board;
@@ -100,11 +100,12 @@ export class BoardService {
         data: { archived: true },
       });
 
-      await tx.boardLog.create({
+      await tx.teamLog.create({
         data: {
-          boardId: boardId,
-          action: BoardAction.DELETED,
+          teamId: board.teamId,
+          action: TeamAction.BOARD_DELETED,
           userId: userId,
+          message: `Board ${board.name} deleted`,
         },
       });
     });

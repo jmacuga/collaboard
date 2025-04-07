@@ -1,7 +1,12 @@
 import { prisma } from "@/db/prisma";
-import { TeamServiceError } from "@/lib/services/team/team-service";
+import {
+  TeamService,
+  TeamServiceError,
+} from "@/lib/services/team/team-service";
 import { withTeamRoleApi } from "@/lib/middleware";
 import { NextApiRequest, NextApiResponse } from "next";
+import { authOptions } from "@/lib/auth/auth";
+import { getServerSession } from "next-auth";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "PATCH") {
@@ -13,48 +18,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { role: newRoleName } = req.body;
 
   try {
-    const member = await prisma.teamMember.findUnique({
-      where: { id: memberId },
-      include: { role: true },
-    });
-
-    if (!member) {
-      return res.status(404).json({ message: "Member not found" });
+    const session = await getServerSession(req, res, authOptions);
+    if (!session?.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    const updatedMember = await TeamService.updateMemberRole(
+      teamId,
+      memberId,
+      newRoleName,
+      session.user.id
+    );
 
-    if (member.role.name === "Admin" && newRoleName !== "Admin") {
-      const adminCount = await prisma.teamMember.count({
-        where: {
-          teamId,
-          role: {
-            name: "Admin",
-          },
-        },
-      });
-
-      if (adminCount <= 1) {
-        throw new TeamServiceError("Cannot remove the last admin of the team");
-      }
-    }
-
-    const newRole = await prisma.teamRole.findFirst({
-      where: { name: newRoleName },
+    return res.status(200).json({
+      success: true,
+      message: "Member role updated successfully",
+      data: updatedMember,
     });
-
-    if (!newRole) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    const updatedMember = await prisma.teamMember.update({
-      where: { id: memberId },
-      data: { roleId: newRole.id },
-      include: {
-        user: true,
-        role: true,
-      },
-    });
-
-    return res.status(200).json(updatedMember);
   } catch (error) {
     if (error instanceof TeamServiceError) {
       return res.status(400).json({ message: error.message });

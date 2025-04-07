@@ -5,11 +5,9 @@ const prisma = new PrismaClient();
 async function main() {
   try {
     // Clean up existing data
-    await prisma.boardLog.deleteMany();
     await prisma.comment.deleteMany();
     await prisma.reviewRequest.deleteMany();
     await prisma.mergeRequest.deleteMany();
-    await prisma.boardAction.deleteMany();
     await prisma.board.deleteMany();
     await prisma.teamInvitation.deleteMany();
     await prisma.teamMember.deleteMany();

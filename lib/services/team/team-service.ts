@@ -11,6 +11,9 @@ import {
   Team,
   TeamInvitation,
   Prisma,
+  TeamAction,
+  TeamRole,
+  TeamLog,
 } from "@prisma/client";
 
 export class TeamServiceError extends Error {
@@ -319,6 +322,15 @@ export class TeamService {
           data: { status: TeamInvitationStatus.ACCEPTED },
         });
 
+        await tx.teamLog.create({
+          data: {
+            teamId: invitation.team.id,
+            userId: invitation.hostId,
+            action: TeamAction.MEMBER_ADDED,
+            message: `User ${user.email} joined the team`,
+          },
+        });
+
         return teamMember as TeamMemberWithRole;
       });
     } catch (error) {
@@ -458,45 +470,61 @@ export class TeamService {
    */
   static async deleteMember(
     teamId: string,
-    memberId: string
+    memberId: string,
+    userId: string
   ): Promise<boolean> {
     try {
-      const member = await prisma.teamMember.findUnique({
-        where: { id: memberId },
-        include: { role: true },
-      });
+      return await prisma.$transaction(async (tx) => {
+        const member = await tx.teamMember.findUnique({
+          where: { id: memberId },
+          include: { role: true, user: true },
+        });
 
-      if (!member) {
-        throw new TeamServiceError(`Team member with ID ${memberId} not found`);
-      }
-      const membersCount = await prisma.teamMember.count({
-        where: { teamId },
-      });
-      if (membersCount <= 1) {
-        throw new TeamServiceError("Cannot delete the last member of the team");
-      }
-      if (member.role.name === "Admin") {
-        const adminCount = await prisma.teamMember.count({
-          where: {
-            teamId,
-            role: {
-              name: "Admin",
+        if (!member) {
+          throw new TeamServiceError(
+            `Team member with ID ${memberId} not found`
+          );
+        }
+        const membersCount = await tx.teamMember.count({
+          where: { teamId },
+        });
+        if (membersCount <= 1) {
+          throw new TeamServiceError(
+            "Cannot delete the last member of the team"
+          );
+        }
+        if (member.role.name === "Admin") {
+          const adminCount = await tx.teamMember.count({
+            where: {
+              teamId,
+              role: {
+                name: "Admin",
+              },
             },
+          });
+
+          if (adminCount <= 1) {
+            throw new TeamServiceError(
+              "Cannot delete the last admin of the team"
+            );
+          }
+        }
+
+        await tx.teamMember.delete({
+          where: { id: memberId },
+        });
+
+        await tx.teamLog.create({
+          data: {
+            teamId,
+            userId,
+            action: TeamAction.MEMBER_REMOVED,
+            message: `User ${member.user.email} left the team`,
           },
         });
 
-        if (adminCount <= 1) {
-          throw new TeamServiceError(
-            "Cannot delete the last admin of the team"
-          );
-        }
-      }
-
-      await prisma.teamMember.delete({
-        where: { id: memberId },
+        return true;
       });
-
-      return true;
     } catch (error) {
       if (error instanceof TeamServiceError) {
         throw error;
@@ -510,7 +538,7 @@ export class TeamService {
     }
   }
 
-  static async getMemberById(memberId: string): Promise<PrismaTeamMember> {
+  static async getMemberById(memberId: string): Promise<TeamMemberWithRole> {
     const member = await prisma.teamMember.findUnique({
       where: { id: memberId },
       include: { role: true, user: true },
@@ -518,7 +546,7 @@ export class TeamService {
     if (!member) {
       throw new TeamServiceError(`Team member with ID ${memberId} not found`);
     }
-    return member as PrismaTeamMember;
+    return member;
   }
 
   static async getTeamMembers(teamId: string): Promise<TeamMemberWithRole[]> {
@@ -565,38 +593,96 @@ export class TeamService {
     }
   }
 
-  static async getTeamBoardLogs(teamId: string): Promise<any[]> {
+  static async getRoleByName(roleName: string): Promise<TeamRole> {
+    let role: TeamRole | null = null;
     try {
-      const logs = await prisma.boardLog.findMany({
+      role = await prisma.teamRole.findUnique({
+        where: { name: roleName },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new TeamServiceError(`Failed to get role by name: ${roleName}`);
+    }
+    if (!role) {
+      throw new TeamServiceError(`Role with name ${roleName} not found`);
+    }
+    return role;
+  }
+
+  static async getTeamLogs(teamId: string): Promise<TeamLog[]> {
+    try {
+      const logs = await prisma.teamLog.findMany({
         where: {
-          board: {
-            teamId,
-          },
+          teamId,
         },
         include: {
-          board: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              surname: true,
-              username: true,
-            },
-          },
+          user: true,
         },
         orderBy: {
           createdAt: "desc",
         },
       });
+
       return logs;
     } catch (error) {
       console.error(error);
       return [];
+    }
+  }
+  static async updateMemberRole(
+    teamId: string,
+    memberId: string,
+    roleName: string,
+    userId: string
+  ): Promise<TeamMemberWithRole> {
+    const member = await this.getMemberById(memberId);
+
+    if (!member) {
+      throw new TeamServiceError(`Team member with ID ${memberId} not found`);
+    }
+
+    if (member.role.name === "Admin" && roleName !== "Admin") {
+      const adminCount = await prisma.teamMember.count({
+        where: {
+          teamId,
+          role: {
+            name: "Admin",
+          },
+        },
+      });
+
+      if (adminCount <= 1) {
+        throw new TeamServiceError("Cannot remove the last admin of the team");
+      }
+    }
+
+    const role = await this.getRoleByName(roleName);
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const updatedMember = await tx.teamMember.update({
+          where: { id: memberId },
+          data: { roleId: role.id },
+          include: {
+            user: true,
+            role: true,
+          },
+        });
+
+        await tx.teamLog.create({
+          data: {
+            teamId,
+            userId,
+            action: TeamAction.ROLE_UPDATED,
+            message: `User ${updatedMember.user.email} role updated to ${roleName}`,
+          },
+        });
+        return updatedMember;
+      });
+    } catch (error) {
+      if (error instanceof TeamServiceError) {
+        throw error;
+      }
+      throw new TeamServiceError(`Failed to update member role: ${error}`);
     }
   }
 }

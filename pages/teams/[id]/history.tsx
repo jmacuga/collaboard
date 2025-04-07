@@ -7,6 +7,7 @@ import { TeamNav } from "@/components/teams/team-nav";
 import TeamArchived from "@/components/teams/team-archived";
 import { format } from "date-fns";
 import { Clock, AlertCircle } from "lucide-react";
+import { TeamAction } from "@prisma/client";
 
 interface HistoryPageProps {
   logs: string;
@@ -14,25 +15,39 @@ interface HistoryPageProps {
   userRole: string;
 }
 
-export default function HistoryPage({
-  logs,
-  team,
-  userRole,
-}: HistoryPageProps) {
+export default function HistoryPage({ logs, team }: HistoryPageProps) {
   const parsedTeam = JSON.parse(team);
   const parsedLogs = JSON.parse(logs);
-  const parsedUserRole = JSON.parse(userRole);
 
   if (parsedTeam.archived) {
     return <TeamArchived />;
   }
 
-  const getActionLabel = (action: string) => {
+  const getActionLabel = (action: TeamAction) => {
     switch (action) {
       case "CREATED":
-        return "Created";
+        return "Created team";
       case "DELETED":
-        return "Deleted";
+        return "Deleted team";
+      case "MEMBER_ADDED":
+        return "Added member";
+      case "MEMBER_REMOVED":
+        return "Removed member";
+      case "ROLE_UPDATED":
+        return "Updated role";
+      case "BOARD_CREATED":
+        return "Created board";
+      case "BOARD_DELETED":
+        return "Deleted board";
+      case "MERGE_REQUEST_CREATED":
+        return "Created merge request";
+      case "MERGE_REQUEST_UPDATED":
+        return "Updated merge request";
+      case "REVIEW_REQUEST_CREATED":
+        return "Created review request";
+      case "REVIEW_REQUEST_UPDATED":
+        return "Updated review request";
+
       default:
         return action;
     }
@@ -53,7 +68,7 @@ export default function HistoryPage({
           <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium">No history available</h3>
           <p className="text-sm text-gray-500 mt-2">
-            There are no recorded actions for this team's boards yet.
+            There are no recorded actions for this team yet.
           </p>
         </div>
       ) : (
@@ -66,20 +81,16 @@ export default function HistoryPage({
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-medium">
-                    <span className="text-blue-600">
-                      {log.user.name} {log.user.surname}
-                    </span>
+                    <span className="text-gray-900">{log.message}</span>
+                  </p>
+                  <p className="text-sm">
                     <span className="text-gray-700">
-                      {" "}
-                      {getActionLabel(log.action)}{" "}
-                    </span>
-                    <span className="text-gray-900">
-                      board "{log.board.name}"
+                      Author: {log.user.name} {log.user.surname}
                     </span>
                   </p>
                   <div className="flex items-center mt-1 text-sm text-gray-500">
                     <Clock className="h-3.5 w-3.5 mr-1" />
-                    {format(new Date(log.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                    {format(new Date(log.createdAt), "MMM d, yyyy 'at' h:mm")}
                   </div>
                 </div>
               </div>
@@ -105,7 +116,7 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
     };
   }
 
-  const logs = await TeamService.getTeamBoardLogs(teamId);
+  const logs = await TeamService.getTeamLogs(teamId);
 
   return {
     props: {

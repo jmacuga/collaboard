@@ -525,7 +525,7 @@ export class TeamService {
   static async deleteMember(
     teamId: string,
     memberId: string,
-    userId: string
+    userId?: string
   ): Promise<boolean> {
     try {
       return await prisma.$transaction(async (tx) => {
@@ -567,13 +567,19 @@ export class TeamService {
         await tx.teamMember.delete({
           where: { id: memberId },
         });
+        let message = "";
+        if (userId === member.userId) {
+          message = `User ${member.user.email} left the team`;
+        } else {
+          message = `User ${member.user.email} was removed from the team by ${userId}`;
+        }
 
         await tx.teamLog.create({
           data: {
             teamId,
-            userId,
+            userId: userId ?? member.userId,
             action: TeamAction.MEMBER_REMOVED,
-            message: `User ${member.user.email} left the team`,
+            message,
           },
         });
 

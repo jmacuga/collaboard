@@ -27,6 +27,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     await TeamService.deleteMember(teamId, member.id);
+
     return res.status(200).json({ message: "Successfully left the team" });
   } catch (error) {
     if (error instanceof Error) {

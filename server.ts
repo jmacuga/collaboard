@@ -1,3 +1,19 @@
+import crypto from "crypto";
+if (!globalThis.crypto.subtle && crypto.webcrypto && crypto.webcrypto.subtle) {
+  // @ts-ignore - Adding subtle property to crypto
+  globalThis.crypto.subtle = crypto.webcrypto.subtle;
+}
+
+if (!globalThis.crypto.getRandomValues && crypto.webcrypto) {
+  Object.defineProperty(globalThis.crypto, "getRandomValues", {
+    // @ts-ignore - Type compatibility between Node.js and Web Crypto API
+    value: function (buffer: Uint8Array) {
+      return crypto.webcrypto.getRandomValues(buffer);
+    },
+    configurable: true,
+  });
+}
+
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { parse } from "url";

@@ -28,6 +28,25 @@ services:
     networks:
       - app-network
 
+  collaboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collaboard_app
+    restart: unless-stopped
+    command: npm run start
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://user:user1234@mongodb:27017/collaboard?authSource=admin
+      - DATABASE_URL=mysql://root:root1234@mariadb:3306/collaboard
+    depends_on:
+      - mongodb
+      - mariadb
+    networks:
+      - app-network
+
 volumes:
   mongo-data:
   mariadb-data:

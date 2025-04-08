@@ -14,6 +14,7 @@ import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 import { useEffect, useState } from "react";
 import { isAfter } from "date-fns";
 import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
+
 export function BoardCards({
   teamBoards,
   userRole,
@@ -24,7 +25,13 @@ export function BoardCards({
   lastUpdatedMap: Record<string, Date>;
 }) {
   const [updatedBoards, setUpdatedBoards] = useState<string[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   const { getLastViewed } = useUpdateLastViewed();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     const roundToSeconds = (date: Date): Date => {
       const newDate = new Date(date);
@@ -63,6 +70,16 @@ export function BoardCards({
 
     getUpdatedBoards();
   }, [teamBoards, lastUpdatedMap]);
+
+  const formatDate = (date: Date) => {
+    if (!isMounted) return "";
+    return format(new Date(date), "MMM d, yyyy");
+  };
+
+  const formatDateTime = (date: Date) => {
+    if (!isMounted) return "";
+    return format(new Date(date), "MMM d, HH:mm");
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -109,7 +126,8 @@ export function BoardCards({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <p>
-                  Created {format(new Date(board.createdAt), "MMM d, yyyy")}
+                  Created{" "}
+                  {isMounted ? formatDate(new Date(board.createdAt)) : ""}
                 </p>
               </div>
               {lastUpdatedMap[board.id as string] && (
@@ -117,7 +135,9 @@ export function BoardCards({
                   <Clock className="h-4 w-4" />
                   <p>
                     Last Updated{" "}
-                    {format(lastUpdatedMap[board.id as string], "MMM d, HH:mm")}
+                    {isMounted
+                      ? formatDateTime(lastUpdatedMap[board.id as string])
+                      : ""}
                   </p>
                 </div>
               )}

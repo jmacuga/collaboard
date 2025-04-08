@@ -353,4 +353,8 @@ export class ClientSyncService implements IClientSyncService {
     this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
     this.removeDocIdFromIndexedDB();
   }
+
+  public isConnected(): boolean {
+    return this.connected;
+  }
 }

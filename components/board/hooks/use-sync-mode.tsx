@@ -3,12 +3,15 @@ import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useRouter } from "next/router";
+import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
+import { UserLastViewedLogType } from "@prisma/client";
 
 const useSyncMode = () => {
   const clientSyncService = useClientSync();
   const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
   const router = useRouter();
+  const { updateLastViewed } = useUpdateLastViewed();
 
   const fetchBoard = async () => {
     try {
@@ -60,11 +63,19 @@ const useSyncMode = () => {
         if (await clientSyncService.canConnect()) {
           await clientSyncService.setOnline(true);
           setIsOnline(true);
+          await updateLastViewed({
+            type: UserLastViewedLogType.BOARD,
+            boardId: router.query.id as string,
+          });
         } else {
           setSynced(false);
           console.log("Detected local changes - staying offline");
         }
       } else {
+        await updateLastViewed({
+          type: UserLastViewedLogType.BOARD,
+          boardId: router.query.id as string,
+        });
         await clientSyncService.setOnline(false);
         setIsOnline(false);
       }

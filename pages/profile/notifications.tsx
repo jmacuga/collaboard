@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationService } from "@/lib/services/notification/notification-service";
-import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
+import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
 
 interface NotificationsPageProps {
   logs: string;
@@ -216,7 +216,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const lastViewedAt = await NotificationService.getLastViewedTimestamp(
       session.user.id
     );
-    console.log("Last viewed at", lastViewedAt);
 
     const teams = await TeamService.getUserTeams(session.user.id, true);
     const logsPromises = teams.map((team) => TeamService.getTeamLogs(team.id));

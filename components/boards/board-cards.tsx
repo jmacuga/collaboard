@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 import { useEffect, useState } from "react";
 import { isAfter } from "date-fns";
-import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
+import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
 export function BoardCards({
   teamBoards,
   userRole,

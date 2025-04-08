@@ -19,7 +19,7 @@ import { TeamAction, UserLastViewedLogType } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { NotificationService } from "@/lib/services/notification/notification-service";
-import { useUpdateLastViewed } from "@/components/profile/useUpdateLastViewed";
+import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
 
 interface HistoryPageProps {
   logs: string;
@@ -214,7 +214,6 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
     UserLastViewedLogType.TEAM,
     teamId
   );
-  console.log("Last viewed at", lastViewedAt);
 
   return {
     props: {

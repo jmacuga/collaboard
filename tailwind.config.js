@@ -17,6 +17,10 @@ module.exports = {
           DEFAULT: "#f1f5f9", // slate-100
           foreground: "#64748b", // slate-500
         },
+        destructive: {
+          DEFAULT: "#ef4444", // red-500
+          foreground: "#ffffff",
+        },
         border: "#e2e8f0", // slate-200
       },
       fontFamily: {

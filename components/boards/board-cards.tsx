@@ -126,10 +126,7 @@ export function BoardCards({
                   href={`/boards/${board.id}/merge-requests`}
                   className="w-full"
                 >
-                  <Button
-                    variant="secondary"
-                    className="w-full flex items-center justify-center gap-2 hover:bg-primary/50 hover:text-primary-foreground transition-colors"
-                  >
+                  <Button className="w-full flex items-center justify-center gap-2 hover:bg-primary/50 hover:text-primary-foreground transition-colors">
                     <GitPullRequest className="h-4 w-4" />
                     Merge Requests
                   </Button>

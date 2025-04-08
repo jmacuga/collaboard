@@ -11,12 +11,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const userMember = await TeamService.getMemberById(memberId);
 
-    const sessionUser = await getServerSession(req, res, authOptions);
-    if (userMember.userId === sessionUser?.user.id) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session?.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (userMember.userId === session?.user?.id) {
       return res.status(400).json({ message: "You cannot delete yourself" });
     }
 
-    await TeamService.deleteMember(teamId, memberId);
+    await TeamService.deleteMember(teamId, memberId, session.user.id);
     return res.status(200).json({ message: "Member deleted successfully" });
   } catch (error) {
     if (error instanceof Error) {

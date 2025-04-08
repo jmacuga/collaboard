@@ -1,10 +1,11 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { Board, MergeRequest, Prisma } from "@prisma/client";
+import { Board, MergeRequest, Prisma, TeamAction } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { getOrCreateRepo } from "@/lib/automerge-server";
+import { Doc } from "@/db/models/Doc";
 export class BoardServiceError extends Error {
   constructor(message: string) {
     super(message);
@@ -26,23 +27,34 @@ export class BoardService {
   static async create(data: {
     name: string;
     teamId: string;
+    userId: string;
   }): Promise<Board | null> {
     try {
-      await dbConnect();
-      const serverRepo = await getOrCreateRepo();
-      if (!serverRepo) {
-        throw new Error("Server repo not found");
-      }
-      const handle = serverRepo.create<LayerSchema>();
-      const board = await prisma.board.create({
-        data: {
-          name: data.name,
-          teamId: data.teamId,
-          automergeDocId: handle.documentId,
-          isMergeRequestRequired: false,
-        },
+      return await prisma.$transaction(async (tx) => {
+        await dbConnect();
+        const serverRepo = await getOrCreateRepo();
+        if (!serverRepo) {
+          throw new Error("Server repo not found");
+        }
+        const handle = serverRepo.create<LayerSchema>();
+        const board = await tx.board.create({
+          data: {
+            name: data.name,
+            teamId: data.teamId,
+            automergeDocId: handle.documentId,
+            isMergeRequestRequired: false,
+          },
+        });
+        await tx.teamLog.create({
+          data: {
+            teamId: data.teamId,
+            action: TeamAction.BOARD_CREATED,
+            userId: data.userId,
+            message: `Board ${board.name} created`,
+          },
+        });
+        return board;
       });
-      return board;
     } catch (error) {
       console.error(error);
       throw error;
@@ -67,7 +79,7 @@ export class BoardService {
     });
   }
 
-  static async archive(boardId: string): Promise<void> {
+  static async archive(boardId: string, userId: string): Promise<void> {
     await prisma.$transaction(async (tx) => {
       let board: Board | null = null;
       board = await tx.board.findUnique({
@@ -83,9 +95,18 @@ export class BoardService {
       await this.deleteReviewRequests(boardId, tx);
       await this.deleteMergeRequests(boardId, tx);
       serverRepo.delete(board.automergeDocId as AnyDocumentId);
-      await prisma.board.update({
+      await tx.board.update({
         where: { id: boardId },
         data: { archived: true },
+      });
+
+      await tx.teamLog.create({
+        data: {
+          teamId: board.teamId,
+          action: TeamAction.BOARD_DELETED,
+          userId: userId,
+          message: `Board ${board.name} deleted`,
+        },
       });
     });
 
@@ -138,5 +159,41 @@ export class BoardService {
       },
     });
     return mergeRequests;
+  }
+
+  static async getBoardLastUpdated(boardId: string): Promise<Date | null> {
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      select: {
+        automergeDocId: true,
+      },
+    });
+    if (!board) {
+      throw new BoardNotFoundError(boardId);
+    }
+    const lastUpdated = await this.getDocLastUpdated(
+      board.automergeDocId as string
+    );
+    if (!lastUpdated) {
+      return null;
+    }
+    return lastUpdated;
+  }
+
+  private static async getDocLastUpdated(
+    docId: string
+  ): Promise<Date | undefined> {
+    await dbConnect();
+
+    try {
+      const doc = await Doc.findOne({ "key.0": docId })
+        .sort({ updatedAt: -1 })
+        .select("updatedAt");
+
+      return doc?.updatedAt;
+    } catch (error) {
+      console.error("Error getting document last updated:", error);
+      return undefined;
+    }
   }
 }

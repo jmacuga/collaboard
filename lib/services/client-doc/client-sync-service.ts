@@ -300,7 +300,7 @@ export class ClientSyncService implements IClientSyncService {
 
         const cleanupAndResolve = () => {
           clearTimeout(timeoutId);
-          this.handle.off("ephemeral-message", handleEphemeralMessage);
+          this.handle.removeListener("ephemeral-message");
           resolve(Array.from(activeUsers));
         };
 
@@ -352,5 +352,9 @@ export class ClientSyncService implements IClientSyncService {
   public async removeLocalDoc(): Promise<void> {
     this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
     this.removeDocIdFromIndexedDB();
+  }
+
+  public isConnected(): boolean {
+    return this.connected;
   }
 }

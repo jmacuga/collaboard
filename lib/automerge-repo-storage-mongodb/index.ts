@@ -10,6 +10,7 @@ import {
   StorageAdapterInterface,
   type StorageKey,
 } from "@automerge/automerge-repo";
+import isEqual from "lodash/isEqual";
 import { MongoClient, MongoClientOptions, Collection, BSON } from "mongodb";
 import assert from "node:assert";
 
@@ -40,7 +41,7 @@ function buildKeyPrefixFilter(keyPrefix: StorageKey) {
   );
 }
 
-type ChunkDocument = { key: StorageKey; data: BSON.Binary };
+type ChunkDocument = { key: StorageKey; data: BSON.Binary; updatedAt: Date };
 
 type MongoDBStorageAdapterOptions = {
   dbName?: string;
@@ -113,11 +114,20 @@ export class MongoDBStorageAdapter implements StorageAdapterInterface {
   async save(key: StorageKey, data: Uint8Array): Promise<void> {
     assertStorageKey(key);
     const collection = await this.collection;
-    await collection.updateOne(
-      { key: key },
-      { $set: { data: new BSON.Binary(data) } },
-      { upsert: true }
-    );
+    const chunk_type = key[1];
+    if (chunk_type !== "sync-state") {
+      await collection.updateOne(
+        { key: key },
+        { $set: { data: new BSON.Binary(data), updatedAt: new Date() } },
+        { upsert: true }
+      );
+    } else {
+      await collection.updateOne(
+        { key: key },
+        { $set: { data: new BSON.Binary(data) } },
+        { upsert: true }
+      );
+    }
   }
 
   async remove(key: StorageKey): Promise<void> {

@@ -39,7 +39,6 @@ export const useNetworkStatus = () => {
 
     const checkServerConnection = () => {
       if (networkStatus === "UNKNOWN" && hasMounted.current) {
-        console.log("pinging server");
         fetch("/api/ping", { cache: "no-store" })
           .then(() => {
             if (

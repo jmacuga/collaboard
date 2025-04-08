@@ -1,5 +1,5 @@
 "use client";
-import { LayoutDashboard, Users, Settings, GitPullRequest } from "lucide-react";
+import { LayoutDashboard, Users, Settings, History } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -25,6 +25,11 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
       icon: Users,
     },
     {
+      value: "history",
+      label: "History",
+      icon: History,
+    },
+    {
       value: "settings",
       label: "Settings",
       icon: Settings,
@@ -41,6 +46,8 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
 
       if (matchingTab) {
         setActiveTab(matchingTab.value);
+      } else {
+        setActiveTab(defaultTab);
       }
     }
   }, [router.asPath, router.isReady, navItems]);
@@ -55,7 +62,7 @@ export function TeamNav({ teamId, defaultTab = "boards" }: TeamNavProps) {
         router.push(`/teams/${teamId}/${value}`);
       }}
     >
-      <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+      <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
         {navItems.map((item) => (
           <TabsTrigger
             key={item.value}

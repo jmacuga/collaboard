@@ -14,7 +14,6 @@ interface Settings {
 }
 
 export class CollaboardDB extends Dexie {
-  docUrls!: Table<DocUrls>;
   settings!: Table<Settings>;
   docIds!: Table<DocIds>;
 
@@ -34,6 +33,15 @@ export class CollaboardDB extends Dexie {
       settings: "key",
       docIds: "docId",
     });
+    this.version(4).stores({
+      settings: "key",
+      docIds: "docId",
+      boards: "id, lastSeen",
+    });
+    this.version(4).stores({
+      settings: "key",
+      docIds: "docId",
+    });
   }
 }
 
@@ -42,14 +50,3 @@ export const db = new CollaboardDB();
 export const SETTINGS = {
   LAST_GARBAGE_COLLECTION_DATE: "lastGarbageCollectionDate",
 };
-
-export async function handleDatabaseUpgrade() {
-  try {
-    await db.open();
-    await Promise.all([db.docIds.count(), db.settings.count()]);
-    console.log("Database upgrade completed successfully");
-  } catch (error) {
-    console.error("Database upgrade failed:", error);
-    throw error;
-  }
-}

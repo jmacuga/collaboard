@@ -27,6 +27,27 @@ enum MergeRequestStatus {
 }
 
 
+
+enum TeamAction {
+  CREATED
+  DELETED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  ROLE_UPDATED
+  BOARD_CREATED
+  BOARD_DELETED
+  MERGE_REQUEST_CREATED
+  MERGE_REQUEST_UPDATED
+  REVIEW_REQUEST_CREATED
+  REVIEW_REQUEST_UPDATED
+}
+
+enum UserLastViewedLogType {
+  ALL
+  TEAM
+  BOARD
+}
+
 // Models
 model User {
   id            String          @id @default(uuid())
@@ -37,6 +58,7 @@ model User {
   username      String          @unique
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+   
   
   // Relations
   teamMembers      TeamMember[]
@@ -44,7 +66,8 @@ model User {
   mergeRequests    MergeRequest[]
   reviewRequests   ReviewRequest[]
   comments         Comment[]
-  boardLogs        BoardLog[]
+  teamLogs         TeamLog[]
+  lastViewedLogs   UserLastViewedLog[]
 }
 
 model Team {
@@ -58,6 +81,21 @@ model Team {
   members     TeamMember[]
   boards      Board[]
   invitations TeamInvitation[]
+  logs        TeamLog[]
+}
+
+model TeamLog {
+  id           String     @id @default(uuid())
+  teamId       String
+  userId       String
+  action       TeamAction
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  message      String?
+
+  // Relations
+  team         Team       @relation(fields: [teamId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
 }
 
 model TeamMember {
@@ -75,12 +113,11 @@ model TeamMember {
 }
 
 model TeamRole {
-  id        String      @id @default(uuid())
-  name      String      @unique
-
+  id           String      @id @default(uuid())
+  name         String      @unique
+  
   // Relations
-  members   TeamMember[]
-
+  members      TeamMember[]
 }
 
 model TeamInvitation {
@@ -112,8 +149,6 @@ model Board {
   mergeRequests  MergeRequest[]  @relation("BoardMergeRequests")
   reviewRequests ReviewRequest[] @relation("BoardReviewRequests")
   comments       Comment[]       @relation("BoardComments")
-  boardLogs      BoardLog[]      @relation("BoardLogs")
-
 }
 
 model MergeRequest {
@@ -160,29 +195,21 @@ model Comment {
   user      User      @relation(fields: [userId], references: [id])
 }
 
-model BoardLog {
-  id        String      @id @default(uuid())
-  boardId   String
-  userId    String
-  actionId  String
-  objectId  String?
-  headId    String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
 
+model UserLastViewedLog {
+  id          String    @id @default(uuid())
+  userId      String
+  type        UserLastViewedLogType
+  timestamp   DateTime  @default(now())
+  teamId      String?
+  boardId     String?
+  
   // Relations
-  action    BoardAction @relation(fields: [actionId], references: [id])
-  board     Board       @relation("BoardLogs", fields: [boardId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id])
-} 
+  user        User      @relation(fields: [userId], references: [id])
 
-model BoardAction {
-  id        String    @id @default(uuid())
-  name      String
-  reversable Boolean @default(true)
-
-  // Relations
-  boardLogs BoardLog[]
-
-  @@unique([name])
+  @@unique([userId, type, teamId])
+  @@unique([userId, type, boardId])
 }
+
+
+

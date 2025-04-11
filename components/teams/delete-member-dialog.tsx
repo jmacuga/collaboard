@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { TeamMemberWithRelations } from "@/lib/services/team/team-service";
@@ -38,6 +38,7 @@ export default function DeleteMemberDialog({
 
       if (!response.ok) {
         const data = await response.json();
+        toast.error(data.message || "Failed to delete member");
         throw new Error(data.message || "Failed to delete member");
       }
 

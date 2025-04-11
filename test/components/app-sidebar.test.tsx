@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { AppSidebar } from "../app-sidebar";
-import { SidebarProvider } from "../ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const mockIsMobile = jest.fn(() => false);
 jest.mock("@/hooks/use-mobile", () => ({

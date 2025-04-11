@@ -9,7 +9,7 @@ import { format } from "date-fns";
 export default function TeamsCards({ teams }: { teams: Team[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {teams ? (
+      {teams && teams.length > 0 ? (
         teams.map((team) => (
           <Card key={team.id}>
             <CardHeader className="relative">

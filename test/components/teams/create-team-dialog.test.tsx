@@ -155,9 +155,19 @@ describe("CreateTeamDialog", () => {
 
     render(<CreateTeamDialog />);
 
-    const onSubmitFunction = mockHandleSubmit.mock.calls[0][0];
+    const user = userEvent.setup();
+    const openButton = screen
+      .getByTestId("mock-dialog-trigger")
+      .querySelector("button");
+    await user.click(openButton as Element);
 
-    await onSubmitFunction({ name: "New Team" });
+    const input = screen.getByTestId("mock-input");
+    await user.type(input, "New Team");
+
+    const createButton = screen
+      .getByTestId("mock-dialog-footer")
+      .querySelector("button");
+    await user.click(createButton as Element);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -183,9 +193,17 @@ describe("CreateTeamDialog", () => {
 
     render(<CreateTeamDialog />);
 
-    const onSubmitFunction = mockHandleSubmit.mock.calls[0][0];
-
-    await onSubmitFunction({ name: "New Team" });
+    const user = userEvent.setup();
+    const openButton = screen
+      .getByTestId("mock-dialog-trigger")
+      .querySelector("button");
+    await user.click(openButton as Element);
+    const input = screen.getByTestId("mock-input");
+    await user.type(input, "New Team");
+    const createButton = screen
+      .getByTestId("mock-dialog-footer")
+      .querySelector("button");
+    await user.click(createButton as Element);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();

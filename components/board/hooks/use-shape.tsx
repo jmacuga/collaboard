@@ -58,7 +58,6 @@ const useShape = () => {
         stroke: shapeColor,
         strokeWidth: 3,
       });
-      console.log(shape);
     }
     if (shapeType === "arrow") {
       shape = new Konva.Arrow({

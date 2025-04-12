@@ -79,7 +79,7 @@ export function SignUpForm() {
           <div className="mt-4">
             <label
               className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="password"
+              htmlFor="confirmPassword"
             >
               Confirm Password
             </label>
@@ -99,7 +99,7 @@ export function SignUpForm() {
           <div className="mt-4">
             <label
               className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="password"
+              htmlFor="name"
             >
               Name
             </label>
@@ -118,7 +118,7 @@ export function SignUpForm() {
           <div className="mt-4">
             <label
               className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="password"
+              htmlFor="surname"
             >
               Surname
             </label>
@@ -137,7 +137,7 @@ export function SignUpForm() {
           <div className="mt-4">
             <label
               className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="password"
+              htmlFor="username"
             >
               Username
             </label>

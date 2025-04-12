@@ -23,7 +23,7 @@ import { useForm } from "react-hook-form";
 
 import { useState } from "react";
 import { schemaTeam } from "@/lib/schemas/team.schema";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/router";
 
 type TeamFormData = {

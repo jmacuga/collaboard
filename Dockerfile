@@ -23,7 +23,7 @@ ENV npm_config_build_from_source=true
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_OPTIONS="--experimental-global-webcrypto"
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 RUN rm -rf node_modules/canvas
 RUN npm install canvas --build-from-source
 

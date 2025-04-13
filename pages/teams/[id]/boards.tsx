@@ -35,8 +35,8 @@ export default function BoardsPage({
         <h1 className="text-3xl font-bold">{parsedTeam.name} - Boards</h1>
       </div>
       <div className="flex justify-between items-center mb-8">
-        <TeamNav teamId={parsedTeam.id as string} />
-        <CreateBoardDialog teamId={parsedTeam.id as string} />
+        <TeamNav teamId={parsedTeam.id} />
+        <CreateBoardDialog teamId={parsedTeam.id} />
       </div>
 
       {parsedBoards && (

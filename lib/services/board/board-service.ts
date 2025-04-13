@@ -22,8 +22,6 @@ export class BoardNotFoundError extends BoardServiceError {
 export type PrismaTransactionalClient = Prisma.TransactionClient;
 
 export class BoardService {
-  constructor() {}
-
   static async create(data: {
     name: string;
     teamId: string;

@@ -5,29 +5,44 @@ import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useRouter } from "next/router";
 import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
 import { UserLastViewedLogType } from "@prisma/client";
+import { Board } from "@prisma/client";
 
-const useSyncMode = () => {
+type SyncModeHook = {
+  toggleSyncMode: () => Promise<void>;
+};
+
+const useSyncMode = (): SyncModeHook => {
   const clientSyncService = useClientSync();
   const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
   const router = useRouter();
   const { updateLastViewed } = useUpdateLastViewed();
 
-  const fetchBoard = async () => {
+  const getBoardId = (): string => {
+    const boardId = router.query.id;
+    if (!boardId || Array.isArray(boardId)) {
+      throw new Error("Invalid board ID");
+    }
+    return boardId;
+  };
+
+  const fetchBoard = async (): Promise<Board | null> => {
     try {
-      const boardId = router.query.id as string;
+      const boardId = getBoardId();
       const response = await fetch(`/api/boards/${boardId}`);
+
       if (!response.ok) {
         return null;
       }
-      const board = await response.json();
-      return board;
+
+      return await response.json();
     } catch (error) {
       console.error("Failed to fetch board:", error);
+      return null;
     }
   };
 
-  const boardArchived = async () => {
+  const isBoardArchived = async (): Promise<boolean | null> => {
     const board = await fetchBoard();
     if (!board) {
       return null;
@@ -35,54 +50,77 @@ const useSyncMode = () => {
     return board.archived;
   };
 
-  useEffect(() => {
-    if (networkStatus === "OFFLINE") {
-      setIsOnline(false);
-      const setLocalMode = async () => {
-        try {
-          await clientSyncService.setOnline(false);
-        } catch (error: unknown) {
-          console.error("Failed to set local mode:", error);
-        }
-      };
-      setLocalMode();
+  const updateBoardLastViewed = async (): Promise<void> => {
+    try {
+      await updateLastViewed({
+        type: UserLastViewedLogType.BOARD,
+        boardId: getBoardId(),
+      });
+    } catch (error) {
+      console.error("Failed to update last viewed:", error);
     }
-  }, [networkStatus, clientSyncService]);
+  };
 
-  const toggleSyncMode = async () => {
+  useEffect(() => {
+    if (networkStatus !== "OFFLINE") {
+      return;
+    }
+
+    const setLocalMode = async (): Promise<void> => {
+      try {
+        setIsOnline(false);
+        await clientSyncService.setOnline(false);
+      } catch (error) {
+        console.error("Failed to set local mode:", error);
+      }
+    };
+
+    setLocalMode();
+  }, [networkStatus, clientSyncService, setIsOnline]);
+
+  const switchToOnlineMode = async (): Promise<void> => {
+    const isArchived = await isBoardArchived();
+
+    if (isArchived) {
+      router.push(`/boards/${getBoardId()}`);
+      return;
+    }
+
+    const canConnect = await clientSyncService.canConnect();
+    if (!canConnect) {
+      setSynced(false);
+      console.log("Detected local changes - staying disconnected");
+      return;
+    }
+
+    await clientSyncService.setOnline(true);
+    setIsOnline(true);
+    await updateBoardLastViewed();
+  };
+
+  const switchToOfflineMode = async (): Promise<void> => {
+    await updateBoardLastViewed();
+    await clientSyncService.setOnline(false);
+    setIsOnline(false);
+  };
+
+  const toggleSyncMode = async (): Promise<void> => {
     try {
       if (!isOnline && networkStatus !== "ONLINE") {
         console.warn("Cannot switch to real-time mode when network is offline");
         return;
       }
+
       if (!isOnline) {
-        if (await boardArchived()) {
-          const boardId = router.query.id as string;
-          router.push(`/boards/${boardId}`);
-        }
-        if (await clientSyncService.canConnect()) {
-          await clientSyncService.setOnline(true);
-          setIsOnline(true);
-          await updateLastViewed({
-            type: UserLastViewedLogType.BOARD,
-            boardId: router.query.id as string,
-          });
-        } else {
-          setSynced(false);
-          console.log("Detected local changes - staying offline");
-        }
+        await switchToOnlineMode();
       } else {
-        await updateLastViewed({
-          type: UserLastViewedLogType.BOARD,
-          boardId: router.query.id as string,
-        });
-        await clientSyncService.setOnline(false);
-        setIsOnline(false);
+        await switchToOfflineMode();
       }
     } catch (error) {
       console.error("Failed to toggle real-time/local mode:", error);
     }
   };
+
   return { toggleSyncMode };
 };
 

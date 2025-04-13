@@ -14,7 +14,7 @@ import * as automerge from "@automerge/automerge";
 import { BoardHeader } from "../board/components/board-header";
 import { useRouter } from "next/router";
 import { NetworkStatusProvider } from "../providers/network-status-provider";
-import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
+import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 
 export function MergeRequestUpdateContent({
   board,
@@ -63,7 +63,8 @@ export function MergeRequestUpdateContent({
   useEffect(() => {
     const applyChangesToUpdateDoc = async () => {
       if (initialLoad.current || !clientSyncService) return;
-      const serverRepo = clientGetServerRepo();
+      const { repo: serverRepo, cleanup } =
+        new ServerRepoFactory().createManagedRepo();
       const serverDoc = await serverRepo
         .find<LayerSchema>(board.automergeDocId as AnyDocumentId)
         .doc();
@@ -74,6 +75,7 @@ export function MergeRequestUpdateContent({
         doc = automerge.merge(doc, serverDoc);
         return automerge.applyChanges(doc, changes)[0];
       });
+      cleanup();
     };
 
     applyChangesToUpdateDoc();

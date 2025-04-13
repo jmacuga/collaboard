@@ -49,12 +49,14 @@ export default function BoardPreviewPage({
     const fetchLocalChanges = async () => {
       if (!clientSyncServiceRef.current) return;
 
-      const localChanges = await clientSyncServiceRef.current.getLocalChanges();
-      setLocalChanges(localChanges);
+      const localHandle = await clientSyncServiceRef.current.getHandle();
+      const localDoc = await localHandle.doc();
       const serverDoc = await clientSyncServiceRef.current.getServerDoc();
       const serverDocCopy = automerge.clone(serverDoc);
-      const doc2 = automerge.applyChanges(serverDocCopy, localChanges)[0];
-      setPreviewDoc(doc2);
+      const mergedDoc = automerge.merge(serverDocCopy, localDoc);
+      const changes = automerge.getChanges(serverDocCopy, mergedDoc);
+      setLocalChanges(changes);
+      setPreviewDoc(mergedDoc);
     };
 
     fetchLocalChanges();

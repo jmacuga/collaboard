@@ -42,11 +42,11 @@ enum TeamAction {
   REVIEW_REQUEST_UPDATED
 }
 
-enum UserLastViewedLogType {
-  ALL
-  TEAM
-  BOARD
-}
+// enum UserLastViewedLogType {
+//   ALL
+//   TEAM
+//   BOARD
+// }
 
 // Models
 model User {
@@ -196,20 +196,42 @@ model Comment {
 }
 
 
-model UserLastViewedLog {
-  id          String    @id @default(uuid())
-  userId      String
-  type        UserLastViewedLogType
-  timestamp   DateTime  @default(now())
-  teamId      String?
-  boardId     String?
+// model UserLastViewedLog {
+//   id          String    @id @default(uuid())
+//   userId      String
+//   type        UserLastViewedLogType
+//   timestamp   DateTime  @default(now())
+//   teamId      String?
+//   boardId     String?
   
+//   // Relations
+//   user        User      @relation(fields: [userId], references: [id])
+
+//   @@unique([userId, type, teamId])
+//   @@unique([userId, type, boardId])
+// }
+
+model UserLastViewedTeamLog {
+  id        String    @id @default(uuid())
+  userId    String
+  teamId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
   // Relations
   user        User      @relation(fields: [userId], references: [id])
-
-  @@unique([userId, type, teamId])
-  @@unique([userId, type, boardId])
+  team        Team      @relation(fields: [teamId], references: [id])
 }
 
 
+model UserLastViewedBoardLog {
+  id        String    @id @default(uuid())
+  userId    String
+  boardId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  board       Board     @relation(fields: [boardId], references: [id])
+}

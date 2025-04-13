@@ -201,9 +201,9 @@ export class ClientSyncService implements IClientSyncService {
         return false;
       }
 
-      const serverHeads = await this.getDocumentHeads(serverDocHandle);
-      const localHeads = await this.getDocumentHeads(this.handle);
       if (localChanges.length === serverChanges.length) {
+        const serverHeads = await this.getDocumentHeads(serverDocHandle);
+        const localHeads = await this.getDocumentHeads(this.handle);
         return this.areArraysEqual(localHeads, serverHeads);
       }
       return this.containsAllChanges(serverChanges, localChanges);

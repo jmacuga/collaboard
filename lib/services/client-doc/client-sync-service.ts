@@ -98,32 +98,59 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   /**
+   * Generic method to compare collections using frequency counting
+   * @param collection1 - First collection
+   * @param collection2 - Second collection
+   * @param getKey - Function to get a string key from an item
+   * @param allowSubset - If true, collection2 can be a subset of collection1
+   * @returns boolean indicating if collections match according to criteria
+   */
+  private compareCollections<T>(
+    collection1: T[],
+    collection2: T[],
+    getKey: (item: T) => string,
+    allowSubset: boolean = false
+  ): boolean {
+    if (collection1 === collection2) return true;
+    if (collection2.length === 0) return true;
+    if (!allowSubset && collection1.length !== collection2.length) return false;
+    if (allowSubset && collection1.length < collection2.length) return false;
+
+    const counts = new Map<string, number>();
+
+    for (const item of collection1) {
+      const key = getKey(item);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    for (const item of collection2) {
+      const key = getKey(item);
+      const count = counts.get(key);
+
+      if (count === undefined) return false;
+
+      if (count === 1) {
+        counts.delete(key);
+      } else {
+        counts.set(key, count - 1);
+      }
+    }
+
+    return allowSubset || counts.size === 0;
+  }
+
+  /**
    * Checks if two arrays contain exactly the same elements, regardless of order
    * @param array1 - First array to compare
    * @param array2 - Second array to compare
    * @returns boolean indicating if arrays contain the same elements
    */
   private areArraysEqual(array1: string[], array2: string[]): boolean {
-    if (array1 === array2) return true;
     if (!array1.length && !array2.length) return true;
-    if (array1.length !== array2.length) return false;
-    const counts = new Map<string, number>();
-
-    for (const item of array1) {
-      counts.set(item, (counts.get(item) || 0) + 1);
-    }
-
-    for (const item of array2) {
-      const count = counts.get(item);
-      if (count === undefined) return false;
-
-      if (count === 1) {
-        counts.delete(item);
-      } else {
-        counts.set(item, count - 1);
-      }
-    }
-    return counts.size === 0;
+    return (
+      this.compareCollections(array1, array2, (item) => item) &&
+      this.compareCollections(array2, array1, (item) => item)
+    );
   }
 
   /**
@@ -133,36 +160,12 @@ export class ClientSyncService implements IClientSyncService {
    * @returns boolean indicating if array1 contains all changes in array2
    */
   private containsAllChanges(array1: Change[], array2: Change[]): boolean {
-    if (array1 === array2) return true;
-    if (array2.length === 0) return true;
-    if (array1.length < array2.length) return false;
-
-    const hashChange = (change: Change): string => {
-      return Array.from(change).join(",");
-    };
-
-    const hashMap = new Map<string, number>();
-
-    for (const change of array1) {
-      const hash = hashChange(change);
-      hashMap.set(hash, (hashMap.get(hash) || 0) + 1);
-    }
-    for (const change of array2) {
-      const hash = hashChange(change);
-      const count = hashMap.get(hash);
-
-      if (count === undefined) {
-        return false;
-      }
-
-      if (count === 1) {
-        hashMap.delete(hash);
-      } else {
-        hashMap.set(hash, count - 1);
-      }
-    }
-
-    return true;
+    return this.compareCollections(
+      array1,
+      array2,
+      (change) => Array.from(change).join(","),
+      true
+    );
   }
 
   /**

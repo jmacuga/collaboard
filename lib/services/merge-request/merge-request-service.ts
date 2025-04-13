@@ -473,7 +473,7 @@ export class MergeRequestService {
         where: { id: mergeRequest.id },
         data: {
           updatedAt: new Date(),
-          status: MergeRequestStatus.PENDING,
+          status: MergeRequestStatus.OPEN,
         },
       });
       await this.updateReviewRequests(mergeRequest.id, prismaTx);

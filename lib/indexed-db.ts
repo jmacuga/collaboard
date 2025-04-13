@@ -1,9 +1,5 @@
 import Dexie, { Table } from "dexie";
 
-interface DocUrls {
-  docUrl: string;
-}
-
 interface DocIds {
   docId: string;
 }

@@ -15,12 +15,11 @@ import {
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
-import { db } from "@/lib/indexed-db";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
-import { getChanges, getHeads } from "@automerge/automerge";
-import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
+import { getChanges, getHeads, getMissingDeps } from "@automerge/automerge";
+import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 /**
  * Service for synchronizing local documents with the server
  * Manages online/offline state and document synchronization
@@ -34,6 +33,7 @@ export class ClientSyncService implements IClientSyncService {
   private connected: boolean;
   private readonly DISABLE_RETRY_INTERVAL = 10_000_000;
   private handle: DocHandle<LayerSchema>;
+  private serverRepoFactory: ServerRepoFactory;
 
   /**
    * Creates a new ClientSyncService
@@ -63,6 +63,7 @@ export class ClientSyncService implements IClientSyncService {
       peerId: this.peerId,
     });
     this.handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
+    this.serverRepoFactory = new ServerRepoFactory();
   }
 
   /**
@@ -71,24 +72,18 @@ export class ClientSyncService implements IClientSyncService {
    */
   public async initializeRepo(): Promise<DocHandle<LayerSchema> | null> {
     try {
-      const docExists = await this.docExistsInIndexedDB();
+      this.disconnect();
 
-      if (docExists) {
-        try {
-          await this.handle.whenReady();
-          return this.handle;
-        } catch (error) {
-          console.log("Could not find local doc. Creating new from server");
-          await this.connect();
-          await this.handle.whenReady();
-          return this.handle;
-        }
+      const handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
+      await handle.whenReady(["unavailable", "requesting", "ready"]);
+
+      if (handle.state == "ready") {
+        return handle;
       } else {
-        console.log("Creating local doc");
+        // document not present in storage
         await this.connect();
-        await this.addDocIdToIndexedDB();
-        await this.handle.whenReady();
-        return this.handle;
+        await handle.whenReady();
+        return handle;
       }
     } catch (error) {
       console.error("Could not find or create local doc. Reason:", error);
@@ -97,31 +92,51 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   public async getHandle(): Promise<DocHandle<LayerSchema>> {
-    await this.handle.whenReady();
-    return this.handle;
+    const handle = this.repo.find<LayerSchema>(this.docId as AnyDocumentId);
+    await handle.whenReady();
+    return handle;
   }
 
   /**
-   * Checks if a document exists in IndexedDB
-   * @returns Whether the document exists
+   * Generic method to compare collections using frequency counting
+   * @param collection1 - First collection
+   * @param collection2 - Second collection
+   * @param getKey - Function to get a string key from an item
+   * @param allowSubset - If true, collection2 can be a subset of collection1
+   * @returns boolean indicating if collections match according to criteria
    */
-  private async docExistsInIndexedDB(): Promise<boolean> {
-    const docExists = await db.docIds.get(this.docId);
-    return !!docExists;
-  }
+  private compareCollections<T>(
+    collection1: T[],
+    collection2: T[],
+    getKey: (item: T) => string,
+    allowSubset: boolean = false
+  ): boolean {
+    if (collection1 === collection2) return true;
+    if (collection2.length === 0) return true;
+    if (!allowSubset && collection1.length !== collection2.length) return false;
+    if (allowSubset && collection1.length < collection2.length) return false;
 
-  /**
-   * Adds a document ID to IndexedDB
-   */
-  private async addDocIdToIndexedDB(): Promise<void> {
-    await db.docIds.add({ docId: this.docId });
-  }
+    const counts = new Map<string, number>();
 
-  /**
-   * Removes a document URL from IndexedDB
-   */
-  private async removeDocIdFromIndexedDB(): Promise<void> {
-    await db.docIds.delete(this.docId);
+    for (const item of collection1) {
+      const key = getKey(item);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    for (const item of collection2) {
+      const key = getKey(item);
+      const count = counts.get(key);
+
+      if (count === undefined) return false;
+
+      if (count === 1) {
+        counts.delete(key);
+      } else {
+        counts.set(key, count - 1);
+      }
+    }
+
+    return allowSubset || counts.size === 0;
   }
 
   /**
@@ -131,13 +146,25 @@ export class ClientSyncService implements IClientSyncService {
    * @returns boolean indicating if arrays contain the same elements
    */
   private areArraysEqual(array1: string[], array2: string[]): boolean {
-    if (!array1.length || !array2.length || array1.length !== array2.length) {
-      return false;
-    }
-    const set = new Set(array1);
+    if (!array1.length && !array2.length) return true;
     return (
-      array2.every((element) => set.has(element)) &&
-      array1.every((element) => set.has(element))
+      this.compareCollections(array1, array2, (item) => item) &&
+      this.compareCollections(array2, array1, (item) => item)
+    );
+  }
+
+  /**
+   * Checks if all changes in array2 are present in array1
+   * @param array1 - First array to compare
+   * @param array2 - Second array to compare
+   * @returns boolean indicating if array1 contains all changes in array2
+   */
+  private containsAllChanges(array1: Change[], array2: Change[]): boolean {
+    return this.compareCollections(
+      array1,
+      array2,
+      (change) => Array.from(change).join(","),
+      true
     );
   }
 
@@ -156,13 +183,14 @@ export class ClientSyncService implements IClientSyncService {
   /**
    * Checks if the client can connect to the server by comparing local and server document states
    * @returns Promise resolving to boolean indicating if connection is possible
-   * @throws Error if document handles cannot be initialized
    */
   public async canConnect(): Promise<boolean> {
-    try {
-      this.disconnect();
+    if (this.connected) return true;
 
-      const serverRepo = clientGetServerRepo();
+    const { repo: serverRepo, cleanup } =
+      this.serverRepoFactory.createManagedRepo();
+
+    try {
       const serverDocHandle = serverRepo.find<LayerSchema>(
         this.docId as AnyDocumentId
       );
@@ -176,17 +204,17 @@ export class ClientSyncService implements IClientSyncService {
         return false;
       }
 
-      if (localChanges.length == serverChanges.length) {
-        const localHeads = await this.getDocumentHeads(this.handle);
+      if (localChanges.length === serverChanges.length) {
         const serverHeads = await this.getDocumentHeads(serverDocHandle);
-        const headsEqual = this.areArraysEqual(localHeads, serverHeads);
-        return headsEqual;
+        const localHeads = await this.getDocumentHeads(this.handle);
+        return this.areArraysEqual(localHeads, serverHeads);
       }
-
-      return true;
+      return this.containsAllChanges(serverChanges, localChanges);
     } catch (error) {
-      console.error("Failed to check connection status:", error);
+      console.error("Failed to check if repo can connect", error);
       return false;
+    } finally {
+      cleanup();
     }
   }
 
@@ -199,12 +227,7 @@ export class ClientSyncService implements IClientSyncService {
    * Creates a new network adapter if needed
    */
   public async connect(): Promise<void> {
-    if (this.connected) {
-      console.log("Already connected to server");
-      return;
-    }
-
-    console.log("Connecting to server");
+    if (this.connected) return;
 
     if (
       this.networkAdapter.socket?.readyState !== WebSocket.OPEN &&
@@ -214,12 +237,9 @@ export class ClientSyncService implements IClientSyncService {
         this.websocketURL,
         this.DISABLE_RETRY_INTERVAL
       );
-
       this.repo.networkSubsystem.addNetworkAdapter(
         this.networkAdapter as any as NetworkAdapterInterface
       );
-    } else {
-      console.log("Already connected to server");
     }
 
     this.connected = true;
@@ -229,22 +249,20 @@ export class ClientSyncService implements IClientSyncService {
    * Disconnects from the server
    */
   public disconnect(): void {
-    if (!this.connected) {
-      console.log("Already disconnected from server");
-      return;
-    }
+    if (!this.connected) return;
 
     try {
       this.networkAdapter.disconnect();
       // @ts-ignore
       this.networkAdapter.emit("close");
+      if (
+        this.networkAdapter.socket?.readyState === WebSocket.OPEN ||
+        this.networkAdapter.socket?.readyState === WebSocket.CONNECTING
+      ) {
+        this.networkAdapter.socket.close();
+      }
     } catch (error) {
       console.error("Error disconnecting from server", error);
-    }
-
-    if (this.networkAdapter.socket?.readyState === WebSocket.OPEN) {
-      this.networkAdapter.socket.close();
-      console.log("Disconnected from server");
     }
 
     this.connected = false;
@@ -317,19 +335,6 @@ export class ClientSyncService implements IClientSyncService {
    */
   public deleteDoc(): void {
     this.repo.delete(this.docId as AnyDocumentId);
-    this.removeDocIdFromIndexedDB();
-  }
-
-  /**
-   * Gets the local changes
-   * @returns The local changes
-   */
-  public async getLocalChanges(): Promise<Change[]> {
-    const handle = await this.getHandle();
-    const localDoc = await handle.doc();
-    const serverDoc = await this.getServerDoc();
-    const changes = getChanges(serverDoc, localDoc);
-    return changes;
   }
 
   /**
@@ -338,12 +343,18 @@ export class ClientSyncService implements IClientSyncService {
    * @returns The server document
    */
   public async getServerDoc(docId?: string): Promise<Doc<LayerSchema>> {
-    const serverRepo = clientGetServerRepo();
-    const serverHandle = serverRepo.find<LayerSchema>(
-      docId ? (docId as AnyDocumentId) : (this.docId as AnyDocumentId)
-    );
-    await serverHandle.whenReady();
-    return await serverHandle.doc();
+    const { repo: serverRepo, cleanup } =
+      this.serverRepoFactory.createManagedRepo();
+
+    try {
+      const serverHandle = serverRepo.find<LayerSchema>(
+        docId ? (docId as AnyDocumentId) : (this.docId as AnyDocumentId)
+      );
+      await serverHandle.whenReady();
+      return await serverHandle.doc();
+    } finally {
+      cleanup();
+    }
   }
 
   /**
@@ -351,7 +362,6 @@ export class ClientSyncService implements IClientSyncService {
    */
   public async removeLocalDoc(): Promise<void> {
     this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
-    this.removeDocIdFromIndexedDB();
   }
 
   public isConnected(): boolean {

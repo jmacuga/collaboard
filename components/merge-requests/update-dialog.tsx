@@ -16,7 +16,7 @@ import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { ClientSyncContext } from "../board/context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import clientGetServerRepo from "@/lib/utils/clientGetServerRepo";
+import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 
 export function UpdateMergeRequestDialog({
   boardId,
@@ -36,10 +36,12 @@ export function UpdateMergeRequestDialog({
 
   const calculateChanges = async () => {
     if (!clientSyncService) return [];
-    const serverRepo = clientGetServerRepo();
+    const { repo: serverRepo, cleanup } =
+      new ServerRepoFactory().createManagedRepo();
     const serverDoc = await serverRepo
       .find<LayerSchema>(serverDocId as AnyDocumentId)
       .doc();
+    cleanup();
     return getChanges(serverDoc, doc);
   };
 

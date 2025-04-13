@@ -56,20 +56,10 @@ const data = {
           icon: Bell,
         },
         {
-          title: "Settings",
-          url: "/profile/settings",
-          icon: Files,
-        },
-        {
           title: "Sign Out",
           icon: LogOut,
         },
       ],
-    },
-    {
-      title: "Review Requests",
-      url: "#",
-      icon: GitPullRequest,
     },
   ],
 };

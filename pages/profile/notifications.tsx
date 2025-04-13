@@ -53,7 +53,10 @@ export default function NotificationsPage({
 }: NotificationsPageProps) {
   const parsedLogs: LogWithUser[] = JSON.parse(logs);
   const parsedTeams: Team[] = JSON.parse(teams);
-  const lastViewed = lastViewedAt ? new Date(lastViewedAt) : null;
+  const lastViewedAtMap = lastViewedAt ? JSON.parse(lastViewedAt) : {};
+  Object.keys(lastViewedAtMap).forEach((key) => {
+    lastViewedAtMap[key] = new Date(lastViewedAtMap[key]);
+  });
 
   const [filter, setFilter] = useState<string | null>(null);
   const mountedRef = useRef(false);
@@ -62,7 +65,9 @@ export default function NotificationsPage({
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
-      updateLastViewed({ type: UserLastViewedLogType.ALL });
+      parsedTeams.forEach((team) => {
+        updateLastViewed({ type: UserLastViewedLogType.TEAM, teamId: team.id });
+      });
     }
   }, []);
 
@@ -155,7 +160,8 @@ export default function NotificationsPage({
             <Card
               key={log.id}
               className={`hover:shadow-sm transition-shadow ${
-                lastViewed && new Date(log.createdAt) > lastViewed
+                lastViewedAtMap[log.teamId] &&
+                new Date(log.createdAt) > lastViewedAtMap[log.teamId]
                   ? "border-l-4 border-l-blue-500"
                   : ""
               }`}
@@ -167,6 +173,7 @@ export default function NotificationsPage({
                       <span className="font-medium text-sm">
                         {log.team.name}
                       </span>
+
                       <Badge
                         variant="outline"
                         className={getActionColor(log.action)}
@@ -176,11 +183,13 @@ export default function NotificationsPage({
                           {log.action.replace(/_/g, " ")}
                         </span>
                       </Badge>
-                      {lastViewed && new Date(log.createdAt) > lastViewed && (
-                        <Badge className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
-                          New
-                        </Badge>
-                      )}
+                      {lastViewedAtMap[log.teamId] &&
+                        new Date(log.createdAt) >
+                          lastViewedAtMap[log.teamId] && (
+                          <Badge className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md">
+                            New
+                          </Badge>
+                        )}
                       <span className="text-gray-500 text-xs ml-auto">
                         {format(new Date(log.createdAt), "MMM d, h:mm a")}
                       </span>
@@ -213,9 +222,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const lastViewedAt = await NotificationService.getLastViewedTimestamp(
-      session.user.id
-    );
+    const lastViewedAt =
+      await NotificationService.getLastViewedUserTeamsTimestamps(
+        session.user.id
+      );
 
     const teams = await TeamService.getUserTeams(session.user.id, true);
     const logsPromises = teams.map((team) => TeamService.getTeamLogs(team.id));
@@ -237,7 +247,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         logs: JSON.stringify(logsWithTeam),
         teams: JSON.stringify(teams),
-        lastViewedAt: lastViewedAt ? lastViewedAt.toISOString() : null,
+        lastViewedAt: JSON.stringify(lastViewedAt),
       },
     };
   } catch (error) {
@@ -246,7 +256,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         logs: JSON.stringify([]),
         teams: JSON.stringify([]),
-        lastViewedAt: null,
+        lastViewedAt: JSON.stringify({}),
         error: "Failed to load notifications",
       },
     };

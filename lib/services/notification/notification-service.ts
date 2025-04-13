@@ -110,6 +110,34 @@ export class NotificationService {
     return record?.timestamp || null;
   }
 
+  static async getLastViewedUserTeamsTimestamps(
+    userId: string
+  ): Promise<Record<string, string>> {
+    try {
+      const record = await prisma.userLastViewedLog.findMany({
+        where: {
+          userId,
+          type: {
+            in: [UserLastViewedLogType.TEAM],
+          },
+        },
+        orderBy: {
+          timestamp: "desc",
+        },
+      });
+
+      return record.reduce((acc, curr) => {
+        if (curr.teamId) {
+          acc[curr.teamId] = curr.timestamp.toISOString();
+        }
+        return acc;
+      }, {} as Record<string, string>);
+    } catch (error) {
+      console.error(error);
+      return {};
+    }
+  }
+
   /**
    * Gets the timestamp when a user last viewed notifications of a specific team
    *

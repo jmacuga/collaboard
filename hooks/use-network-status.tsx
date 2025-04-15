@@ -39,7 +39,7 @@ export const useNetworkStatus = () => {
 
     const checkServerConnection = () => {
       if (networkStatus === "UNKNOWN" && hasMounted.current) {
-        fetch("/api/ping", { cache: "no-store" })
+        fetch("/api/ping", { cache: "no-store", credentials: "include" })
           .then(() => {
             if (
               prevNetworkStatusRef.current !== "ONLINE" &&

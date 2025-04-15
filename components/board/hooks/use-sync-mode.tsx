@@ -12,8 +12,8 @@ type SyncModeHook = {
 };
 
 const useSyncMode = (): SyncModeHook => {
+  const { isRealTime, setIsRealTime, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
-  const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { switchToOnline, switchToOffline } = useConnectionManager();
   const { updateLastViewed } = useLastViewedBoardLog();
   const router = useRouter();
@@ -31,13 +31,14 @@ const useSyncMode = (): SyncModeHook => {
 
   const toggleSyncMode = async (): Promise<void> => {
     try {
-      if (!isOnline && networkStatus !== "ONLINE") {
-        console.warn("Cannot switch to real-time mode when network is offline");
-        toast.error("Cannot switch to real-time mode when network is offline");
+      if (!isRealTime && networkStatus !== "ONLINE") {
+        toast.warning(
+          "Cannot switch to real-time mode when network is offline"
+        );
         return;
       }
 
-      if (!isOnline) {
+      if (!isRealTime) {
         const isArchived = await isBoardArchived();
         if (isArchived) {
           router.push(`/boards/${router.query.id}`);
@@ -47,18 +48,19 @@ const useSyncMode = (): SyncModeHook => {
         const connected = await switchToOnline();
 
         if (connected) {
-          setIsOnline(true);
+          setIsRealTime(true);
           await updateBoardLastViewed();
+          setSynced(true);
         } else {
           setSynced(false);
         }
       } else {
         await updateBoardLastViewed();
         await switchToOffline();
-        setIsOnline(false);
+        setIsRealTime(false);
       }
     } catch (error) {
-      console.error("Failed to toggle real-time/local mode:", error);
+      toast.error("Failed to toggle real-time/local mode");
     }
   };
 

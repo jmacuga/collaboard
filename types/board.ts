@@ -21,12 +21,6 @@ export interface BoardShapeProps {
   onTextDblClick?: (e: KonvaEventObject<MouseEvent>) => void;
 }
 
-export interface BoardProps {
-  isOnline: boolean;
-  activeUsers: string[];
-  objectEditors: Record<string, string[]>;
-}
-
 export interface ShapeRendererProps extends BoardShapeProps {
   ref?: (node: any) => void;
 }

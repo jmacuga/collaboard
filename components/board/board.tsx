@@ -47,7 +47,7 @@ export default function Board({
     textColor,
     currentLineId,
     mode,
-    isOnline,
+    isRealTime,
     stagePosition,
     resetStagePosition,
     editingText,
@@ -125,7 +125,7 @@ export default function Board({
           <SideToolbar teamId={team.id} />
         </div>
         {!hideActiveUsers &&
-          isOnline &&
+          isRealTime &&
           activeUsers &&
           activeUsers.length > 0 && <ActiveUsersList users={activeUsers} />}
         <div>
@@ -140,7 +140,7 @@ export default function Board({
             y={stagePosition.y}
           >
             <Layer>
-              {isOnline &&
+              {isRealTime &&
                 localDoc &&
                 objectEditors &&
                 Object.entries(objectEditors).map(([objectId, editors]) => (

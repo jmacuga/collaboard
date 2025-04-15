@@ -44,8 +44,8 @@ interface BoardContextType {
   setShapeType: (type: ShapeType) => void;
   shapeColor: string;
   setShapeColor: (color: string) => void;
-  isOnline: boolean;
-  setIsOnline: (online: boolean) => void;
+  isRealTime: boolean;
+  setIsRealTime: (online: boolean) => void;
   getPointerPosition: (e: KonvaEventObject<MouseEvent>) => Point | null;
   localPoints: number[];
   setLocalPoints: (points: number[] | ((prev: number[]) => number[])) => void;
@@ -85,7 +85,7 @@ export const BoardContextProvider: React.FC<Props> = ({
   const [shapeColor, setShapeColor] = useState("rgb(0,0,0)");
   const [textColor, setTextColor] = useState("rgb(0,0,0)");
   const [textFontSize, setTextFontSize] = useState<number>(24);
-  const [isOnline, setIsOnline] = useState<boolean>(syncedInitial);
+  const [isRealTime, setIsRealTime] = useState<boolean>(syncedInitial);
   const [localPoints, setLocalPoints] = useState<number[]>([]);
   const [stagePosition, setStagePosition] = useState<Vector2d>({ x: 0, y: 0 });
   const [editingText, setEditingText] = useState<string | null>(null);
@@ -168,8 +168,8 @@ export const BoardContextProvider: React.FC<Props> = ({
       setShapeType,
       shapeColor,
       setShapeColor,
-      isOnline,
-      setIsOnline,
+      isRealTime,
+      setIsRealTime,
       textColor,
       setTextColor,
       textFontSize,
@@ -200,7 +200,7 @@ export const BoardContextProvider: React.FC<Props> = ({
       brushSize,
       shapeType,
       shapeColor,
-      isOnline,
+      isRealTime,
       textColor,
       setTextColor,
       textFontSize,

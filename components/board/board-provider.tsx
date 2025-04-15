@@ -9,8 +9,8 @@ import { NetworkStatusProvider } from "@/components/providers/network-status-pro
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { SyncStatusControl } from "./components/sync-status-control";
 import { BoardHeader } from "./components/board-header";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
-import { UserLastViewedLogType } from "@prisma/client";
+import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
+
 interface BoardState {
   clientSyncService: ClientSyncService | null;
   synced: boolean;
@@ -28,7 +28,7 @@ export function BoardProvider({
     synced: false,
   });
   const isInitialized = useRef(false);
-  const { updateLastViewed } = useUpdateLastViewed();
+  const { updateLastViewed } = useLastViewedBoardLog();
 
   useEffect(() => {
     const initializeClientSyncService = async () => {
@@ -44,7 +44,6 @@ export function BoardProvider({
       if (await clientSyncService.canConnect()) {
         await clientSyncService.connect();
         await updateLastViewed({
-          type: UserLastViewedLogType.BOARD,
           boardId: board.id,
         });
         synced = true;
@@ -62,7 +61,6 @@ export function BoardProvider({
         if (state.clientSyncService) {
           if (state.clientSyncService.isConnected()) {
             await updateLastViewed({
-              type: UserLastViewedLogType.BOARD,
               boardId: board.id,
             });
             await state.clientSyncService.disconnect();

@@ -466,8 +466,11 @@ export class MergeRequestService {
         throw new MergeRequestError("Merge request not found");
       }
       const { mergeRequest } = result;
-      if (mergeRequest.status === MergeRequestStatus.MERGED) {
-        throw new MergeRequestError("Merge request is already merged");
+      if (
+        mergeRequest.status !== MergeRequestStatus.OPEN &&
+        mergeRequest.status !== MergeRequestStatus.PENDING
+      ) {
+        throw new MergeRequestError("Merge request is not open");
       }
       await prismaTx.mergeRequest.update({
         where: { id: mergeRequest.id },

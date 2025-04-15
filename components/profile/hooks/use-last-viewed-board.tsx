@@ -1,37 +1,23 @@
-import { UserLastViewedLogType } from "@prisma/client";
-
-export function useUpdateLastViewed() {
-  const updateLastViewed = async ({
-    type,
-    teamId,
-    boardId,
-  }: {
-    type: UserLastViewedLogType;
-    teamId?: string;
-    boardId?: string;
-  }) => {
+export function useLastViewedBoardLog() {
+  const updateLastViewed = async ({ boardId }: { boardId?: string }) => {
     try {
-      await fetch("/api/last-viewed/update", {
+      await fetch("/api/last-viewed/board/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ type, teamId, boardId }),
+        body: JSON.stringify({ boardId }),
       });
     } catch (error) {
       console.error("Failed to update last viewed timestamp:", error);
     }
   };
 
-  const getLastViewed = async (
-    type: UserLastViewedLogType,
-    boardId?: string,
-    teamId?: string
-  ) => {
+  const getLastViewed = async (boardId?: string) => {
     try {
       const response = await fetch(
-        `/api/last-viewed/?type=${type}&boardId=${boardId}&teamId=${teamId}`,
+        `/api/last-viewed/board/?boardId=${boardId}`,
         {
           method: "GET",
           headers: {

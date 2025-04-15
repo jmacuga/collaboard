@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
-import { NotificationService } from "@/lib/services/notification/notification-service";
+import { LastViewedBoardLogService } from "@/lib/services/last-viewed-board-log/last-viewed-board-log-service";
 import { withApiAuth } from "@/lib/middleware/with-api-auth";
-import { UserLastViewedLogType } from "@prisma/client";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -12,15 +11,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { type = UserLastViewedLogType.ALL, teamId, boardId } = req.query;
+    const { boardId } = req.body;
+    await LastViewedBoardLogService.updateTimestamp(session.user.id, boardId);
 
-    const lastViewed = await NotificationService.getLastViewedTimestamp(
-      session.user.id,
-      type as UserLastViewedLogType,
-      teamId as string,
-      boardId as string
-    );
-    return res.status(200).json({ lastViewed });
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.error("Error marking notifications as viewed:", error);
     return res.status(500).json({
@@ -31,6 +25,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 export default withApiAuth(handler, {
-  methods: ["GET"],
+  methods: ["POST"],
   requireAuth: true,
 });

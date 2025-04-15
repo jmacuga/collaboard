@@ -3,8 +3,7 @@ import { BoardContext } from "../context/board-context";
 import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
 import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useRouter } from "next/router";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
-import { UserLastViewedLogType } from "@prisma/client";
+import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
 import { Board } from "@prisma/client";
 
 type SyncModeHook = {
@@ -16,7 +15,7 @@ const useSyncMode = (): SyncModeHook => {
   const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
   const router = useRouter();
-  const { updateLastViewed } = useUpdateLastViewed();
+  const { updateLastViewed } = useLastViewedBoardLog();
 
   const getBoardId = (): string => {
     const boardId = router.query.id;
@@ -53,7 +52,6 @@ const useSyncMode = (): SyncModeHook => {
   const updateBoardLastViewed = async (): Promise<void> => {
     try {
       await updateLastViewed({
-        type: UserLastViewedLogType.BOARD,
         boardId: getBoardId(),
       });
     } catch (error) {

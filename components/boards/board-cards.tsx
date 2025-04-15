@@ -1,4 +1,4 @@
-import { Board, UserLastViewedLogType } from "@prisma/client";
+import { Board } from "@prisma/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   LayoutDashboard,
@@ -12,64 +12,23 @@ import { getColorForIndex } from "@/lib/utils/colors";
 import { format } from "date-fns";
 import { DeleteBoardDialog } from "@/components/boards/delete-board-dialog";
 import { useEffect, useState } from "react";
-import { isAfter } from "date-fns";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
 
 export function BoardCards({
   teamBoards,
   userRole,
+  updatedBoards,
   lastUpdatedMap,
 }: {
-  teamBoards: Board[] | null;
+  teamBoards: (Board & { lastUpdated: Date | null })[] | null;
   userRole: string;
+  updatedBoards: string[];
   lastUpdatedMap: Record<string, Date>;
 }) {
-  const [updatedBoards, setUpdatedBoards] = useState<string[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const { getLastViewed } = useUpdateLastViewed();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  useEffect(() => {
-    const roundToSeconds = (date: Date): Date => {
-      const newDate = new Date(date);
-      newDate.setMilliseconds(0);
-      return newDate;
-    };
-
-    const getUpdatedBoards = async () => {
-      const boardIds: string[] = [];
-
-      await Promise.all(
-        teamBoards?.map(async (board) => {
-          const boardLastUpdated = lastUpdatedMap[board.id];
-          const lastViewed = await getLastViewed(
-            UserLastViewedLogType.BOARD,
-            board.id
-          );
-          if (!lastViewed) {
-            boardIds.push(board.id);
-            return;
-          }
-          if (!boardLastUpdated) return;
-
-          const boardLastUpdatedDate = new Date(boardLastUpdated);
-
-          const roundedLastUpdated = roundToSeconds(boardLastUpdatedDate);
-          const roundedLastViewed = roundToSeconds(lastViewed);
-
-          if (isAfter(roundedLastUpdated, roundedLastViewed)) {
-            boardIds.push(board.id);
-          }
-        }) ?? []
-      );
-      setUpdatedBoards(boardIds);
-    };
-
-    getUpdatedBoards();
-  }, [teamBoards, lastUpdatedMap]);
 
   const formatDate = (date: Date) => {
     if (!isMounted) return "";
@@ -130,14 +89,12 @@ export function BoardCards({
                   {isMounted ? formatDate(new Date(board.createdAt)) : ""}
                 </p>
               </div>
-              {lastUpdatedMap[board.id as string] && (
+              {lastUpdatedMap[board.id] && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   <p>
                     Last Updated{" "}
-                    {isMounted
-                      ? formatDateTime(lastUpdatedMap[board.id as string])
-                      : ""}
+                    {isMounted ? formatDateTime(lastUpdatedMap[board.id]) : ""}
                   </p>
                 </div>
               )}

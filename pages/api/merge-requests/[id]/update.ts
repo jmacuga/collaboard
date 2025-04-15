@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { withTeamRoleApi } from "@/lib/middleware";
-import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
+import {
+  MergeRequestError,
+  MergeRequestService,
+} from "@/lib/services/merge-request/merge-request-service";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   let changes;
@@ -14,10 +17,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   } catch (error) {
     return res.status(400).json({ message: "Invalid request body" });
   }
-
   const mergeRequestId = req.query.id as string;
-
-  await MergeRequestService.update(mergeRequestId, changes);
+  try {
+    await MergeRequestService.update(mergeRequestId, changes);
+  } catch (error) {
+    if (error instanceof MergeRequestError) {
+      return res.status(400).json({ message: error.message });
+    }
+    console.error("Error updating merge request:", error);
+    return res.status(500).json({ message: "Error updating merge request" });
+  }
 
   return res.status(200).json({ message: "Merge request updated" });
 }

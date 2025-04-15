@@ -215,8 +215,12 @@ export default function Board({
           />
         </div>
       )}
-      {showResetButton && <ResetPositionButton onClick={resetStagePosition} />}
-      <ShapeColorPalette />
+      <div className="fixed bottom-7 right-72 z-40 flex items-center">
+        {showResetButton && (
+          <ResetPositionButton onClick={resetStagePosition} />
+        )}
+        <ShapeColorPalette />
+      </div>
     </>
   );
 }

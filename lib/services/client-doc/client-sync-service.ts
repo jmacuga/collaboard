@@ -18,7 +18,13 @@ import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { v4 as uuidv4 } from "uuid";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { UserStatusPayload } from "@/types/userStatusPayload";
-import { getChanges, getHeads, getMissingDeps } from "@automerge/automerge";
+import {
+  applyChanges,
+  clone,
+  getChanges,
+  getHeads,
+  merge,
+} from "@automerge/automerge";
 import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 /**
  * Service for synchronizing local documents with the server
@@ -30,7 +36,6 @@ export class ClientSyncService implements IClientSyncService {
   private readonly websocketURL: string;
   private networkAdapter: BrowserWebSocketClientAdapter;
   private readonly peerId: PeerId;
-  private connected: boolean;
   private readonly DISABLE_RETRY_INTERVAL = 10_000_000;
   private handle: DocHandle<LayerSchema>;
   private serverRepoFactory: ServerRepoFactory;
@@ -53,7 +58,6 @@ export class ClientSyncService implements IClientSyncService {
       this.DISABLE_RETRY_INTERVAL
     );
     this.peerId = uuidv4() as PeerId;
-    this.connected = false;
     this.repo = new Repo({
       network: [],
       storage: new IndexedDBStorageAdapter(
@@ -70,7 +74,7 @@ export class ClientSyncService implements IClientSyncService {
    * Initializes the local repository
    * Creates or loads an existing document
    */
-  public async initializeRepo(): Promise<DocHandle<LayerSchema> | null> {
+  public async initializeRepo(): Promise<DocHandle<LayerSchema>> {
     try {
       this.disconnect();
 
@@ -185,7 +189,7 @@ export class ClientSyncService implements IClientSyncService {
    * @returns Promise resolving to boolean indicating if connection is possible
    */
   public async canConnect(): Promise<boolean> {
-    if (this.connected) return true;
+    if (this.isConnected()) return true;
 
     const { repo: serverRepo, cleanup } =
       this.serverRepoFactory.createManagedRepo();
@@ -218,38 +222,47 @@ export class ClientSyncService implements IClientSyncService {
     }
   }
 
-  public getRepo(): Repo | null {
+  public getRepo(): Repo {
     return this.repo;
   }
 
   /**
-   * Connects to the server
+   * Connects to the server with improved error handling and safety checks
    * Creates a new network adapter if needed
+   * @throws Error if connection fails
    */
   public async connect(): Promise<void> {
-    if (this.connected) return;
-
-    if (
-      this.networkAdapter.socket?.readyState !== WebSocket.OPEN &&
-      this.networkAdapter.socket?.readyState !== WebSocket.CONNECTING
-    ) {
+    if (this.isConnected()) {
+      console.debug("Already connected to server");
+      return;
+    }
+    try {
+      if (!this.websocketURL) {
+        throw new Error("WebSocket URL is not configured");
+      }
       this.networkAdapter = new BrowserWebSocketClientAdapter(
         this.websocketURL,
         this.DISABLE_RETRY_INTERVAL
       );
       this.repo.networkSubsystem.addNetworkAdapter(
-        this.networkAdapter as any as NetworkAdapterInterface
+        this.networkAdapter as unknown as NetworkAdapterInterface
+      );
+      await this.repo.networkSubsystem.whenReady();
+      console.debug("Successfully connected to server");
+    } catch (error) {
+      console.error("Failed to connect to server:", error);
+      throw new Error(
+        `Failed to connect to server: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
       );
     }
-
-    this.connected = true;
   }
-
   /**
    * Disconnects from the server
    */
   public disconnect(): void {
-    if (!this.connected) return;
+    if (!this.isConnected()) return;
 
     try {
       this.networkAdapter.disconnect();
@@ -264,8 +277,6 @@ export class ClientSyncService implements IClientSyncService {
     } catch (error) {
       console.error("Error disconnecting from server", error);
     }
-
-    this.connected = false;
   }
 
   /**
@@ -342,7 +353,7 @@ export class ClientSyncService implements IClientSyncService {
    * @param docId The ID of the document to get
    * @returns The server document
    */
-  public async getServerDoc(docId?: string): Promise<Doc<LayerSchema>> {
+  public async getServerDoc(docId?: string): Promise<Doc<LayerSchema> | null> {
     const { repo: serverRepo, cleanup } =
       this.serverRepoFactory.createManagedRepo();
 
@@ -352,8 +363,62 @@ export class ClientSyncService implements IClientSyncService {
       );
       await serverHandle.whenReady();
       return await serverHandle.doc();
+    } catch (error) {
+      console.error("Error getting server doc:", error);
+      return null;
     } finally {
       cleanup();
+    }
+  }
+
+  /**
+   * Gets the result of merging local and server documents
+   * @returns An object containing the merged document and changes, or null values if merge cannot be performed
+   * @throws Error if there are issues accessing local or server documents
+   */
+  public async getLocalMergePreview(): Promise<{
+    doc: Doc<LayerSchema> | null;
+    changes: Change[] | null;
+  }> {
+    try {
+      const localHandle = await this.getHandle();
+      const localDoc = await localHandle.doc();
+
+      if (!localDoc) {
+        return { doc: null, changes: null };
+      }
+
+      const serverDoc = await this.getServerDoc();
+
+      if (!serverDoc) {
+        return { doc: null, changes: null };
+      }
+
+      const serverDocCopy = clone(serverDoc);
+      const mergedDoc = merge(serverDocCopy, localDoc);
+      const changes = getChanges(serverDocCopy, mergedDoc);
+
+      return { doc: mergedDoc, changes };
+    } catch (error) {
+      console.error("Error during document merge:", error);
+      return { doc: null, changes: null };
+    }
+  }
+
+  public async getMergeRequestPreview(
+    changes: Change[]
+  ): Promise<Doc<LayerSchema> | null> {
+    try {
+      const serverDoc = await this.getServerDoc();
+      if (!serverDoc) {
+        return null;
+      }
+      const serverDocCopy = clone(serverDoc);
+      const doc2 = applyChanges(serverDocCopy, changes)[0];
+      return doc2;
+    } catch (error) {
+      console.error("Error during document merge:", error);
+      return null;
     }
   }
 
@@ -365,6 +430,9 @@ export class ClientSyncService implements IClientSyncService {
   }
 
   public isConnected(): boolean {
-    return this.connected;
+    return (
+      this.networkAdapter.socket?.readyState === WebSocket.OPEN ||
+      this.networkAdapter.socket?.readyState === WebSocket.CONNECTING
+    );
   }
 }

@@ -14,6 +14,7 @@ import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import { ClientSyncContext } from "@/components/board/context/client-sync-context";
 import TeamArchived from "@/components/teams/team-archived";
 import BoardArchived from "@/components/boards/board-archived";
+import { toast } from "sonner";
 
 interface BoardPreviewPageProps {
   board: string;
@@ -49,14 +50,15 @@ export default function BoardPreviewPage({
     const fetchLocalChanges = async () => {
       if (!clientSyncServiceRef.current) return;
 
-      const localHandle = await clientSyncServiceRef.current.getHandle();
-      const localDoc = await localHandle.doc();
-      const serverDoc = await clientSyncServiceRef.current.getServerDoc();
-      const serverDocCopy = automerge.clone(serverDoc);
-      const mergedDoc = automerge.merge(serverDocCopy, localDoc);
-      const changes = automerge.getChanges(serverDocCopy, mergedDoc);
+      const { doc, changes } =
+        await clientSyncServiceRef.current.getLocalMergePreview();
+
+      if (!doc || !changes) {
+        toast.error("Error fetching merge request preview");
+        return;
+      }
       setLocalChanges(changes);
-      setPreviewDoc(mergedDoc);
+      setPreviewDoc(doc);
     };
 
     fetchLocalChanges();

@@ -15,6 +15,7 @@ import { getSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import BoardArchived from "@/components/boards/board-archived";
 import TeamArchived from "@/components/teams/team-archived";
+import { toast } from "sonner";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -59,9 +60,13 @@ export default function MergeRequestPage({
     }
     const getPreviewDoc = async () => {
       if (!clientSyncServiceRef.current) return;
-      const serverDoc = await clientSyncServiceRef.current.getServerDoc();
-      const serverDocCopy = automerge.clone(serverDoc);
-      const doc2 = automerge.applyChanges(serverDocCopy, decodedChanges)[0];
+      const doc2 = await clientSyncServiceRef.current.getMergeRequestPreview(
+        decodedChanges
+      );
+      if (!doc2) {
+        toast.error("Error fetching merge request preview");
+        return;
+      }
       setPreviewDoc(doc2);
     };
 

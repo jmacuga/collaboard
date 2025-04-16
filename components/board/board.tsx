@@ -4,7 +4,6 @@ import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
@@ -26,6 +25,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
+import { useCollaborationClient } from "./context/collaboration-client-context";
 
 export default function Board({
   team,
@@ -36,8 +36,8 @@ export default function Board({
   board: PrismaBoard;
   hideActiveUsers?: boolean;
 }) {
-  const clientSyncService = useClientSync();
-  const docId = clientSyncService.getDocId() as AnyDocumentId;
+  const collaborationClient = useCollaborationClient();
+  const docId = collaborationClient.getDocId() as AnyDocumentId;
   const [localDoc] = useDocument<LayerSchema>(docId);
   const { width, height } = useWindowDimensions();
 

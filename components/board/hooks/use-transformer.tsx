@@ -4,16 +4,16 @@ import { useContext, useEffect, useRef, useCallback } from "react";
 import Konva from "konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 
 export const useTransformer = (localDoc: LayerSchema | undefined) => {
   const { selectedShapeIds } = useContext(BoardContext);
   const transformerRef = useRef<Konva.Transformer>(null);
-  const clientSyncService = useClientSync();
+  const collaborationClient = useCollaborationClient();
   const [_, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+    collaborationClient.getDocId() as AnyDocumentId
   );
 
   const handleTransformEnd = useCallback(

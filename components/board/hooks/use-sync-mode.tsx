@@ -58,7 +58,6 @@ const useSyncMode = (): SyncModeHook => {
           return;
         }
         const connected = await switchToOnline();
-
         if (connected) {
           setIsRealTime(true);
           await updateBoardLastViewed();

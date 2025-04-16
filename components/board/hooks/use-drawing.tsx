@@ -6,7 +6,7 @@ import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
 import Konva from "konva";
 import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { KonvaEventObject } from "konva/lib/Node";
 
@@ -34,9 +34,9 @@ function useDrawing() {
     localPoints,
     setLocalPoints,
   } = useContext(BoardContext);
-  const clientSyncService = useClientSync();
+  const collaborationClient = useCollaborationClient();
   const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+    collaborationClient.getDocId() as AnyDocumentId
   );
 
   const addLineToDoc = useCallback(

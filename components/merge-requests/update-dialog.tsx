@@ -14,7 +14,7 @@ import { toast } from "react-hot-toast";
 import { getChanges } from "@automerge/automerge";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { ClientSyncContext } from "../board/context/client-sync-context";
+import { CollaborationClientContext } from "../board/context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 
@@ -29,13 +29,13 @@ export function UpdateMergeRequestDialog({
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { clientSyncService } = useContext(ClientSyncContext);
+  const { collaborationClient } = useContext(CollaborationClientContext);
   const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService?.getDocId() as AnyDocumentId
+    collaborationClient?.getDocId() as AnyDocumentId
   );
 
   const calculateChanges = async () => {
-    if (!clientSyncService) return [];
+    if (!collaborationClient) return [];
     const { repo: serverRepo, cleanup } =
       new ServerRepoFactory().createManagedRepo();
     const serverDoc = await serverRepo
@@ -67,7 +67,7 @@ export function UpdateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request updated successfully");
-        clientSyncService?.deleteDoc();
+        collaborationClient?.deleteDoc();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;

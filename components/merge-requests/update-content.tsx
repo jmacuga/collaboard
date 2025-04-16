@@ -2,8 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import Board from "@/components/board/board";
-import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
-import { ClientSyncContext } from "@/components/board/context/client-sync-context";
+import { CollaborationClient } from "@/lib/sync/collaboration-client";
+import { CollaborationClientContext } from "@/components/board/context/collaboration-client-context";
 import { BoardContextProvider } from "@/components/board/context/board-context";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
@@ -15,7 +15,7 @@ import { BoardHeader } from "../board/components/board-header";
 import { useRouter } from "next/router";
 import { NetworkStatusProvider } from "../providers/network-status-provider";
 import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
-
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 export function MergeRequestUpdateContent({
   board,
   team,
@@ -27,8 +27,8 @@ export function MergeRequestUpdateContent({
 }) {
   const router = useRouter();
   const initialLoad = useRef(true);
-  const [clientSyncService, setClientSyncService] =
-    useState<ClientSyncService | null>(null);
+  const [collaborationClient, setCollaborationClient] =
+    useState<CollaborationClient | null>(null);
   const [updateDocId, setUpdateDocId] = useState<string | null>(
     router.query.updateDocId as string
   );
@@ -44,31 +44,29 @@ export function MergeRequestUpdateContent({
         docId = docHandle.documentId as string;
       }
 
-      setClientSyncService(
-        new ClientSyncService({
-          docId: docId,
-        })
+      setCollaborationClient(
+        new CollaborationClient(docId, NEXT_PUBLIC_WEBSOCKET_URL)
       );
       setUpdateDocId(docId);
       initialLoad.current = false;
     }
 
     return () => {
-      if (clientSyncService) {
-        clientSyncService.deleteDoc();
+      if (collaborationClient) {
+        collaborationClient.deleteDoc();
       }
     };
   }, [updateDocId]);
 
   useEffect(() => {
     const applyChangesToUpdateDoc = async () => {
-      if (initialLoad.current || !clientSyncService) return;
+      if (initialLoad.current || !collaborationClient) return;
       const { repo: serverRepo, cleanup } =
         new ServerRepoFactory().createManagedRepo();
       const serverDoc = await serverRepo
         .find<LayerSchema>(board.automergeDocId as AnyDocumentId)
         .doc();
-      const docHandle = await clientSyncService
+      const docHandle = await collaborationClient
         .getRepo()
         ?.find<LayerSchema>(updateDocId as AnyDocumentId);
       docHandle?.update((doc) => {
@@ -79,16 +77,18 @@ export function MergeRequestUpdateContent({
     };
 
     applyChangesToUpdateDoc();
-  }, [clientSyncService]);
+  }, [collaborationClient]);
 
-  if (!clientSyncService) {
+  if (!collaborationClient) {
     return <div>Loading board...</div>;
   }
 
   return (
     <NetworkStatusProvider>
-      <RepoContext.Provider value={clientSyncService.getRepo()}>
-        <ClientSyncContext.Provider value={{ clientSyncService }}>
+      <RepoContext.Provider value={collaborationClient.getRepo()}>
+        <CollaborationClientContext.Provider
+          value={{ collaborationClient: collaborationClient }}
+        >
           <BoardContextProvider syncedInitial={true}>
             <div className="flex flex-col h-screen">
               <BoardHeader
@@ -103,7 +103,7 @@ export function MergeRequestUpdateContent({
               <Board team={team} board={board} hideActiveUsers={true} />
             </div>
           </BoardContextProvider>
-        </ClientSyncContext.Provider>
+        </CollaborationClientContext.Provider>
       </RepoContext.Provider>
     </NetworkStatusProvider>
   );

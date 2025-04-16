@@ -4,12 +4,12 @@ import Konva from "konva";
 import { LayerSchema } from "@/types/KonvaNodeSchema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 
 export const useErasing = () => {
-  const clientSyncService = useClientSync();
+  const collaborationClient = useCollaborationClient();
   const [doc, setDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+    collaborationClient.getDocId() as AnyDocumentId
   );
   const isErasing = useRef(false);
 

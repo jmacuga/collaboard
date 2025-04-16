@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import { Change } from "@automerge/automerge";
-import { ClientSyncContext } from "../board/context/client-sync-context";
-
+import { useCollaborationClient } from "../board/context/collaboration-client-context";
 export function CreateMergeRequestDialog({
   boardId,
   localChanges,
@@ -23,14 +22,14 @@ export function CreateMergeRequestDialog({
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { clientSyncService } = useContext(ClientSyncContext);
-
+  const collaborationClient = useCollaborationClient();
   const onSubmit = async () => {
     try {
       const changes = localChanges.map((change) =>
         Buffer.from(change).toString("base64")
       );
-      if (!clientSyncService) return;
+
+      if (!collaborationClient) return;
       const response = await fetch("/api/merge-requests/create", {
         method: "POST",
         headers: {
@@ -44,7 +43,7 @@ export function CreateMergeRequestDialog({
 
       if (response.ok) {
         toast.success("Merge request created successfully");
-        clientSyncService?.removeLocalDoc();
+        collaborationClient.deleteDoc();
         setOpen(false);
         router.push(`/boards/${boardId}/merge-requests`);
         return;

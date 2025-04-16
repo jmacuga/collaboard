@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
-
+import { CollaborationClient } from "@/lib/sync/collaboration-client";
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
@@ -38,9 +38,12 @@ export function DeleteBoardDialog({
       );
 
       try {
-        const syncService = new ClientSyncService(docId);
+        const collaborationClient = new CollaborationClient(
+          docId,
+          NEXT_PUBLIC_WEBSOCKET_URL
+        );
         setCheckingUsers(true);
-        const activeUsers = await syncService.getActiveUsers();
+        const activeUsers = await collaborationClient.getActiveUsers();
         setCheckingUsers(false);
 
         if (activeUsers.length > 0) {
@@ -56,7 +59,7 @@ export function DeleteBoardDialog({
 
         if (response.ok) {
           try {
-            syncService.deleteDoc();
+            collaborationClient.deleteDoc();
           } catch (error) {
             console.error(error);
             toast.error("Failed to delete board doc");

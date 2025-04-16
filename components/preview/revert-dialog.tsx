@@ -10,17 +10,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-import { ClientSyncContext } from "../board/context/client-sync-context";
+import { useCollaborationClient } from "../board/context/collaboration-client-context";
 
 export function RevertDialog({ boardId }: { boardId: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { clientSyncService } = useContext(ClientSyncContext);
+  const collaborationClient = useCollaborationClient();
 
   const handleRevertChanges = async () => {
-    if (!clientSyncService) return;
-    await clientSyncService.removeLocalDoc();
+    if (!collaborationClient) return;
+    await collaborationClient.removeLocalDoc();
     router.push(`/boards/${boardId}`);
   };
 

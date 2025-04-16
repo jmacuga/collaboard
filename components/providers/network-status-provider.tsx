@@ -5,8 +5,9 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useNetworkStatus, NetworkStatus } from "@/hooks/use-network-status";
+import { useNetworkStatus } from "@/hooks/use-network-status";
 import { toast } from "react-hot-toast";
+import { NetworkStatus } from "@/lib/network-status-monitor";
 
 interface NetworkStatusContextType {
   networkStatus: NetworkStatus;

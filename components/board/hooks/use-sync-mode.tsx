@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
 import { useRouter } from "next/router";
 import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
@@ -18,6 +18,18 @@ const useSyncMode = (): SyncModeHook => {
   const { updateLastViewed } = useLastViewedBoardLog();
   const router = useRouter();
   const { isBoardArchived } = useBoardArchivedCheck();
+
+  useEffect(() => {
+    console.log("networkStatus", networkStatus);
+  }, [networkStatus]);
+
+  useEffect(() => {
+    if (networkStatus === "ONLINE" && !isRealTime) {
+      toggleSyncMode();
+    } else if (networkStatus === "OFFLINE" && isRealTime) {
+      toggleSyncMode();
+    }
+  }, [networkStatus]);
 
   const updateBoardLastViewed = async (): Promise<void> => {
     try {

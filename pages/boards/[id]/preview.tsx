@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
 import { useState, useRef, useEffect } from "react";
 import * as automerge from "@automerge/automerge";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { Change, Doc } from "@automerge/automerge";
 import { PreviewHeader } from "@/components/preview/preview-header";
 import { TeamService } from "@/lib/services/team/team-service";
@@ -36,7 +36,7 @@ export default function BoardPreviewPage({
     return <BoardArchived />;
   }
   const [isMounted, setIsMounted] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
+  const [previewDoc, setPreviewDoc] = useState<Doc<StageSchema>>();
   const collaborationClientRef = useRef<CollaborationClient | null>(null);
   const [localChanges, setLocalChanges] = useState<Change[]>([]);
 

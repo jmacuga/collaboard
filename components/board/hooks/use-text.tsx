@@ -1,4 +1,4 @@
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { useCollaborationClient } from "../context/collaboration-client-context";
@@ -10,7 +10,7 @@ import { next as Automerge } from "@automerge/automerge";
 
 const useText = () => {
   const collaborationClient = useCollaborationClient();
-  const [localDoc, changeDoc] = useDocument<LayerSchema>(
+  const [localDoc, changeDoc] = useDocument<StageSchema>(
     collaborationClient.getDocId() as AnyDocumentId
   );
   const {
@@ -28,7 +28,7 @@ const useText = () => {
   } = useContext(BoardContext);
 
   const updateTextInDoc = (textId: string, text: string) => {
-    changeDoc((doc: LayerSchema) => {
+    changeDoc((doc: StageSchema) => {
       if (doc[textId]) {
         const path = [textId, "attrs", "text"];
         if (text === "") {
@@ -46,7 +46,7 @@ const useText = () => {
       console.error("Could not get text position");
       return;
     }
-    changeDoc((doc: LayerSchema) => {
+    changeDoc((doc: StageSchema) => {
       doc[textId] = {
         className: new RawString("Text"),
         attrs: {

@@ -5,13 +5,13 @@ import ColorIcon from "../color-icon";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { useCollaborationClient } from "../context/collaboration-client-context";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { Palette } from "lucide-react";
 
 const ShapeColorPalette = () => {
   const { selectedShapeIds, mode } = useContext(BoardContext);
   const collaborationClient = useCollaborationClient();
-  const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
+  const [localDoc, changeLocalDoc] = useDocument<StageSchema>(
     collaborationClient.getDocId() as AnyDocumentId
   );
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +21,7 @@ const ShapeColorPalette = () => {
     (color: string) => {
       if (!selectedShapeIds.length || !localDoc) return;
 
-      changeLocalDoc((doc: LayerSchema) => {
+      changeLocalDoc((doc: StageSchema) => {
         selectedShapeIds.forEach((shapeId) => {
           if (!doc[shapeId]) return;
 

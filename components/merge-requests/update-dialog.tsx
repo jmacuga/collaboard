@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "react-hot-toast";
 import { getChanges } from "@automerge/automerge";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { CollaborationClientContext } from "../board/context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
@@ -30,16 +30,15 @@ export function UpdateMergeRequestDialog({
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { collaborationClient } = useContext(CollaborationClientContext);
-  const [doc, changeDoc] = useDocument<LayerSchema>(
+  const [doc, changeDoc] = useDocument<StageSchema>(
     collaborationClient?.getDocId() as AnyDocumentId
   );
 
   const calculateChanges = async () => {
     if (!collaborationClient) return [];
-    const { repo: serverRepo, cleanup } =
-      new ServerRepoFactory().createManagedRepo();
+    const { repo: serverRepo, cleanup } = ServerRepoFactory.create();
     const serverDoc = await serverRepo
-      .find<LayerSchema>(serverDocId as AnyDocumentId)
+      .find<StageSchema>(serverDocId as AnyDocumentId)
       .doc();
     cleanup();
     return getChanges(serverDoc, doc);

@@ -6,7 +6,7 @@ import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { CollaborationClientContext } from "@/components/board/context/collaboration-client-context";
 import { BoardContextProvider } from "@/components/board/context/board-context";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { AnyDocumentId, Repo } from "@automerge/automerge-repo";
 import { MergeRequestUpdateHeader } from "./update-header";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -40,7 +40,7 @@ export function MergeRequestUpdateContent({
         const repo = new Repo({
           storage: new IndexedDBStorageAdapter(),
         });
-        const docHandle = repo.create<LayerSchema>();
+        const docHandle = repo.create<StageSchema>();
         docId = docHandle.documentId as string;
       }
 
@@ -61,14 +61,13 @@ export function MergeRequestUpdateContent({
   useEffect(() => {
     const applyChangesToUpdateDoc = async () => {
       if (initialLoad.current || !collaborationClient) return;
-      const { repo: serverRepo, cleanup } =
-        new ServerRepoFactory().createManagedRepo();
+      const { repo: serverRepo, cleanup } = ServerRepoFactory.create();
       const serverDoc = await serverRepo
-        .find<LayerSchema>(board.automergeDocId as AnyDocumentId)
+        .find<StageSchema>(board.automergeDocId as AnyDocumentId)
         .doc();
       const docHandle = await collaborationClient
         .getRepo()
-        ?.find<LayerSchema>(updateDocId as AnyDocumentId);
+        ?.find<StageSchema>(updateDocId as AnyDocumentId);
       docHandle?.update((doc) => {
         doc = automerge.merge(doc, serverDoc);
         return automerge.applyChanges(doc, changes)[0];

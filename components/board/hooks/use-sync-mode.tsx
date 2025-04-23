@@ -20,13 +20,9 @@ const useSyncMode = (): SyncModeHook => {
   const { isBoardArchived } = useBoardArchivedCheck();
 
   useEffect(() => {
-    console.log("networkStatus", networkStatus);
-  }, [networkStatus]);
-
-  useEffect(() => {
     if (networkStatus === "ONLINE" && !isRealTime) {
       toggleSyncMode();
-    } else if (networkStatus === "OFFLINE" && isRealTime) {
+    } else if (networkStatus === "OFFLINE") {
       toggleSyncMode();
     }
   }, [networkStatus]);

@@ -3,7 +3,7 @@ import { useEffect, useContext } from "react";
 import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
@@ -38,7 +38,7 @@ export default function Board({
 }) {
   const collaborationClient = useCollaborationClient();
   const docId = collaborationClient.getDocId() as AnyDocumentId;
-  const [localDoc] = useDocument<LayerSchema>(docId);
+  const [localDoc] = useDocument<StageSchema>(docId);
   const { width, height } = useWindowDimensions();
 
   const {

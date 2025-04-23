@@ -3,7 +3,7 @@ import {
   DocHandleEphemeralMessagePayload,
 } from "@automerge/automerge-repo";
 import { UserStatusPayload } from "@/types/userStatusPayload";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 
 export class UserPresenceMonitor {
   private readonly PRESENCE_TIMEOUT = 2500;
@@ -11,7 +11,7 @@ export class UserPresenceMonitor {
   public constructor() {}
 
   public async getActiveUsers(
-    handle: DocHandle<LayerSchema>
+    handle: DocHandle<StageSchema>
   ): Promise<string[]> {
     const activeUsers: Set<string> = new Set();
 
@@ -41,7 +41,7 @@ export class UserPresenceMonitor {
   }
 
   private cleanup(
-    handle: DocHandle<LayerSchema>,
+    handle: DocHandle<StageSchema>,
     resolve: (users: string[]) => void,
     activeUsers: Set<string>
   ): void {

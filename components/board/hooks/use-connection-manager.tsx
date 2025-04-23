@@ -9,13 +9,19 @@ export const useConnectionManager = () => {
     if (networkStatus !== "ONLINE") {
       return false;
     }
-    const canConnect = await collaborationClient.canConnect();
-    if (!canConnect) {
-      console.log("Detected local changes - staying disconnected");
+    try {
+      const canConnect = await collaborationClient.canConnect();
+      if (!canConnect) {
+        console.log("Detected local changes - staying disconnected");
+        return false;
+      }
+
+      await collaborationClient.setOnline(true);
+      return true;
+    } catch (error) {
+      console.error("Error switching to online:", error);
       return false;
     }
-    await collaborationClient.setOnline(true);
-    return true;
   };
 
   const switchToOffline = async (): Promise<void> => {

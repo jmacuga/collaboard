@@ -4,20 +4,32 @@ import {
   DocHandle,
   Repo,
   AnyDocumentId,
+  PeerId,
+  DocumentId,
 } from "@automerge/automerge-repo";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { StorageConfig } from "./types";
-import { DocumentManager } from "./document-manager";
-import { NetworkManager } from "./network-manager";
-import { DocumentSynchronizer } from "./document-synchronizer";
+import { getLocalMergePreview, getMergeRequestPreview } from "./synchronizer";
 import { UserPresenceMonitor } from "./user-presence-monitor";
+import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
+import { v4 as uuidv4 } from "uuid";
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
+import { NetworkAdapterInterface } from "@automerge/automerge-repo";
+
+class MergeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MergeError";
+  }
+}
 
 export class CollaborationClient {
   private readonly docId: string;
-  private documentManager: DocumentManager;
-  private networkManager: NetworkManager;
-  private documentSynchronizer: DocumentSynchronizer;
+  private repo: Repo;
+  private websocketURL: string;
+  private websocketAdapter: BrowserWebSocketClientAdapter;
   private presenceMonitor: UserPresenceMonitor;
+  private readonly DISABLE_RETRY_INTERVAL = 10_000_000;
 
   constructor(
     docId: string,
@@ -25,22 +37,32 @@ export class CollaborationClient {
     storageConfig?: StorageConfig
   ) {
     this.docId = docId;
-    this.documentManager = new DocumentManager(docId, storageConfig);
-    this.networkManager = new NetworkManager(websocketUrl);
-    this.documentSynchronizer = new DocumentSynchronizer();
+    this.repo = new Repo({
+      network: [],
+      storage: new IndexedDBStorageAdapter(
+        storageConfig?.database,
+        storageConfig?.store
+      ),
+      peerId: this.generatePeerId() as PeerId,
+    });
     this.presenceMonitor = new UserPresenceMonitor();
+    this.websocketURL = websocketUrl;
+    this.websocketAdapter = new BrowserWebSocketClientAdapter(
+      this.websocketURL,
+      this.DISABLE_RETRY_INTERVAL
+    );
   }
 
-  public async initialize(): Promise<DocHandle<LayerSchema>> {
+  public async initialize(): Promise<DocHandle<StageSchema>> {
     try {
-      this.networkManager.disconnect();
-      const handle = await this.documentManager.getHandle();
+      this.disconnect();
+      const handle = await this.getHandle();
       await handle.whenReady(["unavailable", "requesting", "ready"]);
 
       if (handle.state === "ready") {
         return handle;
       } else {
-        await this.networkManager.connect(this.documentManager.getRepo());
+        await this.connect();
         await handle.whenReady();
         return handle;
       }
@@ -49,27 +71,59 @@ export class CollaborationClient {
     }
   }
 
-  public async getHandle(): Promise<DocHandle<LayerSchema>> {
-    return this.documentManager.getHandle();
+  public async getHandle(): Promise<DocHandle<StageSchema>> {
+    return this.repo.find<StageSchema>(this.docId as AnyDocumentId);
   }
 
   public getRepo(): Repo {
-    return this.documentManager.getRepo();
+    return this.repo;
   }
 
   public async canConnect(): Promise<boolean> {
-    if (this.isConnected()) return true;
-    const localHandle = await this.documentManager.getHandle();
+    if (this.isSocketActive()) return true;
+    const localHandle = await this.getHandle();
     const localDoc = await localHandle.doc();
-    return this.documentSynchronizer.canSync(localDoc, this.docId);
+    const { changes } = await getLocalMergePreview<StageSchema>({
+      localDoc,
+      docId: this.docId,
+    });
+    if (changes === null) throw new MergeError("Error getting merge preview");
+    if (changes && changes.length > 0) return false;
+    return true;
   }
 
   public async connect(): Promise<void> {
-    await this.networkManager.connect(this.documentManager.getRepo());
+    if (this.isSocketActive()) return;
+    try {
+      this.websocketAdapter = new BrowserWebSocketClientAdapter(
+        this.websocketURL,
+        this.DISABLE_RETRY_INTERVAL
+      );
+      this.repo.networkSubsystem.addNetworkAdapter(
+        this.websocketAdapter as unknown as NetworkAdapterInterface
+      );
+      await this.repo.networkSubsystem.whenReady();
+    } catch (error) {
+      throw new Error(`Connection failed: ${error}`);
+    }
   }
 
   public disconnect(): void {
-    this.networkManager.disconnect();
+    try {
+      if (this.isSocketActive()) {
+        this.websocketAdapter.disconnect();
+      }
+      this.websocketAdapter.socket?.close();
+    } catch (error) {
+      console.error("Disconnection error:", error);
+    }
+  }
+
+  private isSocketActive(): boolean {
+    return (
+      this.websocketAdapter.socket?.readyState === WebSocket.OPEN ||
+      this.websocketAdapter.socket?.readyState === WebSocket.CONNECTING
+    );
   }
 
   public getDocId(): string {
@@ -100,23 +154,19 @@ export class CollaborationClient {
   }
 
   public deleteDoc(): void {
-    this.documentManager.deleteDoc();
-  }
-
-  public async getServerDoc(docId?: string): Promise<Doc<LayerSchema> | null> {
-    return this.documentSynchronizer.getServerDoc(docId || this.docId);
+    this.repo.delete(this.docId as AnyDocumentId);
   }
 
   public async getLocalMergePreview(): Promise<{
-    doc: Doc<LayerSchema> | null;
+    doc: Doc<StageSchema> | null;
     changes: Change[] | null;
   }> {
-    const localHandle = await this.documentManager.getHandle();
+    const localHandle = await this.getHandle();
     const localDoc = await localHandle.doc();
     if (!localDoc) {
       return { doc: null, changes: null };
     }
-    return this.documentSynchronizer.getLocalMergePreview({
+    return getLocalMergePreview({
       localDoc: localDoc,
       docId: this.docId,
     });
@@ -124,26 +174,27 @@ export class CollaborationClient {
 
   public async getMergeRequestPreview(
     changes: Change[]
-  ): Promise<Doc<LayerSchema> | null> {
-    return this.documentSynchronizer.getMergeRequestPreview(
-      changes,
-      this.docId
-    );
+  ): Promise<Doc<StageSchema> | null> {
+    return getMergeRequestPreview(changes, this.docId);
   }
 
   public async removeLocalDoc(): Promise<void> {
-    await this.documentManager.removeLocalDocument();
+    this.repo.storageSubsystem!.removeDoc(this.docId as DocumentId);
   }
 
   public isConnected(): boolean {
-    return this.networkManager.isConnected();
+    return this.isSocketActive();
   }
 
   /**
    * Initializes the repository and returns the document handle
    * @deprecated Use initialize() instead
    */
-  public async initializeRepo(): Promise<DocHandle<LayerSchema>> {
+  public async initializeRepo(): Promise<DocHandle<StageSchema>> {
     return this.initialize();
+  }
+
+  private generatePeerId(): PeerId {
+    return uuidv4() as PeerId;
   }
 }

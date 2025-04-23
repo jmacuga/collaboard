@@ -4,31 +4,15 @@ import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 
 export class ServerRepoFactory {
-  private websocketUrl: string;
-
-  constructor(websocketUrl = NEXT_PUBLIC_WEBSOCKET_URL) {
-    this.websocketUrl = websocketUrl;
-  }
-
-  createRepo(): Repo {
-    return new Repo({
-      network: [
-        new BrowserWebSocketClientAdapter(
-          this.websocketUrl
-        ) as any as NetworkAdapterInterface,
-      ],
-    });
-  }
-
   /**
    * Creates a repo and returns both the repo and its network adapter for cleanup
    */
-  createManagedRepo(): {
+  static create(websocketUrl = NEXT_PUBLIC_WEBSOCKET_URL): {
     repo: Repo;
     adapter: BrowserWebSocketClientAdapter;
     cleanup: () => void;
   } {
-    const adapter = new BrowserWebSocketClientAdapter(this.websocketUrl);
+    const adapter = new BrowserWebSocketClientAdapter(websocketUrl);
     const repo = new Repo({
       network: [adapter as any as NetworkAdapterInterface],
     });

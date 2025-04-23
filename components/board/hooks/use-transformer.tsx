@@ -3,16 +3,16 @@
 import { useContext, useEffect, useRef, useCallback } from "react";
 import Konva from "konva";
 import { BoardContext } from "@/components/board/context/board-context";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { useCollaborationClient } from "../context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 
-export const useTransformer = (localDoc: LayerSchema | undefined) => {
+export const useTransformer = (localDoc: StageSchema | undefined) => {
   const { selectedShapeIds } = useContext(BoardContext);
   const transformerRef = useRef<Konva.Transformer>(null);
   const collaborationClient = useCollaborationClient();
-  const [_, changeLocalDoc] = useDocument<LayerSchema>(
+  const [_, changeLocalDoc] = useDocument<StageSchema>(
     collaborationClient.getDocId() as AnyDocumentId
   );
 
@@ -21,7 +21,7 @@ export const useTransformer = (localDoc: LayerSchema | undefined) => {
       const node = e.target;
       const shapeId = node.attrs.id;
 
-      changeLocalDoc((doc: LayerSchema) => {
+      changeLocalDoc((doc: StageSchema) => {
         if (!doc[shapeId]) return;
 
         const shape = doc[shapeId];

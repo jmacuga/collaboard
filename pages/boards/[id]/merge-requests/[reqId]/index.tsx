@@ -1,7 +1,7 @@
 import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
 import { useState, useRef, useEffect } from "react";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { Doc } from "@automerge/automerge";
 import { CollaborationClientContext } from "@/components/board/context/collaboration-client-context";
 import { TeamService } from "@/lib/services/team/team-service";
@@ -16,7 +16,6 @@ import TeamArchived from "@/components/teams/team-archived";
 import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
-import { DocumentSynchronizer } from "@/lib/sync/document-synchronizer";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -50,7 +49,7 @@ export default function MergeRequestPage({
 
   const collaborationClientRef = useRef<CollaborationClient | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<Doc<LayerSchema>>();
+  const [previewDoc, setPreviewDoc] = useState<Doc<StageSchema>>();
 
   useEffect(() => {
     setIsMounted(true);

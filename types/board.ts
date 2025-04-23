@@ -1,4 +1,4 @@
-import { KonvaNodeSchema } from "./KonvaNodeSchema";
+import { KonvaNodeSchema } from "./stage-schema";
 import { KonvaEventObject } from "konva/lib/Node";
 
 export type BoardMode =

@@ -1,8 +1,8 @@
 export type NetworkStatus = "ONLINE" | "OFFLINE" | "UNKNOWN";
 
 interface NetworkMonitorConfig {
-  pingEndpoint?: string;
-  checkDelay?: number;
+  pingEndpoint: string;
+  checkDelay: number;
 }
 
 export class NetworkStatusMonitor {
@@ -18,9 +18,9 @@ export class NetworkStatusMonitor {
   private readonly boundOfflineHandler: () => void;
   private isInitialized: boolean = false;
 
-  constructor(config?: NetworkMonitorConfig) {
-    this.pingEndpoint = config?.pingEndpoint ?? "/api/ping";
-    this.checkDelay = config?.checkDelay ?? 3000;
+  constructor(config: NetworkMonitorConfig) {
+    this.pingEndpoint = config.pingEndpoint;
+    this.checkDelay = config.checkDelay;
     this.listeners = new Set();
 
     this.boundOnlineHandler = () => {
@@ -29,13 +29,9 @@ export class NetworkStatusMonitor {
     };
     this.boundOfflineHandler = () => this.updateStatus("OFFLINE");
 
-    if (this.isBrowser()) {
+    if (typeof window !== "undefined") {
       this.initialize();
     }
-  }
-
-  private isBrowser(): boolean {
-    return typeof window !== "undefined";
   }
 
   private initialize(): void {
@@ -43,10 +39,6 @@ export class NetworkStatusMonitor {
 
     this.isInitialized = true;
     this.status = navigator.onLine ? "ONLINE" : "OFFLINE";
-    this.initializeListeners();
-  }
-
-  private initializeListeners(): void {
     window.addEventListener("online", this.boundOnlineHandler);
     window.addEventListener("offline", this.boundOfflineHandler);
   }
@@ -102,7 +94,7 @@ export class NetworkStatusMonitor {
   public subscribe(
     callback: (status: NetworkStatus, prevStatus: NetworkStatus) => void
   ): () => void {
-    if (!this.isBrowser()) {
+    if (typeof window === "undefined") {
       console.warn(
         "NetworkStatusMonitor: Subscribing in non-browser environment"
       );

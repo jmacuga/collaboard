@@ -9,7 +9,6 @@ export class ServerRepoFactory {
    */
   static create(websocketUrl = NEXT_PUBLIC_WEBSOCKET_URL): {
     repo: Repo;
-    adapter: BrowserWebSocketClientAdapter;
     cleanup: () => void;
   } {
     const adapter = new BrowserWebSocketClientAdapter(websocketUrl);
@@ -33,7 +32,7 @@ export class ServerRepoFactory {
       }
     };
 
-    return { repo, adapter, cleanup };
+    return { repo, cleanup };
   }
 }
 

@@ -4,7 +4,10 @@ import {
   NetworkStatusMonitor,
 } from "@/lib/network-status-monitor";
 
-const networkMonitor = new NetworkStatusMonitor();
+const networkMonitor = new NetworkStatusMonitor({
+  pingEndpoint: "/api/ping",
+  checkDelay: 3000,
+});
 
 export const useNetworkStatus = () => {
   const [state, setState] = useState(networkMonitor.getCurrentStatus());

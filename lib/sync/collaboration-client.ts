@@ -23,11 +23,17 @@ class MergeError extends Error {
   }
 }
 
+class ConnectionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConnectionError";
+  }
+}
 export class CollaborationClient {
   private readonly docId: string;
   private repo: Repo;
   private websocketURL: string;
-  private websocketAdapter: BrowserWebSocketClientAdapter;
+  private websocketAdapter: BrowserWebSocketClientAdapter | null;
   private presenceMonitor: UserPresenceMonitor;
   private readonly DISABLE_RETRY_INTERVAL = 10_000_000;
 
@@ -47,10 +53,7 @@ export class CollaborationClient {
     });
     this.presenceMonitor = new UserPresenceMonitor();
     this.websocketURL = websocketUrl;
-    this.websocketAdapter = new BrowserWebSocketClientAdapter(
-      this.websocketURL,
-      this.DISABLE_RETRY_INTERVAL
-    );
+    this.websocketAdapter = null;
   }
 
   public async initialize(): Promise<DocHandle<StageSchema>> {
@@ -104,11 +107,12 @@ export class CollaborationClient {
       );
       await this.repo.networkSubsystem.whenReady();
     } catch (error) {
-      throw new Error(`Connection failed: ${error}`);
+      throw new ConnectionError("Connection failed");
     }
   }
 
   public disconnect(): void {
+    if (!this.websocketAdapter) return;
     try {
       if (this.isSocketActive()) {
         this.websocketAdapter.disconnect();
@@ -120,6 +124,7 @@ export class CollaborationClient {
   }
 
   private isSocketActive(): boolean {
+    if (!this.websocketAdapter) return false;
     return (
       this.websocketAdapter.socket?.readyState === WebSocket.OPEN ||
       this.websocketAdapter.socket?.readyState === WebSocket.CONNECTING

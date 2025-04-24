@@ -14,6 +14,8 @@ import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
@@ -29,6 +31,8 @@ export function DeleteBoardDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const [checkingUsers, setCheckingUsers] = useState(false);
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   const handleDelete = async () => {
     try {
@@ -40,7 +44,8 @@ export function DeleteBoardDialog({
       try {
         const collaborationClient = new CollaborationClient(
           docId,
-          NEXT_PUBLIC_WEBSOCKET_URL
+          NEXT_PUBLIC_WEBSOCKET_URL,
+          userId as PeerId
         );
         setCheckingUsers(true);
         const activeUsers = await collaborationClient.getActiveUsers();

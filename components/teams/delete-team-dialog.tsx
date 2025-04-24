@@ -14,6 +14,8 @@ import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
 interface DeleteTeamDialogProps {
   teamId: string;
   teamName: string;
@@ -29,6 +31,8 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
   const [boardsFailedToDelete, setBoardsFailedToDelete] = useState<string[]>(
     []
   );
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   const fetchBoards = async () => {
     try {
@@ -112,7 +116,8 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
       for (const board of boards) {
         const client = new CollaborationClient(
           board.automergeDocId,
-          NEXT_PUBLIC_WEBSOCKET_URL
+          NEXT_PUBLIC_WEBSOCKET_URL,
+          userId as PeerId
         );
         client.connect();
         setBoardName(board.name);

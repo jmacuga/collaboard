@@ -9,13 +9,14 @@ import { BoardHeader } from "@/components/board/components/board-header";
 import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
 import { MergeRequestHeader } from "@/components/merge-requests/merge-request-header";
 import BoardReadonly from "@/components/preview/board-readonly";
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import BoardArchived from "@/components/boards/board-archived";
 import TeamArchived from "@/components/teams/team-archived";
 import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { PeerId } from "@automerge/automerge-repo";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -50,13 +51,16 @@ export default function MergeRequestPage({
   const collaborationClientRef = useRef<CollaborationClient | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Doc<StageSchema>>();
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   useEffect(() => {
     setIsMounted(true);
     if (!collaborationClientRef.current) {
       collaborationClientRef.current = new CollaborationClient(
         parsedBoard.automergeDocId,
-        NEXT_PUBLIC_WEBSOCKET_URL
+        NEXT_PUBLIC_WEBSOCKET_URL,
+        userId as PeerId
       );
     }
     const getPreviewDoc = async () => {

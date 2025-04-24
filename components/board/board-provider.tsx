@@ -11,6 +11,8 @@ import { SyncStatusControl } from "./components/sync-status-control";
 import { BoardHeader } from "./components/board-header";
 import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
 interface BoardState {
   collaborationClient: CollaborationClient | null;
   synced: boolean;
@@ -29,6 +31,9 @@ export function BoardProvider({
   });
   const isInitialized = useRef(false);
   const { updateLastViewed } = useLastViewedBoardLog();
+  const session = useSession();
+
+  const userId = session.data?.user?.id;
 
   useEffect(() => {
     const initializeCollaborationClient = async () => {
@@ -39,7 +44,8 @@ export function BoardProvider({
       isInitialized.current = true;
       const collaborationClient = new CollaborationClient(
         board.automergeDocId as string,
-        NEXT_PUBLIC_WEBSOCKET_URL
+        NEXT_PUBLIC_WEBSOCKET_URL,
+        userId as PeerId
       );
       await collaborationClient.initialize();
       if (await collaborationClient.canConnect()) {

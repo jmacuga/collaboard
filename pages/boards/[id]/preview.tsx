@@ -8,7 +8,7 @@ import { PreviewHeader } from "@/components/preview/preview-header";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
 import BoardReadonly from "@/components/preview/board-readonly";
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { withTeamRolePage } from "@/lib/middleware/with-team-role-page";
 import { CollaborationClientContext } from "@/components/board/context/collaboration-client-context";
 import TeamArchived from "@/components/teams/team-archived";
@@ -16,6 +16,7 @@ import BoardArchived from "@/components/boards/board-archived";
 import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { PeerId } from "@automerge/automerge-repo";
 interface BoardPreviewPageProps {
   board: string;
   team: string;
@@ -39,13 +40,16 @@ export default function BoardPreviewPage({
   const [previewDoc, setPreviewDoc] = useState<Doc<StageSchema>>();
   const collaborationClientRef = useRef<CollaborationClient | null>(null);
   const [localChanges, setLocalChanges] = useState<Change[]>([]);
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   useEffect(() => {
     setIsMounted(true);
     if (!collaborationClientRef.current) {
       collaborationClientRef.current = new CollaborationClient(
         parsedBoard.automergeDocId,
-        NEXT_PUBLIC_WEBSOCKET_URL
+        NEXT_PUBLIC_WEBSOCKET_URL,
+        userId as PeerId
       );
     }
     const fetchLocalChanges = async () => {

@@ -12,7 +12,6 @@ import { StorageConfig } from "./types";
 import { getLocalMergePreview, getMergeRequestPreview } from "./synchronizer";
 import { UserPresenceMonitor } from "./user-presence-monitor";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
-import { v4 as uuidv4 } from "uuid";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { NetworkAdapterInterface } from "@automerge/automerge-repo";
 
@@ -40,19 +39,20 @@ export class CollaborationClient {
   constructor(
     docId: string,
     websocketUrl: string,
+    peerId: PeerId,
     storageConfig?: StorageConfig
   ) {
     this.docId = docId;
+    this.websocketURL = websocketUrl;
     this.repo = new Repo({
       network: [],
       storage: new IndexedDBStorageAdapter(
         storageConfig?.database,
         storageConfig?.store
       ),
-      peerId: this.generatePeerId() as PeerId,
+      peerId: peerId,
     });
     this.presenceMonitor = new UserPresenceMonitor();
-    this.websocketURL = websocketUrl;
     this.websocketAdapter = null;
   }
 
@@ -197,9 +197,5 @@ export class CollaborationClient {
    */
   public async initializeRepo(): Promise<DocHandle<StageSchema>> {
     return this.initialize();
-  }
-
-  private generatePeerId(): PeerId {
-    return uuidv4() as PeerId;
   }
 }

@@ -7,7 +7,7 @@ import { CollaborationClientContext } from "@/components/board/context/collabora
 import { BoardContextProvider } from "@/components/board/context/board-context";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { StageSchema } from "@/types/stage-schema";
-import { AnyDocumentId, Repo } from "@automerge/automerge-repo";
+import { AnyDocumentId, PeerId, Repo } from "@automerge/automerge-repo";
 import { MergeRequestUpdateHeader } from "./update-header";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import * as automerge from "@automerge/automerge";
@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { NetworkStatusProvider } from "../providers/network-status-provider";
 import { ServerRepoFactory } from "@/lib/utils/server-repo-factory";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
 export function MergeRequestUpdateContent({
   board,
   team,
@@ -32,6 +33,8 @@ export function MergeRequestUpdateContent({
   const [updateDocId, setUpdateDocId] = useState<string | null>(
     router.query.updateDocId as string
   );
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   useEffect(() => {
     if (initialLoad.current) {
@@ -45,7 +48,11 @@ export function MergeRequestUpdateContent({
       }
 
       setCollaborationClient(
-        new CollaborationClient(docId, NEXT_PUBLIC_WEBSOCKET_URL)
+        new CollaborationClient(
+          docId,
+          NEXT_PUBLIC_WEBSOCKET_URL,
+          userId as PeerId
+        )
       );
       setUpdateDocId(docId);
       initialLoad.current = false;

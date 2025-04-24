@@ -15,19 +15,27 @@ import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-index
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { NetworkAdapterInterface } from "@automerge/automerge-repo";
 
-class MergeError extends Error {
+export class MergeError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "MergeError";
   }
 }
 
-class ConnectionError extends Error {
+export class ConnectionError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ConnectionError";
   }
 }
+
+export class ActiveUsersError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ActiveUsersError";
+  }
+}
+
 export class CollaborationClient {
   private readonly docId: string;
   private repo: Repo;
@@ -153,8 +161,7 @@ export class CollaborationClient {
       const handle = await this.getHandle();
       return this.presenceMonitor.getActiveUsers(handle);
     } catch (error) {
-      console.error("Error getting active users:", error);
-      return [];
+      throw new ActiveUsersError("Error getting active users");
     }
   }
 

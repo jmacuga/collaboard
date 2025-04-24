@@ -16,6 +16,7 @@ import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { useSession } from "next-auth/react";
 import { PeerId } from "@automerge/automerge-repo";
+import { ActiveUsersError } from "@/lib/sync/collaboration-client";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
@@ -37,9 +38,10 @@ export function DeleteBoardDialog({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const docId = await fetch(`/api/boards/${boardId}/docId`).then((res) =>
+      const response = await fetch(`/api/boards/${boardId}/docId`).then((res) =>
         res.json()
       );
+      const docId = response.docId;
 
       try {
         const collaborationClient = new CollaborationClient(
@@ -76,8 +78,12 @@ export function DeleteBoardDialog({
           toast.error("Failed to delete board");
         }
       } catch (error) {
-        console.error("Error checking active users:", error);
-        toast.error("Failed to check if board is being edited");
+        if (error instanceof ActiveUsersError) {
+          toast.error("Failed to check if board is being edited");
+        } else {
+          console.error("Error checking active users:", error);
+          toast.error("Failed to check if board is being edited");
+        }
         setIsDeleting(false);
       }
     } catch (error) {

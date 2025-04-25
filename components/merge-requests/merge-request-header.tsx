@@ -53,7 +53,7 @@ export const MergeRequestHeader = ({
               Created by: {mergeRequest.requester.email}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Created at: {mergeRequest.createdAt.toLocaleString()}
+              Created at: {new Date(mergeRequest.createdAt).toLocaleString()}
             </p>
           </div>
         </div>

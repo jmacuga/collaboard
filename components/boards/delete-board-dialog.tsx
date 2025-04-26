@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
-
+import { CollaborationClient } from "@/lib/sync/collaboration-client";
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
+import { ActiveUsersError } from "@/lib/sync/collaboration-client";
 interface DeleteBoardDialogProps {
   boardId: string;
   boardName: string;
@@ -29,18 +32,25 @@ export function DeleteBoardDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const [checkingUsers, setCheckingUsers] = useState(false);
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const docId = await fetch(`/api/boards/${boardId}/docId`).then((res) =>
+      const response = await fetch(`/api/boards/${boardId}/docId`).then((res) =>
         res.json()
       );
+      const docId = response.docId;
 
       try {
-        const syncService = new ClientSyncService(docId);
+        const collaborationClient = new CollaborationClient(
+          docId,
+          NEXT_PUBLIC_WEBSOCKET_URL,
+          userId as PeerId
+        );
         setCheckingUsers(true);
-        const activeUsers = await syncService.getActiveUsers();
+        const activeUsers = await collaborationClient.getActiveUsers();
         setCheckingUsers(false);
 
         if (activeUsers.length > 0) {
@@ -56,7 +66,7 @@ export function DeleteBoardDialog({
 
         if (response.ok) {
           try {
-            syncService.deleteDoc();
+            collaborationClient.deleteDoc();
           } catch (error) {
             console.error(error);
             toast.error("Failed to delete board doc");
@@ -68,8 +78,12 @@ export function DeleteBoardDialog({
           toast.error("Failed to delete board");
         }
       } catch (error) {
-        console.error("Error checking active users:", error);
-        toast.error("Failed to check if board is being edited");
+        if (error instanceof ActiveUsersError) {
+          toast.error("Failed to check if board is being edited");
+        } else {
+          console.error("Error checking active users:", error);
+          toast.error("Failed to check if board is being edited");
+        }
         setIsDeleting(false);
       }
     } catch (error) {

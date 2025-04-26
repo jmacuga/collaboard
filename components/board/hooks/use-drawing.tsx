@@ -2,11 +2,11 @@
 
 import { useContext, useState, useCallback } from "react";
 import { BoardContext } from "@/components/board/context/board-context";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import Konva from "konva";
 import { AnyDocumentId, RawString } from "@automerge/automerge-repo";
 import { LineConfig } from "konva/lib/shapes/Line";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { KonvaEventObject } from "konva/lib/Node";
 
@@ -34,14 +34,14 @@ function useDrawing() {
     localPoints,
     setLocalPoints,
   } = useContext(BoardContext);
-  const clientSyncService = useClientSync();
-  const [localDoc, changeLocalDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+  const collaborationClient = useCollaborationClient();
+  const [localDoc, changeLocalDoc] = useDocument<StageSchema>(
+    collaborationClient.getDocId() as AnyDocumentId
   );
 
   const addLineToDoc = useCallback(
     (points: number[]) => {
-      changeLocalDoc((doc: LayerSchema) => {
+      changeLocalDoc((doc: StageSchema) => {
         if (doc[currentLineId]) {
           doc[currentLineId].attrs.points = points;
         }
@@ -69,7 +69,7 @@ function useDrawing() {
     const newLine = new Konva.Line(lineAttributes);
     const lineObject = newLine.toObject() as KonvaNodeSchema;
     lineObject.className = new RawString(lineObject.className);
-    changeLocalDoc((doc: LayerSchema) => {
+    changeLocalDoc((doc: StageSchema) => {
       doc[currentLineId] = lineObject;
     });
 

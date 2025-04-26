@@ -1,5 +1,5 @@
 import { ActiveUser } from "../hooks/use-active-users";
-import { KonvaNodeSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema } from "@/types/stage-schema";
 import { Group, Rect, Circle, Text } from "react-konva";
 import { useState, useEffect, useRef } from "react";
 

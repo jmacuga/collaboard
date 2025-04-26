@@ -2,8 +2,8 @@ import { useState } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "@/components/board/context/client-sync-context";
+import { StageSchema } from "@/types/stage-schema";
+import { useCollaborationClient } from "@/components/board/context/collaboration-client-context";
 
 interface DraggingState {
   draggedShapeId: string | null;
@@ -12,9 +12,9 @@ interface DraggingState {
 }
 
 export const useDragging = () => {
-  const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+  const collaborationClient = useCollaborationClient();
+  const [doc, changeDoc] = useDocument<StageSchema>(
+    collaborationClient.getDocId() as AnyDocumentId
   );
 
   const [draggingState, setDraggingState] = useState<DraggingState>({
@@ -35,7 +35,7 @@ export const useDragging = () => {
   const handleDragEnd = (e: KonvaEventObject<MouseEvent>) => {
     const shapeId = e.target.attrs.id;
     const newPos = { x: e.target.x(), y: e.target.y() };
-    changeDoc((doc: LayerSchema) => {
+    changeDoc((doc: StageSchema) => {
       if (doc[shapeId]) {
         doc[shapeId].attrs.x = newPos.x;
         doc[shapeId].attrs.y = newPos.y;

@@ -1,4 +1,4 @@
-import { KonvaNodeSchema } from "./KonvaNodeSchema";
+import { KonvaNodeSchema } from "./stage-schema";
 import { KonvaEventObject } from "konva/lib/Node";
 
 export type BoardMode =
@@ -19,12 +19,6 @@ export interface BoardShapeProps {
   onDragEnd?: (e: KonvaEventObject<MouseEvent>) => void;
   onTransformEnd?: (e: KonvaEventObject<MouseEvent>) => void;
   onTextDblClick?: (e: KonvaEventObject<MouseEvent>) => void;
-}
-
-export interface BoardProps {
-  isOnline: boolean;
-  activeUsers: string[];
-  objectEditors: Record<string, string[]>;
 }
 
 export interface ShapeRendererProps extends BoardShapeProps {

@@ -15,11 +15,11 @@ import {
   Bell,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { TeamAction, UserLastViewedLogType } from "@prisma/client";
+import { TeamAction } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { NotificationService } from "@/lib/services/notification/notification-service";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
+import { useLastViewedTeamLog } from "@/components/profile/hooks/use-last-viewed-team";
+import { LastViewedTeamLogService } from "@/lib/services/last-viewed-team-log/last-viewed-team-log-service";
 
 interface HistoryPageProps {
   logs: string;
@@ -37,12 +37,11 @@ export default function HistoryPage({
   const parsedLogs = JSON.parse(logs);
   const lastViewed = lastViewedAt ? new Date(lastViewedAt) : null;
   const mountedRef = useRef(false);
-  const { updateLastViewed } = useUpdateLastViewed();
+  const { updateLastViewed } = useLastViewedTeamLog();
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
       updateLastViewed({
-        type: UserLastViewedLogType.TEAM,
         teamId: parsedTeam.id,
       });
     }
@@ -209,9 +208,8 @@ const getServerSidePropsFunc: GetServerSideProps = async (context) => {
 
   const logs = await TeamService.getTeamLogs(teamId);
 
-  const lastViewedAt = await NotificationService.getLastViewedTimestamp(
+  const lastViewedAt = await LastViewedTeamLogService.getTimestamp(
     session!.user.id,
-    UserLastViewedLogType.TEAM,
     teamId
   );
 

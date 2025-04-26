@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 
 export const LocalChangesHeader = () => {
   const { networkStatus } = useNetworkStatusContext();
-  const { synced, isOnline } = useContext(BoardContext);
+  const { synced, isRealTime } = useContext(BoardContext);
   const router = useRouter();
   const handleSyncChanges = async () => {
     if (networkStatus !== "ONLINE") {
@@ -18,7 +18,7 @@ export const LocalChangesHeader = () => {
     router.push(`/boards/${boardId}/preview`);
   };
 
-  if (synced || networkStatus === "OFFLINE" || isOnline) {
+  if (synced || networkStatus === "OFFLINE" || isRealTime) {
     return null;
   }
 

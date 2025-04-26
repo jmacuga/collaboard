@@ -1,7 +1,7 @@
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
 import { useContext, useEffect } from "react";
@@ -10,16 +10,16 @@ import { v4 as uuidv4 } from "uuid";
 import { RawString } from "@automerge/automerge-repo";
 
 const useShape = () => {
-  const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+  const collaborationClient = useCollaborationClient();
+  const [doc, changeDoc] = useDocument<StageSchema>(
+    collaborationClient.getDocId() as AnyDocumentId
   );
   const { shapeColor, shapeType, getPointerPosition } =
     useContext(BoardContext);
   const addToAutomerge = (shape: KonvaNodeSchema) => {
     shape = objectStringToRawString(shape);
     const shapeId = shape.attrs.id;
-    changeDoc((doc: LayerSchema) => {
+    changeDoc((doc: StageSchema) => {
       doc[shapeId] = shape;
     });
   };

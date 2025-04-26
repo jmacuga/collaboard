@@ -1,8 +1,8 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useContext, useRef } from "react";
 import { useHandle } from "@automerge/automerge-repo-react-hooks";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "../context/client-sync-context";
+import { StageSchema } from "@/types/stage-schema";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { v4 as uuidv4 } from "uuid";
 import {
   useLocalAwareness,
@@ -33,11 +33,11 @@ const getRandomColor = () => {
 };
 
 export const useActiveUsers = () => {
-  const clientSyncService = useClientSync();
-  const docId = clientSyncService.getDocId() as AnyDocumentId;
-  const handle = useHandle<LayerSchema>(docId);
+  const collaborationClient = useCollaborationClient();
+  const docId = collaborationClient.getDocId() as AnyDocumentId;
+  const handle = useHandle<StageSchema>(docId);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
-  const { isOnline, selectedShapeIds } = useContext(BoardContext);
+  const { isRealTime, selectedShapeIds } = useContext(BoardContext);
   const { data: session } = useSession();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [updateTrigger, setUpdateTrigger] = useState(0);
@@ -61,7 +61,7 @@ export const useActiveUsers = () => {
   });
 
   useEffect(() => {
-    if (!session?.user || !isOnline) return;
+    if (!session?.user || !isRealTime) return;
 
     const currentUser: UserStatusPayload = {
       user: {
@@ -80,14 +80,14 @@ export const useActiveUsers = () => {
     } catch (error) {
       console.error("Error setting local awareness", error);
     }
-  }, [session, isOnline, selectedShapeIds, userColor]);
+  }, [session, isRealTime, selectedShapeIds, userColor]);
 
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
 
-    if (isOnline && session?.user) {
+    if (isRealTime && session?.user) {
       intervalRef.current = setInterval(() => {
         setUpdateTrigger((prev) => prev + 1);
       }, 3000);
@@ -98,7 +98,7 @@ export const useActiveUsers = () => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isOnline, session]);
+  }, [isRealTime, session]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -162,7 +162,7 @@ export const useActiveUsers = () => {
       color: userColor,
     };
 
-    if (isOnline) {
+    if (isRealTime) {
       try {
         setLocalUserId(session.user.id as string);
         setLocalAwareness(currentUser);
@@ -170,11 +170,11 @@ export const useActiveUsers = () => {
         console.error("Error setting local awareness", error);
       }
     }
-    if (!isOnline) {
+    if (!isRealTime) {
       console.log("Setting local user id to empty string");
       setLocalUserId("");
     }
-  }, [session, isOnline]);
+  }, [session, isRealTime]);
 
   useEffect(() => {
     return () => {

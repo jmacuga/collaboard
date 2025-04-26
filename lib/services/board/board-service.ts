@@ -1,6 +1,6 @@
 "use server";
 import dbConnect from "@/db/dbConnect";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { Board, MergeRequest, Prisma, TeamAction } from "@prisma/client";
 import prisma from "@/db/prisma";
 import { AnyDocumentId } from "@automerge/automerge-repo";
@@ -34,7 +34,7 @@ export class BoardService {
         if (!serverRepo) {
           throw new Error("Server repo not found");
         }
-        const handle = serverRepo.create<LayerSchema>();
+        const handle = serverRepo.create<StageSchema>();
         const board = await tx.board.create({
           data: {
             name: data.name,

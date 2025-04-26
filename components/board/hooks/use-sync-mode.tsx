@@ -1,123 +1,73 @@
 import { useContext, useEffect } from "react";
 import { BoardContext } from "../context/board-context";
-import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
-import { useClientSync } from "@/components/board/context/client-sync-context";
 import { useRouter } from "next/router";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
-import { UserLastViewedLogType } from "@prisma/client";
-import { Board } from "@prisma/client";
+import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
+import { useConnectionManager } from "./use-connection-manager";
+import { useNetworkStatusContext } from "@/components/providers/network-status-provider";
+import { toast } from "sonner";
+import { useBoardArchivedCheck } from "./use-board-archived-check";
 
 type SyncModeHook = {
   toggleSyncMode: () => Promise<void>;
 };
 
 const useSyncMode = (): SyncModeHook => {
-  const clientSyncService = useClientSync();
-  const { isOnline, setIsOnline, setSynced } = useContext(BoardContext);
+  const { isRealTime, setIsRealTime, setSynced } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
+  const { switchToOnline, switchToOffline } = useConnectionManager();
+  const { updateLastViewed } = useLastViewedBoardLog();
   const router = useRouter();
-  const { updateLastViewed } = useUpdateLastViewed();
+  const { isBoardArchived } = useBoardArchivedCheck();
 
-  const getBoardId = (): string => {
-    const boardId = router.query.id;
-    if (!boardId || Array.isArray(boardId)) {
-      throw new Error("Invalid board ID");
+  useEffect(() => {
+    if (networkStatus === "ONLINE" && !isRealTime) {
+      toggleSyncMode();
+    } else if (networkStatus === "OFFLINE") {
+      toggleSyncMode();
     }
-    return boardId;
-  };
-
-  const fetchBoard = async (): Promise<Board | null> => {
-    try {
-      const boardId = getBoardId();
-      const response = await fetch(`/api/boards/${boardId}`);
-
-      if (!response.ok) {
-        return null;
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Failed to fetch board:", error);
-      return null;
-    }
-  };
-
-  const isBoardArchived = async (): Promise<boolean | null> => {
-    const board = await fetchBoard();
-    if (!board) {
-      return null;
-    }
-    return board.archived;
-  };
+  }, [networkStatus]);
 
   const updateBoardLastViewed = async (): Promise<void> => {
     try {
       await updateLastViewed({
-        type: UserLastViewedLogType.BOARD,
-        boardId: getBoardId(),
+        boardId: router.query.id as string,
       });
     } catch (error) {
       console.error("Failed to update last viewed:", error);
     }
   };
 
-  useEffect(() => {
-    if (networkStatus !== "OFFLINE") {
-      return;
-    }
-
-    const setLocalMode = async (): Promise<void> => {
-      try {
-        setIsOnline(false);
-        await clientSyncService.setOnline(false);
-      } catch (error) {
-        console.error("Failed to set local mode:", error);
-      }
-    };
-
-    setLocalMode();
-  }, [networkStatus, clientSyncService, setIsOnline]);
-
-  const switchToOnlineMode = async (): Promise<void> => {
-    const isArchived = await isBoardArchived();
-
-    if (isArchived) {
-      router.push(`/boards/${getBoardId()}`);
-      return;
-    }
-
-    const canConnect = await clientSyncService.canConnect();
-    if (!canConnect) {
-      setSynced(false);
-      console.log("Detected local changes - staying disconnected");
-      return;
-    }
-
-    await clientSyncService.setOnline(true);
-    setIsOnline(true);
-    await updateBoardLastViewed();
-  };
-
-  const switchToOfflineMode = async (): Promise<void> => {
-    await updateBoardLastViewed();
-    await clientSyncService.setOnline(false);
-    setIsOnline(false);
-  };
-
   const toggleSyncMode = async (): Promise<void> => {
     try {
-      if (!isOnline && networkStatus !== "ONLINE") {
-        console.warn("Cannot switch to real-time mode when network is offline");
+      if (!isRealTime && networkStatus !== "ONLINE") {
+        toast.warning(
+          "Cannot switch to real-time mode when network is offline"
+        );
         return;
       }
 
-      if (!isOnline) {
-        await switchToOnlineMode();
+      if (!isRealTime) {
+        const isArchived = await isBoardArchived();
+        if (isArchived) {
+          router.push(`/boards/${router.query.id}`);
+          toast.error("Board is archived");
+          return;
+        }
+        const connected = await switchToOnline();
+        if (connected) {
+          setIsRealTime(true);
+          await updateBoardLastViewed();
+          setSynced(true);
+        } else {
+          setSynced(false);
+        }
       } else {
-        await switchToOfflineMode();
+        await updateBoardLastViewed();
+        await switchToOffline();
+        setIsRealTime(false);
       }
     } catch (error) {
-      console.error("Failed to toggle real-time/local mode:", error);
+      toast.error("Failed to toggle real-time/local mode");
     }
   };
 

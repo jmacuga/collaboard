@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/auth";
-import { NotificationService } from "@/lib/services/notification/notification-service";
+import { LastViewedTeamLogService } from "@/lib/services/last-viewed-team-log/last-viewed-team-log-service";
 import { withApiAuth } from "@/lib/middleware/with-api-auth";
-import { UserLastViewedLogType } from "@prisma/client";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -12,13 +11,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { type = UserLastViewedLogType.ALL, teamId, boardId } = req.body;
-    await NotificationService.updateLastViewedTimestamp(
-      session.user.id,
-      type,
-      teamId,
-      boardId
-    );
+    const { teamId } = req.body;
+    await LastViewedTeamLogService.updateTimestamp(session.user.id, teamId);
 
     return res.status(200).json({ success: true });
   } catch (error) {

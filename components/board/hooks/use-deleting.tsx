@@ -1,22 +1,22 @@
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { useEffect, useCallback, useContext } from "react";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 import { BoardContext } from "../context/board-context";
 
 export const useDeleting = () => {
   const { mode, setBoardMode, selectedShapeIds, setSelectedShapeIds } =
     useContext(BoardContext);
-  const clientSyncService = useClientSync();
-  const [doc, changeDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+  const collaborationClient = useCollaborationClient();
+  const [doc, changeDoc] = useDocument<StageSchema>(
+    collaborationClient.getDocId() as AnyDocumentId
   );
 
   const handleDelete = useCallback(() => {
     if (!doc || selectedShapeIds.length === 0) return;
 
-    changeDoc((currentDoc: LayerSchema) => {
+    changeDoc((currentDoc: StageSchema) => {
       selectedShapeIds.forEach((shapeId) => {
         if (currentDoc[shapeId]) {
           delete currentDoc[shapeId];

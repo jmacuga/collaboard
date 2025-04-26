@@ -1,22 +1,22 @@
 import { useCallback, useRef } from "react";
 import { KonvaEventObject } from "konva/lib/Node";
 import Konva from "konva";
-import { LayerSchema } from "@/types/KonvaNodeSchema";
+import { StageSchema } from "@/types/stage-schema";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
-import { useClientSync } from "../context/client-sync-context";
+import { useCollaborationClient } from "../context/collaboration-client-context";
 
 export const useErasing = () => {
-  const clientSyncService = useClientSync();
-  const [doc, setDoc] = useDocument<LayerSchema>(
-    clientSyncService.getDocId() as AnyDocumentId
+  const collaborationClient = useCollaborationClient();
+  const [doc, setDoc] = useDocument<StageSchema>(
+    collaborationClient.getDocId() as AnyDocumentId
   );
   const isErasing = useRef(false);
 
   const handleErase = useCallback(
     (lineId: string) => {
       if (!doc) return;
-      setDoc((currentDoc: LayerSchema) => {
+      setDoc((currentDoc: StageSchema) => {
         if (currentDoc[lineId]) {
           delete currentDoc[lineId];
         }

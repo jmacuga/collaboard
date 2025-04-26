@@ -2,17 +2,19 @@
 import { useEffect, useState, useRef } from "react";
 import { RepoContext } from "@automerge/automerge-repo-react-hooks";
 import Board from "@/components/board/board";
-import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
-import { ClientSyncContext } from "./context/client-sync-context";
+import { CollaborationClient } from "@/lib/sync/collaboration-client";
+import { CollaborationClientContext } from "./context/collaboration-client-context";
 import { BoardContextProvider } from "./context/board-context";
 import { NetworkStatusProvider } from "@/components/providers/network-status-provider";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { SyncStatusControl } from "./components/sync-status-control";
 import { BoardHeader } from "./components/board-header";
-import { useUpdateLastViewed } from "@/components/profile/hooks/user-last-viewed";
-import { UserLastViewedLogType } from "@prisma/client";
+import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewed-board";
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
 interface BoardState {
-  clientSyncService: ClientSyncService | null;
+  collaborationClient: CollaborationClient | null;
   synced: boolean;
 }
 
@@ -24,27 +26,31 @@ export function BoardProvider({
   team: PrismaTeam;
 }) {
   const [state, setState] = useState<BoardState>({
-    clientSyncService: null,
+    collaborationClient: null,
     synced: false,
   });
   const isInitialized = useRef(false);
-  const { updateLastViewed } = useUpdateLastViewed();
+  const { updateLastViewed } = useLastViewedBoardLog();
+  const session = useSession();
+
+  const userId = session.data?.user?.id;
 
   useEffect(() => {
-    const initializeClientSyncService = async () => {
+    const initializeCollaborationClient = async () => {
       let synced = false;
-      if (isInitialized.current || state.clientSyncService) {
+      if (isInitialized.current || state.collaborationClient) {
         return;
       }
       isInitialized.current = true;
-      const clientSyncService = new ClientSyncService({
-        docId: board.automergeDocId as string,
-      });
-      await clientSyncService.initializeRepo();
-      if (await clientSyncService.canConnect()) {
-        await clientSyncService.connect();
+      const collaborationClient = new CollaborationClient(
+        board.automergeDocId as string,
+        NEXT_PUBLIC_WEBSOCKET_URL,
+        userId as PeerId
+      );
+      await collaborationClient.initialize();
+      if (await collaborationClient.canConnect()) {
+        await collaborationClient.connect();
         await updateLastViewed({
-          type: UserLastViewedLogType.BOARD,
           boardId: board.id,
         });
         synced = true;
@@ -52,20 +58,19 @@ export function BoardProvider({
         console.log("Staying disconnected");
       }
       setState({
-        clientSyncService,
+        collaborationClient,
         synced,
       });
     };
-    initializeClientSyncService();
+    initializeCollaborationClient();
     return () => {
       (async () => {
-        if (state.clientSyncService) {
-          if (state.clientSyncService.isConnected()) {
+        if (state.collaborationClient) {
+          if (state.collaborationClient.isConnected()) {
             await updateLastViewed({
-              type: UserLastViewedLogType.BOARD,
               boardId: board.id,
             });
-            await state.clientSyncService.disconnect();
+            await state.collaborationClient.disconnect();
           }
         }
       })();
@@ -73,19 +78,19 @@ export function BoardProvider({
   }, [
     board.automergeDocId,
     board.id,
-    state.clientSyncService,
+    state.collaborationClient,
     updateLastViewed,
   ]);
 
-  if (!state.clientSyncService) {
+  if (!state.collaborationClient) {
     return <div>Loading board...</div>;
   }
 
   return (
     <NetworkStatusProvider>
-      <RepoContext.Provider value={state.clientSyncService.getRepo()}>
-        <ClientSyncContext.Provider
-          value={{ clientSyncService: state.clientSyncService }}
+      <RepoContext.Provider value={state.collaborationClient.getRepo()}>
+        <CollaborationClientContext.Provider
+          value={{ collaborationClient: state.collaborationClient }}
         >
           <BoardContextProvider syncedInitial={state.synced}>
             <div className="flex flex-col h-screen">
@@ -100,7 +105,7 @@ export function BoardProvider({
               </div>
             </div>
           </BoardContextProvider>
-        </ClientSyncContext.Provider>
+        </CollaborationClientContext.Provider>
       </RepoContext.Provider>
     </NetworkStatusProvider>
   );

@@ -14,10 +14,10 @@ import {
 
 export const SyncStatusControl = () => {
   const [mounted, setMounted] = useState(false);
-  const { isOnline } = useContext(BoardContext);
+  const { isRealTime } = useContext(BoardContext);
   const { networkStatus } = useNetworkStatusContext();
   const { toggleSyncMode } = useSyncMode();
-  const isDisabled = !isOnline && networkStatus !== "ONLINE";
+  const isDisabled = !isRealTime && networkStatus !== "ONLINE";
 
   // Only render on client-side to prevent hydration mismatches
   useEffect(() => {
@@ -63,9 +63,9 @@ export const SyncStatusControl = () => {
   };
 
   const getTooltipMessage = () => {
-    if (networkStatus === "ONLINE" && isOnline) {
+    if (networkStatus === "ONLINE" && isRealTime) {
       return "You are in real-time mode with network connection. Changes are synced immediately.";
-    } else if (networkStatus === "ONLINE" && !isOnline) {
+    } else if (networkStatus === "ONLINE" && !isRealTime) {
       return "You are in local mode despite having network connection. Changes are stored locally until you switch to real-time mode.";
     } else if (networkStatus === "OFFLINE") {
       return "No network connection available. You are working in local mode. Changes will be stored locally until network is restored.";
@@ -116,7 +116,7 @@ export const SyncStatusControl = () => {
           <span
             className={cn(
               "text-xs font-medium transition-colors whitespace-nowrap",
-              !isOnline ? "text-gray-900" : "text-gray-400"
+              !isRealTime ? "text-gray-900" : "text-gray-400"
             )}
           >
             Local
@@ -126,7 +126,7 @@ export const SyncStatusControl = () => {
             <TooltipTrigger asChild>
               <div>
                 <Switch
-                  checked={isOnline}
+                  checked={isRealTime}
                   onCheckedChange={isDisabled ? undefined : toggleSyncMode}
                   disabled={isDisabled}
                   className={cn(
@@ -134,11 +134,11 @@ export const SyncStatusControl = () => {
                     isDisabled
                       ? "opacity-50 cursor-not-allowed"
                       : "cursor-pointer",
-                    isOnline &&
+                    isRealTime &&
                       "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-600"
                   )}
                   aria-label={
-                    isOnline
+                    isRealTime
                       ? "Switch to Local Mode"
                       : "Switch to Real-time Mode"
                   }
@@ -151,7 +151,7 @@ export const SyncStatusControl = () => {
             >
               {isDisabled
                 ? "Cannot switch to real-time mode when network is offline"
-                : isOnline
+                : isRealTime
                 ? "Switch to Local Mode"
                 : "Switch to Real-time Mode"}
             </TooltipContent>
@@ -160,7 +160,7 @@ export const SyncStatusControl = () => {
           <span
             className={cn(
               "text-xs font-medium transition-colors whitespace-nowrap",
-              isOnline ? "text-gray-900" : "text-gray-400"
+              isRealTime ? "text-gray-900" : "text-gray-400"
             )}
           >
             Real-time

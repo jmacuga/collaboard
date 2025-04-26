@@ -3,8 +3,7 @@ import { useEffect, useContext } from "react";
 import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
-import { KonvaNodeSchema, LayerSchema } from "@/types/KonvaNodeSchema";
-import { useClientSync } from "@/components/board/context/client-sync-context";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import { useDocument } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
@@ -26,6 +25,7 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
+import { useCollaborationClient } from "./context/collaboration-client-context";
 
 export default function Board({
   team,
@@ -36,9 +36,9 @@ export default function Board({
   board: PrismaBoard;
   hideActiveUsers?: boolean;
 }) {
-  const clientSyncService = useClientSync();
-  const docId = clientSyncService.getDocId() as AnyDocumentId;
-  const [localDoc] = useDocument<LayerSchema>(docId);
+  const collaborationClient = useCollaborationClient();
+  const docId = collaborationClient.getDocId() as AnyDocumentId;
+  const [localDoc] = useDocument<StageSchema>(docId);
   const { width, height } = useWindowDimensions();
 
   const {
@@ -47,7 +47,7 @@ export default function Board({
     textColor,
     currentLineId,
     mode,
-    isOnline,
+    isRealTime,
     stagePosition,
     resetStagePosition,
     editingText,
@@ -125,7 +125,7 @@ export default function Board({
           <SideToolbar teamId={team.id} />
         </div>
         {!hideActiveUsers &&
-          isOnline &&
+          isRealTime &&
           activeUsers &&
           activeUsers.length > 0 && <ActiveUsersList users={activeUsers} />}
         <div>
@@ -140,7 +140,7 @@ export default function Board({
             y={stagePosition.y}
           >
             <Layer>
-              {isOnline &&
+              {isRealTime &&
                 localDoc &&
                 objectEditors &&
                 Object.entries(objectEditors).map(([objectId, editors]) => (
@@ -215,8 +215,12 @@ export default function Board({
           />
         </div>
       )}
-      {showResetButton && <ResetPositionButton onClick={resetStagePosition} />}
-      <ShapeColorPalette />
+      <div className="fixed bottom-7 right-72 z-40 flex items-center">
+        {showResetButton && (
+          <ResetPositionButton onClick={resetStagePosition} />
+        )}
+        <ShapeColorPalette />
+      </div>
     </>
   );
 }

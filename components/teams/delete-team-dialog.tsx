@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ClientSyncService } from "@/lib/services/client-doc/client-sync-service";
+import { CollaborationClient } from "@/lib/sync/collaboration-client";
+import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
+import { useSession } from "next-auth/react";
+import { PeerId } from "@automerge/automerge-repo";
 interface DeleteTeamDialogProps {
   teamId: string;
   teamName: string;
@@ -28,6 +31,8 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
   const [boardsFailedToDelete, setBoardsFailedToDelete] = useState<string[]>(
     []
   );
+  const session = useSession();
+  const userId = session.data?.user?.id;
 
   const fetchBoards = async () => {
     try {
@@ -45,7 +50,7 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
   const deleteBoard = async (
     boardId: string,
     boardName: string,
-    clientSyncService: ClientSyncService
+    client: CollaborationClient
   ) => {
     try {
       const response = await fetch(`/api/boards/${boardId}/delete`, {
@@ -53,7 +58,7 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
         credentials: "include",
       });
       if (response.ok) {
-        clientSyncService.deleteDoc();
+        client.deleteDoc();
         toast.success("Board deleted successfully");
         return true;
       } else {
@@ -67,9 +72,9 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
     }
   };
 
-  const checkActiveUsers = async (clientSyncService: ClientSyncService) => {
+  const checkActiveUsers = async (client: CollaborationClient) => {
     setCheckingUsers(true);
-    const activeUsers = await clientSyncService.getActiveUsers();
+    const activeUsers = await client.getActiveUsers();
     setCheckingUsers(false);
     return activeUsers.length > 0;
   };
@@ -109,26 +114,24 @@ export function DeleteTeamDialog({ teamId, teamName }: DeleteTeamDialogProps) {
 
       setDeletingBoards(true);
       for (const board of boards) {
-        const clientSyncService = new ClientSyncService({
-          docId: board.automergeDocId,
-        });
-        clientSyncService.connect();
+        const client = new CollaborationClient(
+          board.automergeDocId,
+          NEXT_PUBLIC_WEBSOCKET_URL,
+          userId as PeerId
+        );
+        client.connect();
         setBoardName(board.name);
-        const activeUsers = await checkActiveUsers(clientSyncService);
+        const activeUsers = await checkActiveUsers(client);
         if (activeUsers) {
           toast.error(
             `Board ${board.name} is currently being edited by another user - skipping `
           );
           boardsFailedToDelete.push(board.name);
         } else {
-          const deleted = await deleteBoard(
-            board.id,
-            board.name,
-            clientSyncService
-          );
+          const deleted = await deleteBoard(board.id, board.name, client);
           if (!deleted) boardsFailedToDelete.push(board.name);
         }
-        clientSyncService.disconnect();
+        client.disconnect();
       }
       setDeletingBoards(false);
 

@@ -23,15 +23,41 @@ export const useTransformer = (localDoc: StageSchema | undefined) => {
 
       changeLocalDoc((doc: StageSchema) => {
         if (!doc[shapeId]) return;
-
+        console.log("doc", doc);
         const shape = doc[shapeId];
         const attrs = node.attrs;
 
-        shape.attrs.x = attrs.x ?? 0;
-        shape.attrs.y = attrs.y ?? 0;
-        shape.attrs.scaleX = attrs.scaleX ?? 1;
-        shape.attrs.scaleY = attrs.scaleY ?? 1;
-        shape.attrs.rotation = attrs.rotation ?? 0;
+        console.log("attrs", attrs);
+        console.log("shape.attrs", shape.attrs);
+
+        function roundTo5Decimals(value: number) {
+          return Math.round(value * 100000) / 100000;
+        }
+        if (roundTo5Decimals(shape.attrs.x) !== roundTo5Decimals(attrs.x)) {
+          shape.attrs.x = attrs.x ?? 0;
+        }
+
+        if (roundTo5Decimals(shape.attrs.y) !== roundTo5Decimals(attrs.y)) {
+          shape.attrs.y = attrs.y ?? 0;
+        }
+        if (
+          roundTo5Decimals(shape.attrs.scaleX) !==
+          roundTo5Decimals(attrs.scaleX)
+        ) {
+          shape.attrs.scaleX = attrs.scaleX ?? 1;
+        }
+        if (
+          roundTo5Decimals(shape.attrs.scaleY) !==
+          roundTo5Decimals(attrs.scaleY)
+        ) {
+          shape.attrs.scaleY = attrs.scaleY ?? 1;
+        }
+        if (
+          roundTo5Decimals(shape.attrs.rotation) !==
+          roundTo5Decimals(attrs.rotation)
+        ) {
+          shape.attrs.rotation = attrs.rotation ?? 0;
+        }
       });
     },
     [changeLocalDoc]

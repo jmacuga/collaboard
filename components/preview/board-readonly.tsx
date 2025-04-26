@@ -2,10 +2,10 @@ import { Doc } from "@automerge/automerge";
 import { Layer } from "react-konva";
 import { Stage } from "react-konva";
 import { ShapeRenderer } from "../board/components/shape-renderer";
-import { KonvaNodeSchema, LayerSchema } from "@/types/stage-schema";
+import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
 import { useWindowDimensions } from "../board/hooks/use-window-dimensions";
 
-export default function BoardReadonly({ doc }: { doc: Doc<LayerSchema> }) {
+export default function BoardReadonly({ doc }: { doc: Doc<StageSchema> }) {
   const { width, height } = useWindowDimensions();
 
   return (

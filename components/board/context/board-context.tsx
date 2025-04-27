@@ -80,7 +80,7 @@ export const BoardContextProvider: React.FC<Props> = ({
     useState<React.RefObject<Konva.Stage | null> | null>(null);
   const [brushColor, setBrushColor] = useState<string>("rgb(0,0,0)");
   const [currentLineId, setCurrentLineId] = useState<string>(uuidv4());
-  const [mode, setMode] = useState<BoardMode>("selecting");
+  const [mode, setMode] = useState<BoardMode>("panning");
   const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]);
   const [brushSize, setBrushSize] = useState<number>(2);
   const [shapeType, setShapeType] = useState<ShapeType>("rectangle");

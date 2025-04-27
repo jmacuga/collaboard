@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { PeerId } from "@automerge/automerge-repo";
+import {
+  BoardContext,
+  BoardContextProvider,
+} from "@/components/board/context/board-context";
 interface BoardPreviewPageProps {
   board: string;
   team: string;
@@ -88,7 +92,9 @@ export default function BoardPreviewPage({
         docId={parsedBoard.docId}
         isAdmin={isAdmin}
       />
-      {previewDoc && <BoardReadonly doc={previewDoc} />}
+      <BoardContextProvider syncedInitial={false}>
+        {previewDoc && <BoardReadonly doc={previewDoc} />}
+      </BoardContextProvider>
     </CollaborationClientContext.Provider>
   );
 }

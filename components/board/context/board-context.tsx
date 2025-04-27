@@ -64,6 +64,8 @@ interface BoardContextType {
   isPanning: React.MutableRefObject<boolean>;
   synced: boolean;
   setSynced: (synced: boolean) => void;
+  maxWidth: number;
+  maxHeight: number;
 }
 
 export const BoardContext = createContext<BoardContextType>(
@@ -87,7 +89,12 @@ export const BoardContextProvider: React.FC<Props> = ({
   const [textFontSize, setTextFontSize] = useState<number>(24);
   const [isRealTime, setIsRealTime] = useState<boolean>(syncedInitial);
   const [localPoints, setLocalPoints] = useState<number[]>([]);
-  const [stagePosition, setStagePosition] = useState<Vector2d>({ x: 0, y: 0 });
+  const [maxWidth] = useState<number>(4000);
+  const [maxHeight] = useState<number>(4000);
+  const [stagePosition, setStagePosition] = useState<Vector2d>({
+    x: -maxWidth / 2 + window.innerWidth / 2,
+    y: -maxHeight / 2 + window.innerHeight / 2,
+  });
   const [editingText, setEditingText] = useState<string | null>(null);
   const [textPosition, setTextPosition] = useState<Point | null>(null);
   const [currentTextId, setCurrentTextId] = useState<string | null>(null);
@@ -129,8 +136,11 @@ export const BoardContextProvider: React.FC<Props> = ({
   }, []);
 
   const resetStagePosition = useCallback(() => {
-    setStagePosition({ x: 0, y: 0 });
-  }, []);
+    setStagePosition({
+      x: -maxWidth / 2 + window.innerWidth / 2,
+      y: -maxHeight / 2 + window.innerHeight / 2,
+    });
+  }, [maxWidth, maxHeight]);
 
   const isShapeSelected = (id: string): boolean => {
     return selectedShapeIds.includes(id);
@@ -190,6 +200,8 @@ export const BoardContextProvider: React.FC<Props> = ({
       isPanning,
       synced,
       setSynced,
+      maxWidth,
+      maxHeight,
     }),
     [
       stageRef,
@@ -216,6 +228,8 @@ export const BoardContextProvider: React.FC<Props> = ({
       setBoardMode,
       synced,
       setSynced,
+      maxWidth,
+      maxHeight,
     ]
   );
 

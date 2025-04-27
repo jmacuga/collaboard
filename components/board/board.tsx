@@ -26,6 +26,8 @@ import { Text } from "konva/lib/shapes/Text";
 import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensions";
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { useCollaborationClient } from "./context/collaboration-client-context";
+import { useBoardDimensions } from "@/components/board/hooks/use-board-dimensions";
+import { Minimap } from "./components/minimap";
 
 export default function Board({
   team,
@@ -39,7 +41,8 @@ export default function Board({
   const collaborationClient = useCollaborationClient();
   const docId = collaborationClient.getDocId() as AnyDocumentId;
   const [localDoc] = useDocument<StageSchema>(docId);
-  const { width, height } = useWindowDimensions();
+  const { maxWidth, maxHeight } = useContext(BoardContext);
+  const { width, height } = useBoardDimensions(maxWidth, maxHeight);
 
   const {
     brushColor,
@@ -115,7 +118,9 @@ export default function Board({
     }, 10);
   };
 
-  const showResetButton = stagePosition.x !== 0 || stagePosition.y !== 0;
+  const showResetButton =
+    stagePosition.x !== -maxWidth / 2 + width / 2 ||
+    stagePosition.y !== -maxHeight / 2 + height / 2;
 
   return (
     <>
@@ -128,7 +133,7 @@ export default function Board({
           isRealTime &&
           activeUsers &&
           activeUsers.length > 0 && <ActiveUsersList users={activeUsers} />}
-        <div>
+        <div className="relative">
           <Stage
             width={width}
             height={height}
@@ -181,6 +186,15 @@ export default function Board({
               <Transformer ref={transformerRef} />
             </Layer>
           </Stage>
+          {(stagePosition.x <= -maxWidth + width ||
+            stagePosition.y <= -maxHeight + height ||
+            stagePosition.x >= 0 ||
+            stagePosition.y >= 0) && (
+            <div className="absolute bottom-4 left-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg">
+              Maximum board size reached
+            </div>
+          )}
+          {localDoc && <Minimap localDoc={localDoc} />}
         </div>
       </div>
       {editingText !== null && textPosition && (

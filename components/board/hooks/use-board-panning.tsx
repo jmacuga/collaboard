@@ -4,7 +4,8 @@ import { Vector2d } from "konva/lib/types";
 import { BoardContext } from "../context/board-context";
 
 export const useBoardPanning = () => {
-  const { mode, setStagePosition, isPanning } = useContext(BoardContext);
+  const { mode, setStagePosition, isPanning, maxWidth, maxHeight } =
+    useContext(BoardContext);
   const lastPosition = useRef<Vector2d | null>(null);
 
   const handleBoardPanStart = useCallback((e: KonvaEventObject<MouseEvent>) => {
@@ -26,14 +27,21 @@ export const useBoardPanning = () => {
       const dx = pointerPosition.x - lastPosition.current.x;
       const dy = pointerPosition.y - lastPosition.current.y;
 
-      setStagePosition((prev) => ({
-        x: prev.x + dx,
-        y: prev.y + dy,
-      }));
+      setStagePosition((prev) => {
+        const newX = Math.min(
+          0,
+          Math.max(-maxWidth + stage.width(), prev.x + dx)
+        );
+        const newY = Math.min(
+          0,
+          Math.max(-maxHeight + stage.height(), prev.y + dy)
+        );
+        return { x: newX, y: newY };
+      });
 
       lastPosition.current = pointerPosition;
     },
-    [setStagePosition]
+    [setStagePosition, maxWidth, maxHeight]
   );
 
   const handleBoardPanEnd = useCallback((e: KonvaEventObject<MouseEvent>) => {

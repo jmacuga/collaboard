@@ -87,19 +87,25 @@ export default function MergeRequestPage({
     <CollaborationClientContext.Provider
       value={{ collaborationClient: collaborationClientRef.current }}
     >
-      <BoardHeader
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
-        teamId={parsedTeam.id}
-      />
-      <MergeRequestHeader
-        mergeRequest={parsedMergeRequest}
-        isUserReviewer={isUserReviewer}
-        isUserRequester={isUserRequester}
-      />
-      <BoardContextProvider syncedInitial={false}>
-        {previewDoc && <BoardReadonly doc={previewDoc} />}
-      </BoardContextProvider>
+      <div className="flex flex-col h-screen">
+        <div className="flex-shrink-0">
+          <BoardHeader
+            boardName={parsedBoard.name}
+            teamName={parsedTeam.name}
+            teamId={parsedTeam.id}
+          />
+          <MergeRequestHeader
+            mergeRequest={parsedMergeRequest}
+            isUserReviewer={isUserReviewer}
+            isUserRequester={isUserRequester}
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <BoardContextProvider syncedInitial={false}>
+            {previewDoc && <BoardReadonly doc={previewDoc} />}
+          </BoardContextProvider>
+        </div>
+      </div>
     </CollaborationClientContext.Provider>
   );
 }

@@ -81,20 +81,26 @@ export default function BoardPreviewPage({
     <CollaborationClientContext.Provider
       value={{ collaborationClient: collaborationClientRef.current }}
     >
-      <BoardHeader
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
-        teamId={parsedTeam.id}
-      />
-      <PreviewHeader
-        boardId={parsedBoard.id}
-        localChanges={localChanges}
-        docId={parsedBoard.docId}
-        isAdmin={isAdmin}
-      />
-      <BoardContextProvider syncedInitial={false}>
-        {previewDoc && <BoardReadonly doc={previewDoc} />}
-      </BoardContextProvider>
+      <div className="flex flex-col h-screen">
+        <div className="flex-shrink-0">
+          <BoardHeader
+            boardName={parsedBoard.name}
+            teamName={parsedTeam.name}
+            teamId={parsedTeam.id}
+          />
+          <PreviewHeader
+            boardId={parsedBoard.id}
+            localChanges={localChanges}
+            docId={parsedBoard.docId}
+            isAdmin={isAdmin}
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <BoardContextProvider syncedInitial={false}>
+            {previewDoc && <BoardReadonly doc={previewDoc} />}
+          </BoardContextProvider>
+        </div>
+      </div>
     </CollaborationClientContext.Provider>
   );
 }

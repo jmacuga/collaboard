@@ -7,6 +7,7 @@ import { useWindowDimensions } from "../board/hooks/use-window-dimensions";
 import { useContext } from "react";
 import { BoardContext } from "../board/context/board-context";
 import { useBoardPanning } from "../board/hooks/use-board-panning";
+import { Minimap } from "../board/components/minimap";
 
 export default function BoardReadonly({ doc }: { doc: Doc<StageSchema> }) {
   const { width, height } = useWindowDimensions();
@@ -15,8 +16,8 @@ export default function BoardReadonly({ doc }: { doc: Doc<StageSchema> }) {
     useBoardPanning();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="relative">
+    <div className="h-full bg-gradient-to-b from-background to-muted/20">
+      <div className="relative h-full">
         <Stage
           width={width}
           height={height}
@@ -37,6 +38,7 @@ export default function BoardReadonly({ doc }: { doc: Doc<StageSchema> }) {
           </Layer>
         </Stage>
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/5 to-transparent" />
+        {doc && <Minimap localDoc={doc} />}
       </div>
     </div>
   );

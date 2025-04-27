@@ -89,8 +89,8 @@ export const BoardContextProvider: React.FC<Props> = ({
   const [textFontSize, setTextFontSize] = useState<number>(24);
   const [isRealTime, setIsRealTime] = useState<boolean>(syncedInitial);
   const [localPoints, setLocalPoints] = useState<number[]>([]);
-  const [maxWidth] = useState<number>(5000);
-  const [maxHeight] = useState<number>(5000);
+  const [maxWidth] = useState<number>(4000);
+  const [maxHeight] = useState<number>(4000);
   const [stagePosition, setStagePosition] = useState<Vector2d>({
     x: -maxWidth / 2 + window.innerWidth / 2,
     y: -maxHeight / 2 + window.innerHeight / 2,

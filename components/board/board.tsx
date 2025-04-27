@@ -27,6 +27,7 @@ import { useWindowDimensions } from "@/components/board/hooks/use-window-dimensi
 import { Team as PrismaTeam, Board as PrismaBoard } from "@prisma/client";
 import { useCollaborationClient } from "./context/collaboration-client-context";
 import { useBoardDimensions } from "@/components/board/hooks/use-board-dimensions";
+import { Minimap } from "./components/minimap";
 
 export default function Board({
   team,
@@ -193,6 +194,7 @@ export default function Board({
               Maximum board size reached
             </div>
           )}
+          {localDoc && <Minimap localDoc={localDoc} />}
         </div>
       </div>
       {editingText !== null && textPosition && (

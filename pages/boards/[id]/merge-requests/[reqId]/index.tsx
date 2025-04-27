@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { PeerId } from "@automerge/automerge-repo";
+import { BoardContextProvider } from "@/components/board/context/board-context";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -96,7 +97,9 @@ export default function MergeRequestPage({
         isUserReviewer={isUserReviewer}
         isUserRequester={isUserRequester}
       />
-      {previewDoc && <BoardReadonly doc={previewDoc} />}
+      <BoardContextProvider syncedInitial={false}>
+        {previewDoc && <BoardReadonly doc={previewDoc} />}
+      </BoardContextProvider>
     </CollaborationClientContext.Provider>
   );
 }

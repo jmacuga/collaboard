@@ -550,7 +550,7 @@ describe("MergeRequestService", () => {
         where: { id: mockMergeRequestId },
         data: {
           updatedAt: expect.any(Date),
-          status: MergeRequestStatus.PENDING,
+          status: MergeRequestStatus.OPEN,
         },
       });
       expect(

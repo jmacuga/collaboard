@@ -24,7 +24,6 @@ const MINIMAP_SIZE = 200;
 export const Minimap = ({ localDoc }: MinimapProps) => {
   const { stagePosition, maxWidth, maxHeight } = useContext(BoardContext);
   const scale = MINIMAP_SIZE / maxWidth;
-  console.log("Scale", scale);
   const { width, height } = useWindowDimensions();
   const [isVisible, setIsVisible] = useState(true);
 
@@ -35,8 +34,6 @@ export const Minimap = ({ localDoc }: MinimapProps) => {
   const visibleArea = useMemo(() => {
     const viewportWidth = width;
     const viewportHeight = height;
-    console.log(viewportWidth, viewportHeight);
-    console.log(stagePosition);
     return {
       x: -stagePosition.x,
       y: -stagePosition.y,

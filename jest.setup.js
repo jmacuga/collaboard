@@ -65,3 +65,17 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+// Mock WebSocket
+global.WebSocket = class WebSocket {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
+  constructor() {
+    this.readyState = WebSocket.OPEN;
+  }
+
+  close() {}
+};

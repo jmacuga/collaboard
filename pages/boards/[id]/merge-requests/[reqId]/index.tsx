@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { PeerId } from "@automerge/automerge-repo";
+import { BoardContextProvider } from "@/components/board/context/board-context";
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -86,17 +87,25 @@ export default function MergeRequestPage({
     <CollaborationClientContext.Provider
       value={{ collaborationClient: collaborationClientRef.current }}
     >
-      <BoardHeader
-        boardName={parsedBoard.name}
-        teamName={parsedTeam.name}
-        teamId={parsedTeam.id}
-      />
-      <MergeRequestHeader
-        mergeRequest={parsedMergeRequest}
-        isUserReviewer={isUserReviewer}
-        isUserRequester={isUserRequester}
-      />
-      {previewDoc && <BoardReadonly doc={previewDoc} />}
+      <div className="flex flex-col h-screen">
+        <div className="flex-shrink-0">
+          <BoardHeader
+            boardName={parsedBoard.name}
+            teamName={parsedTeam.name}
+            teamId={parsedTeam.id}
+          />
+          <MergeRequestHeader
+            mergeRequest={parsedMergeRequest}
+            isUserReviewer={isUserReviewer}
+            isUserRequester={isUserRequester}
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <BoardContextProvider syncedInitial={false}>
+            {previewDoc && <BoardReadonly doc={previewDoc} />}
+          </BoardContextProvider>
+        </div>
+      </div>
     </CollaborationClientContext.Provider>
   );
 }

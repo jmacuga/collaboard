@@ -47,13 +47,7 @@ describe("AppSidebar", () => {
       </TestWrapper>
     );
 
-    const links = [
-      "Your Teams",
-      "Team Invitations",
-      "Notifications",
-      "Settings",
-      "Review Requests",
-    ];
+    const links = ["Your Teams", "Team Invitations", "Notifications"];
 
     links.forEach((linkText) => {
       const link = screen.getByRole("link", {

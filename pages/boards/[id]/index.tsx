@@ -5,12 +5,19 @@ import { withTeamRolePage } from "@/lib/middleware";
 import { TeamService } from "@/lib/services/team/team-service";
 import TeamArchived from "@/components/teams/team-archived";
 import BoardArchived from "@/components/boards/board-archived";
+import { MergeRequestService } from "@/lib/services/merge-request/merge-request-service";
+import { MergeRequestStatus } from "@prisma/client";
 interface BoardPageProps {
   board: string;
   team: string;
+  openMergeRequestsCount: number;
 }
 
-export default function BoardPage({ board, team }: BoardPageProps) {
+export default function BoardPage({
+  board,
+  team,
+  openMergeRequestsCount,
+}: BoardPageProps) {
   const parsedBoard = JSON.parse(board);
   const parsedTeam = JSON.parse(team);
 
@@ -20,7 +27,13 @@ export default function BoardPage({ board, team }: BoardPageProps) {
   if (parsedBoard.archived) {
     return <BoardArchived />;
   }
-  return <BoardProvider board={parsedBoard} team={parsedTeam} />;
+  return (
+    <BoardProvider
+      board={parsedBoard}
+      team={parsedTeam}
+      openMergeRequestsCount={openMergeRequestsCount}
+    />
+  );
 }
 
 const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
@@ -32,6 +45,13 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
     };
   }
 
+  const mergeRequests = await BoardService.getMergeRequests(boardId);
+
+  const openMergeRequests = mergeRequests.filter(
+    (mergeRequest) => mergeRequest.status === MergeRequestStatus.OPEN
+  );
+  const openMergeRequestsCount = openMergeRequests.length;
+
   const team = await TeamService.getTeamById(board.teamId);
   if (!team) {
     return {
@@ -42,6 +62,7 @@ const getServerSidePropsFunc: GetServerSideProps = async ({ params }) => {
     props: {
       board: JSON.stringify(board),
       team: JSON.stringify(team),
+      openMergeRequestsCount,
     },
   };
 };

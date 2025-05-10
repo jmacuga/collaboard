@@ -1,0 +1,60 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_test_container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: user1234
+      MONGO_INITDB_DATABASE: collaboard
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/test/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    command: mongod --auth
+    networks:
+      - app-test-network
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb_test_container
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root1234
+      MARIADB_DATABASE: collaboard
+      MARIADB_USER: user
+      MARIADB_PASSWORD: user1234
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d
+    networks:
+      - app-test-network
+
+  collaboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: collaboard_app
+    restart: unless-stopped
+    command: npm run start
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://user:user1234@mongodb:27017/collaboard?authSource=admin
+      - DATABASE_URL=mysql://root:root1234@mariadb:3306/collaboard
+    depends_on:
+      - mongodb
+      - mariadb
+    networks:
+      - app-test-network
+
+volumes:
+  mongo-data:
+  mariadb-data:
+
+networks:
+  app-test-network:
+    driver: bridge

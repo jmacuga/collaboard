@@ -13,6 +13,7 @@ import { useLastViewedBoardLog } from "@/components/profile/hooks/use-last-viewe
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { useSession } from "next-auth/react";
 import { PeerId } from "@automerge/automerge-repo";
+import { MergeRequestCounter } from "./components/merge-request-counter";
 interface BoardState {
   collaborationClient: CollaborationClient | null;
   synced: boolean;
@@ -21,9 +22,11 @@ interface BoardState {
 export function BoardProvider({
   board,
   team,
+  openMergeRequestsCount,
 }: {
   board: PrismaBoard;
   team: PrismaTeam;
+  openMergeRequestsCount: number;
 }) {
   const [state, setState] = useState<BoardState>({
     collaborationClient: null,
@@ -34,7 +37,6 @@ export function BoardProvider({
   const session = useSession();
 
   const userId = session.data?.user?.id;
-
   useEffect(() => {
     const initializeCollaborationClient = async () => {
       let synced = false;
@@ -102,6 +104,9 @@ export function BoardProvider({
               <Board team={team} board={board} />
               <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
                 <SyncStatusControl />
+              </div>
+              <div className="fixed top-44 right-4 z-40 flex items-center gap-3">
+                <MergeRequestCounter openRequests={openMergeRequestsCount} />
               </div>
             </div>
           </BoardContextProvider>

@@ -4,7 +4,7 @@ import { Stage, Layer, Line, Transformer } from "react-konva";
 import { BoardContext } from "@/components/board/context/board-context";
 import { useDrawing } from "@/components/board/hooks/use-drawing";
 import { KonvaNodeSchema, StageSchema } from "@/types/stage-schema";
-import { useDocument } from "@automerge/automerge-repo-react-hooks";
+import { useDocument, useHandle } from "@automerge/automerge-repo-react-hooks";
 import { AnyDocumentId } from "@automerge/automerge-repo";
 import { useTransformer } from "@/components/board/hooks/use-transformer";
 import { useText } from "@/components/board/hooks/use-text";
@@ -43,7 +43,7 @@ export default function Board({
   const [localDoc] = useDocument<StageSchema>(docId);
   const { maxWidth, maxHeight } = useContext(BoardContext);
   const { width, height } = useBoardDimensions(maxWidth, maxHeight);
-
+  const handle = useHandle<StageSchema>(docId);
   const {
     brushColor,
     brushSize,

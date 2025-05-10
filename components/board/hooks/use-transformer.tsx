@@ -23,12 +23,8 @@ export const useTransformer = (localDoc: StageSchema | undefined) => {
 
       changeLocalDoc((doc: StageSchema) => {
         if (!doc[shapeId]) return;
-        console.log("doc", doc);
         const shape = doc[shapeId];
         const attrs = node.attrs;
-
-        console.log("attrs", attrs);
-        console.log("shape.attrs", shape.attrs);
 
         function roundTo5Decimals(value: number) {
           return Math.round(value * 100000) / 100000;

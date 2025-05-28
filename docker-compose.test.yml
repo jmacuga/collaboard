@@ -1,20 +1,23 @@
 services:
   mongodb:
     image: mongo:8.0
-    container_name: mongodb_container
+    container_name: mongodb_test_container
     environment:
       MONGO_INITDB_ROOT_USERNAME: user
       MONGO_INITDB_ROOT_PASSWORD: user1234
+      MONGO_INITDB_DATABASE: collaboard
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
-      - mongo-data:/data/db
+      - mongo-data:/data/test/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    command: mongod --auth
     networks:
-      - app-network
+      - app-test-network
 
   mariadb:
     image: mariadb:11.8
-    container_name: mariadb_container
+    container_name: mariadb_test_container
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: root1234
@@ -22,11 +25,12 @@ services:
       MARIADB_USER: user
       MARIADB_PASSWORD: user1234
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d
     networks:
-      - app-network
+      - app-test-network
 
   collaboard:
     build:
@@ -45,12 +49,12 @@ services:
       - mongodb
       - mariadb
     networks:
-      - app-network
+      - app-test-network
 
 volumes:
   mongo-data:
   mariadb-data:
 
 networks:
-  app-network:
+  app-test-network:
     driver: bridge

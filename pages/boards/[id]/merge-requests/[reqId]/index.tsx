@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import { BoardService } from "@/lib/services/board/board-service";
 import { useState, useRef, useEffect } from "react";
 import { StageSchema } from "@/types/stage-schema";
-import { Doc } from "@automerge/automerge";
+import { Doc, Change } from "@automerge/automerge";
 import { CollaborationClientContext } from "@/components/board/context/collaboration-client-context";
 import { TeamService } from "@/lib/services/team/team-service";
 import { BoardHeader } from "@/components/board/components/board-header";
@@ -18,6 +18,8 @@ import { CollaborationClient } from "@/lib/sync/collaboration-client";
 import { NEXT_PUBLIC_WEBSOCKET_URL } from "@/lib/constants";
 import { PeerId } from "@automerge/automerge-repo";
 import { BoardContextProvider } from "@/components/board/context/board-context";
+import * as A from "@automerge/automerge";
+
 interface MergeRequestPageProps {
   board: string;
   team: string;
@@ -48,6 +50,11 @@ export default function MergeRequestPage({
   const decodedChanges = parsedChanges.map(
     (change: string) => new Uint8Array(Buffer.from(change, "base64"))
   );
+
+  decodedChanges.forEach((change: Change) => {
+    const decodedChange = A.decodeChange(change);
+    console.log(decodedChange.actor);
+  });
 
   const collaborationClientRef = useRef<CollaborationClient | null>(null);
   const [isMounted, setIsMounted] = useState(false);

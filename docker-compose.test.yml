@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:8.0
     container_name: mongodb_test_container
     environment:
       MONGO_INITDB_ROOT_USERNAME: user
@@ -16,7 +16,7 @@ services:
       - app-test-network
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11.8
     container_name: mariadb_test_container
     restart: always
     environment:

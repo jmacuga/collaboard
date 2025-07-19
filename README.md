@@ -2,6 +2,13 @@
 
 A real-time collaborative whiteboard application that enables teams to work together on shared canvases, with support for offline editing and synchronization. App uses CRDT (Conflict-free Replicated Data Types) for synchronization.
 
+## Demo
+
+<video width="320" height="240" controls>
+  <source src="video/all.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## Features
 
 ### User Management
@@ -9,6 +16,9 @@ A real-time collaborative whiteboard application that enables teams to work toge
 - User registration and authentication
 - Team creation and management
 - Role-based access control (Team Members and Administrators)
+
+<img src="img/members.png" alt="Team Members" width="500"/>
+<img src="img/teams-multiple.png" alt="Teams multiple" width="500"/>
 
 ### Whiteboard Features
 
@@ -25,6 +35,9 @@ A real-time collaborative whiteboard application that enables teams to work toge
 - Comments on objects
 - Board export to PNG
 
+<img src="img/boards.png" alt="Team Boards" width="500"/>
+<img src="img/board_with_shapes.png" alt="Board with Shapes" width="500"/>
+
 ### Offline Capabilities
 
 - Continued editing without internet connection
@@ -40,13 +53,7 @@ A real-time collaborative whiteboard application that enables teams to work toge
 - Concurrent editing support
 - Active user list
 
-### History Management
-
-- Detailed change history
-- Version restoration
-- Change tracking with user attribution
-
-## Getting Started
+## Quick Start
 
 ### Installation
 

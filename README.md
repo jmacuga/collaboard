@@ -2,7 +2,12 @@
 
 A real-time collaborative whiteboard application that enables teams to work together on shared canvases, with support for offline editing and synchronization. App uses CRDT (Conflict-free Replicated Data Types) for synchronization.
 
-## [Demo Video](video/all.mp4)
+## Demo
+
+<video width="320" height="240" controls>
+  <source src="video/collaboration_edit.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ## Features
 
